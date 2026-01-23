@@ -2,7 +2,7 @@
 
 A structured approach for testing the HeyGen and Remotion skills together, optimized for HeyGen's generation time.
 
-## PrerequisitesT
+## Prerequisites
 
 1. Remotion project initialized (`npx create-video@latest`)
 2. Skills installed in `.claude/skills/`
