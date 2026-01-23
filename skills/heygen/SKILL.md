@@ -22,6 +22,7 @@ Read individual rule files for detailed explanations and code examples:
 ### Core Video Creation
 - [rules/avatars.md](rules/avatars.md) - Listing avatars, avatar styles, and avatar_id selection
 - [rules/voices.md](rules/voices.md) - Listing voices, locales, speed/pitch configuration
+- [rules/scripts.md](rules/scripts.md) - Writing scripts, pauses/breaks, pacing, and structure templates
 - [rules/video-generation.md](rules/video-generation.md) - POST /v2/video/generate workflow and multi-scene videos
 - [rules/video-agent.md](rules/video-agent.md) - One-shot prompt video generation with Video Agent API
 - [rules/dimensions.md](rules/dimensions.md) - Resolution options (720p/1080p) and aspect ratios
