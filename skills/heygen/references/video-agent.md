@@ -18,6 +18,16 @@ The Video Agent API generates complete videos from a single text prompt. Unlike 
 | Prototype or draft video | Video Agent |
 | Brand-consistent production video | Standard v2/video/generate |
 
+## Before You Call This API
+
+**Required step:** Optimize your prompt using [prompt-optimizer.md](prompt-optimizer.md) before generating a video. The difference between mediocre and professional results depends entirely on prompt quality.
+
+Quick checklist:
+1. Define visual style (colors, aesthetic)
+2. Structure scenes with specific scene types
+3. Write VO script at ~150 words/minute
+4. Specify media types for each scene (Motion Graphics, Stock, AI-generated)
+
 ## Endpoint
 
 ```
@@ -242,41 +252,14 @@ const response = await fetch(
 
 ## Writing Effective Prompts
 
-### Include in Your Prompt
+See **[prompt-optimizer.md](prompt-optimizer.md)** for comprehensive prompt writing guidance.
 
-| Element | Example |
-|---------|---------|
-| **Purpose** | "product demo", "tutorial", "announcement" |
-| **Duration hint** | "60-second", "brief 30-second", "comprehensive 3-minute" |
-| **Tone** | "professional", "casual", "energetic", "serious" |
-| **Audience** | "targeting developers", "for beginners", "enterprise customers" |
-| **Key points** | "highlight the AI features and pricing" |
-
-### Example Prompts
-
-**Product Demo:**
-```
-Create a 90-second product demo for our project management tool.
-Target audience: startup founders and small team leads.
-Highlight: Kanban boards, time tracking, and Slack integration.
-Tone: Professional but approachable.
-```
-
-**Educational:**
-```
-Explain how blockchain technology works in simple terms.
-Duration: 2 minutes.
-Audience: Complete beginners with no technical background.
-Use analogies and avoid jargon.
-```
-
-**Marketing:**
-```
-Create an energetic 30-second ad for our fitness app launch.
-Target: Health-conscious millennials.
-Key message: AI-powered personalized workouts.
-End with a strong call-to-action to download.
-```
+The prompt optimizer covers:
+- Prompt complexity levels (basic → scene-by-scene)
+- Visual style taxonomy and color specification
+- Media type selection (Motion Graphics vs Stock vs AI-generated)
+- Scene structure and timing calculations
+- Ready-to-use templates for common video types
 
 ## Checking Video Status
 

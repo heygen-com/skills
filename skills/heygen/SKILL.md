@@ -12,7 +12,7 @@ AI avatar video creation API for generating talking-head videos, explainers, and
 
 | Task | Read |
 |------|------|
-| Generate video from prompt (easy) | [video-agent.md](references/video-agent.md), [prompt-optimizer.md](references/prompt-optimizer.md) |
+| Generate video from prompt (easy) | [prompt-optimizer.md](references/prompt-optimizer.md) → [video-agent.md](references/video-agent.md) |
 | Generate video with precise control | [video-generation.md](references/video-generation.md), [avatars.md](references/avatars.md), [voices.md](references/voices.md) |
 | Check video status / get download URL | [video-status.md](references/video-status.md) |
 | Add captions or text overlays | [captions.md](references/captions.md), [text-overlays.md](references/text-overlays.md) |
