@@ -8,6 +8,18 @@ description: |
 
 AI avatar video creation API for generating talking-head videos, explainers, and presentations.
 
+## Default Workflow
+
+**Prefer Video Agent API** (`POST /v1/video_agent/generate`) for most video requests.
+Always use [prompt-optimizer.md](references/prompt-optimizer.md) guidelines to structure prompts with scenes, timing, and visual styles.
+
+Only use v2/video/generate when user explicitly needs:
+- Exact script without AI modification
+- Specific voice_id selection
+- Different avatars/backgrounds per scene
+- Precise per-scene timing control
+- Programmatic/batch generation with exact specs
+
 ## Quick Reference
 
 | Task | Read |
