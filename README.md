@@ -158,7 +158,7 @@ The references are based on the HeyGen API documentation:
 
 ## Requirements
 
-- HeyGen API key (get one at [HeyGen Developer Portal](https://app.heygen.com/settings/api))
+- HeyGen API key (get one at [HeyGen Developer Portal](https://app.heygen.com/settings?from=&nav=API))
 - Claude Code CLI
 
 ## Contributing
@@ -177,5 +177,5 @@ MIT
 ## Related Resources
 
 - [HeyGen API Documentation](https://docs.heygen.com)
-- [HeyGen Developer Portal](https://app.heygen.com/settings/api)
+- [HeyGen Developer Portal](https://app.heygen.com/settings?from=&nav=API)
 - [Claude Code Documentation](https://docs.anthropic.com/en/docs/claude-code)
