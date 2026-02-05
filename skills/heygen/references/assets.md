@@ -9,56 +9,118 @@ HeyGen allows you to upload custom assets (images, videos, audio) for use in vid
 
 ## Upload Flow
 
-Asset uploads use a two-step process:
-1. Get a presigned upload URL from HeyGen
-2. Upload the file to the presigned URL
+Asset uploads are a single-step process: POST the raw file binary directly to the upload endpoint. The Content-Type header must match the file's MIME type.
 
-## Getting an Upload URL
+## Uploading an Asset
 
-### Request Fields
+**Endpoint:** `POST https://upload.heygen.com/v1/asset`
 
-| Field | Type | Req | Description |
-|-------|------|:---:|-------------|
-| `content_type` | string | ✓ | MIME type of file to upload |
+### Request
+
+| Header | Required | Description |
+|--------|:--------:|-------------|
+| `X-Api-Key` | ✓ | Your HeyGen API key |
+| `Content-Type` | ✓ | MIME type of the file (e.g. `image/jpeg`) |
+
+The request body is the raw binary file data. No JSON or form fields are needed.
+
+### Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `code` | number | Status code (`100` = success) |
+| `data.id` | string | Unique asset ID for use in video generation |
+| `data.name` | string | Asset name |
+| `data.file_type` | string | `image`, `video`, or `audio` |
+| `data.url` | string | Accessible URL for the uploaded file |
+| `data.image_key` | string \| null | Key for creating uploaded photo avatars (images only) |
+| `data.folder_id` | string | Folder ID (empty if not in a folder) |
+| `data.meta` | string \| null | Asset metadata |
+| `data.created_ts` | number | Unix timestamp of creation |
 
 ### curl
 
 ```bash
-curl -X POST "https://api.heygen.com/v1/asset" \
+curl -X POST "https://upload.heygen.com/v1/asset" \
   -H "X-Api-Key: $HEYGEN_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"content_type": "image/jpeg"}'
+  -H "Content-Type: image/jpeg" \
+  --data-binary '@./background.jpg'
 ```
 
 ### TypeScript
 
 ```typescript
-interface AssetUploadRequest {
-  content_type: string;                        // Required
-}
+import fs from "fs";
 
 interface AssetUploadResponse {
-  error: null | string;
+  code: number;
   data: {
+    id: string;
+    name: string;
+    file_type: string;
     url: string;
-    asset_id: string;
+    image_key: string | null;
+    folder_id: string;
+    meta: string | null;
+    created_ts: number;
   };
+  msg: string | null;
+  message: string | null;
 }
 
-async function getUploadUrl(contentType: string): Promise<AssetUploadResponse["data"]> {
-  const response = await fetch("https://api.heygen.com/v1/asset", {
+async function uploadAsset(filePath: string, contentType: string): Promise<AssetUploadResponse["data"]> {
+  const fileBuffer = fs.readFileSync(filePath);
+
+  const response = await fetch("https://upload.heygen.com/v1/asset", {
     method: "POST",
     headers: {
       "X-Api-Key": process.env.HEYGEN_API_KEY!,
-      "Content-Type": "application/json",
+      "Content-Type": contentType,
     },
-    body: JSON.stringify({ content_type: contentType }),
+    body: fileBuffer,
   });
 
   const json: AssetUploadResponse = await response.json();
 
-  if (json.error) {
-    throw new Error(json.error);
+  if (json.code !== 100) {
+    throw new Error(json.message ?? "Upload failed");
+  }
+
+  return json.data;
+}
+
+// Usage
+const asset = await uploadAsset("./background.jpg", "image/jpeg");
+console.log(`Uploaded asset: ${asset.id}`);
+console.log(`Asset URL: ${asset.url}`);
+```
+
+### TypeScript (with streams for large files)
+
+```typescript
+import fs from "fs";
+import { stat } from "fs/promises";
+
+async function uploadLargeAsset(filePath: string, contentType: string): Promise<AssetUploadResponse["data"]> {
+  const fileStats = await stat(filePath);
+  const fileStream = fs.createReadStream(filePath);
+
+  const response = await fetch("https://upload.heygen.com/v1/asset", {
+    method: "POST",
+    headers: {
+      "X-Api-Key": process.env.HEYGEN_API_KEY!,
+      "Content-Type": contentType,
+      "Content-Length": fileStats.size.toString(),
+    },
+    body: fileStream as any,
+    // @ts-ignore - duplex is needed for streaming
+    duplex: "half",
+  });
+
+  const json: AssetUploadResponse = await response.json();
+
+  if (json.code !== 100) {
+    throw new Error(json.message ?? "Upload failed");
   }
 
   return json.data;
@@ -71,21 +133,28 @@ async function getUploadUrl(contentType: string): Promise<AssetUploadResponse["d
 import requests
 import os
 
-def get_upload_url(content_type: str) -> dict:
-    response = requests.post(
-        "https://api.heygen.com/v1/asset",
-        headers={
-            "X-Api-Key": os.environ["HEYGEN_API_KEY"],
-            "Content-Type": "application/json"
-        },
-        json={"content_type": content_type}
-    )
+def upload_asset(file_path: str, content_type: str) -> dict:
+    with open(file_path, "rb") as f:
+        response = requests.post(
+            "https://upload.heygen.com/v1/asset",
+            headers={
+                "X-Api-Key": os.environ["HEYGEN_API_KEY"],
+                "Content-Type": content_type
+            },
+            data=f
+        )
 
     data = response.json()
-    if data.get("error"):
-        raise Exception(data["error"])
+    if data.get("code") != 100:
+        raise Exception(data.get("message", "Upload failed"))
 
     return data["data"]
+
+
+# Usage
+asset = upload_asset("./background.jpg", "image/jpeg")
+print(f"Uploaded asset: {asset['id']}")
+print(f"Asset URL: {asset['url']}")
 ```
 
 ## Supported Content Types
@@ -95,126 +164,37 @@ def get_upload_url(content_type: str) -> dict:
 | JPEG | `image/jpeg` | Backgrounds, talking photos |
 | PNG | `image/png` | Backgrounds, overlays |
 | MP4 | `video/mp4` | Video backgrounds |
+| WebM | `video/webm` | Video backgrounds |
 | MP3 | `audio/mpeg` | Custom audio input |
 | WAV | `audio/wav` | Custom audio input |
-
-## Uploading Files
-
-### TypeScript
-
-```typescript
-import fs from "fs";
-
-async function uploadFile(filePath: string, contentType: string): Promise<string> {
-  // 1. Get upload URL
-  const { url, asset_id } = await getUploadUrl(contentType);
-
-  // 2. Read file
-  const fileBuffer = fs.readFileSync(filePath);
-
-  // 3. Upload to presigned URL
-  const uploadResponse = await fetch(url, {
-    method: "PUT",
-    headers: {
-      "Content-Type": contentType,
-    },
-    body: fileBuffer,
-  });
-
-  if (!uploadResponse.ok) {
-    throw new Error(`Upload failed: ${uploadResponse.status}`);
-  }
-
-  return asset_id;
-}
-
-// Usage
-const imageAssetId = await uploadFile("./background.jpg", "image/jpeg");
-console.log(`Uploaded image asset: ${imageAssetId}`);
-```
-
-### TypeScript (with streams for large files)
-
-```typescript
-import fs from "fs";
-import { stat } from "fs/promises";
-
-async function uploadLargeFile(filePath: string, contentType: string): Promise<string> {
-  const { url, asset_id } = await getUploadUrl(contentType);
-
-  const fileStats = await stat(filePath);
-  const fileStream = fs.createReadStream(filePath);
-
-  const uploadResponse = await fetch(url, {
-    method: "PUT",
-    headers: {
-      "Content-Type": contentType,
-      "Content-Length": fileStats.size.toString(),
-    },
-    body: fileStream as any,
-    // @ts-ignore - duplex is needed for streaming
-    duplex: "half",
-  });
-
-  if (!uploadResponse.ok) {
-    throw new Error(`Upload failed: ${uploadResponse.status}`);
-  }
-
-  return asset_id;
-}
-```
-
-### Python
-
-```python
-import requests
-
-def upload_file(file_path: str, content_type: str) -> str:
-    # 1. Get upload URL
-    upload_data = get_upload_url(content_type)
-    url = upload_data["url"]
-    asset_id = upload_data["asset_id"]
-
-    # 2. Upload file
-    with open(file_path, "rb") as f:
-        response = requests.put(
-            url,
-            headers={"Content-Type": content_type},
-            data=f
-        )
-
-    if not response.ok:
-        raise Exception(f"Upload failed: {response.status_code}")
-
-    return asset_id
-
-
-# Usage
-image_asset_id = upload_file("./background.jpg", "image/jpeg")
-print(f"Uploaded image asset: {image_asset_id}")
-```
 
 ## Uploading from URL
 
 If your asset is already hosted online:
 
 ```typescript
-async function uploadFromUrl(sourceUrl: string, contentType: string): Promise<string> {
+async function uploadFromUrl(sourceUrl: string, contentType: string): Promise<AssetUploadResponse["data"]> {
   // 1. Download the file
   const sourceResponse = await fetch(sourceUrl);
-  const buffer = await sourceResponse.arrayBuffer();
+  const buffer = Buffer.from(await sourceResponse.arrayBuffer());
 
-  // 2. Get HeyGen upload URL
-  const { url, asset_id } = await getUploadUrl(contentType);
-
-  // 3. Upload to HeyGen
-  await fetch(url, {
-    method: "PUT",
-    headers: { "Content-Type": contentType },
+  // 2. Upload directly to HeyGen
+  const response = await fetch("https://upload.heygen.com/v1/asset", {
+    method: "POST",
+    headers: {
+      "X-Api-Key": process.env.HEYGEN_API_KEY!,
+      "Content-Type": contentType,
+    },
     body: buffer,
   });
 
-  return asset_id;
+  const json: AssetUploadResponse = await response.json();
+
+  if (json.code !== 100) {
+    throw new Error(json.message ?? "Upload failed");
+  }
+
+  return json.data;
 }
 ```
 
@@ -238,7 +218,7 @@ const videoConfig = {
       },
       background: {
         type: "image",
-        url: `https://files.heygen.ai/asset/${imageAssetId}`,
+        url: asset.url,  // Use the URL from the upload response
       },
     },
   ],
@@ -253,7 +233,7 @@ const talkingPhotoConfig = {
     {
       character: {
         type: "talking_photo",
-        talking_photo_id: photoAssetId,
+        talking_photo_id: asset.id,  // Use the ID from the upload response
       },
       voice: {
         type: "text",
@@ -278,7 +258,7 @@ const audioConfig = {
       },
       voice: {
         type: "audio",
-        audio_url: `https://files.heygen.ai/asset/${audioAssetId}`,
+        audio_url: asset.url,  // Use the URL from the upload response
       },
     },
   ],
@@ -294,7 +274,7 @@ async function createVideoWithCustomBackground(
 ): Promise<string> {
   // 1. Upload background
   console.log("Uploading background...");
-  const backgroundId = await uploadFile(backgroundPath, "image/jpeg");
+  const background = await uploadAsset(backgroundPath, "image/jpeg");
 
   // 2. Create video config
   const config = {
@@ -312,7 +292,7 @@ async function createVideoWithCustomBackground(
         },
         background: {
           type: "image",
-          url: `https://files.heygen.ai/asset/${backgroundId}`,
+          url: background.url,
         },
       },
     ],
@@ -337,7 +317,7 @@ async function createVideoWithCustomBackground(
 
 ## Asset Limitations
 
-- **File size**: Varies by asset type (typically 10-100MB max)
+- **File size**: 10MB maximum
 - **Image dimensions**: Recommended to match video dimensions
 - **Audio duration**: Should match expected video length
 - **Retention**: Assets may be deleted after a period of inactivity
