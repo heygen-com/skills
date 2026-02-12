@@ -109,25 +109,6 @@ const spanishConfig = {
 
 ## Working with SRT Files
 
-### Downloading SRT
-
-After video generation, you may be able to download the SRT file:
-
-```typescript
-async function downloadSrt(videoId: string): Promise<string> {
-  const response = await fetch(
-    `https://api.heygen.com/v1/video/${videoId}/srt`,
-    { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to download SRT");
-  }
-
-  return response.text();
-}
-```
-
 ### SRT File Format
 
 Standard SRT format:

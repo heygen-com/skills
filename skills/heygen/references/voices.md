@@ -424,9 +424,9 @@ const multiLanguageConfig = {
 Many avatars have a `default_voice_id` that's pre-matched. **This is the best approach.**
 
 ```typescript
-// Using v3 API to get avatar with default voice
+// Using v2 API to get avatar with default voice
 const response = await fetch(
-  "https://api.heygen.com/v3/avatar_group.list?include_public=true",
+  "https://api.heygen.com/v2/avatar_group.list?include_public=true",
   { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
 );
 const { data } = await response.json();

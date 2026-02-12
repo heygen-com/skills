@@ -183,7 +183,7 @@ Configure your webhook URL through the HeyGen dashboard or API:
 ### Via API
 
 ```bash
-curl -X POST "https://api.heygen.com/v1/webhook.add" \
+curl -X POST "https://api.heygen.com/v1/webhook/endpoint.add" \
   -H "X-Api-Key: $HEYGEN_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -202,7 +202,7 @@ interface WebhookConfig {
 }
 
 async function registerWebhook(config: WebhookConfig): Promise<void> {
-  const response = await fetch("https://api.heygen.com/v1/webhook.add", {
+  const response = await fetch("https://api.heygen.com/v1/webhook/endpoint.add", {
     method: "POST",
     headers: {
       "X-Api-Key": process.env.HEYGEN_API_KEY!,

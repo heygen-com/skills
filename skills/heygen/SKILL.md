@@ -1,7 +1,7 @@
 ---
 name: heygen
 description: |
-  HeyGen AI avatar video creation API. Use when: (1) Generating AI avatar videos with /v2/video/generate, (2) Using Video Agent for one-shot prompt-to-video generation, (3) Working with HeyGen avatars, voices, backgrounds, or captions, (4) Creating transparent WebM videos for compositing, (5) Polling video status or handling webhooks, (6) Integrating HeyGen with Remotion for programmatic video, (7) Translating or dubbing existing videos.
+  HeyGen AI avatar video creation API. Use when: (1) Generating AI avatar videos with /v2/video/generate, (2) Using Video Agent for one-shot prompt-to-video generation, (3) Working with HeyGen avatars, voices, backgrounds, or captions, (4) Creating transparent WebM videos for compositing, (5) Polling video status or handling webhooks, (6) Integrating HeyGen with Remotion for programmatic video, (7) Translating or dubbing existing videos, (8) Generating standalone TTS audio with the Starfish model via /v1/audio.
 ---
 
 # HeyGen API
@@ -29,7 +29,7 @@ Only use v2/video/generate when user explicitly needs:
 | Check video status / get download URL | [video-status.md](references/video-status.md) |
 | Add captions or text overlays | [captions.md](references/captions.md), [text-overlays.md](references/text-overlays.md) |
 | Transparent video for compositing | [video-generation.md](references/video-generation.md) (WebM section) |
-| Real-time interactive avatar | [streaming-avatars.md](references/streaming-avatars.md) |
+| Generate standalone TTS audio | [text-to-speech.md](references/text-to-speech.md) |
 | Translate/dub existing video | [video-translation.md](references/video-translation.md) |
 | Use with Remotion | [remotion-integration.md](references/remotion-integration.md) |
 
@@ -58,7 +58,7 @@ Only use v2/video/generate when user explicitly needs:
 ### Advanced Features
 - [references/templates.md](references/templates.md) - Template listing and variable replacement
 - [references/video-translation.md](references/video-translation.md) - Translating videos and dubbing
-- [references/streaming-avatars.md](references/streaming-avatars.md) - Real-time interactive sessions
+- [references/text-to-speech.md](references/text-to-speech.md) - Standalone TTS audio with Starfish model
 - [references/photo-avatars.md](references/photo-avatars.md) - Creating avatars from photos
 - [references/webhooks.md](references/webhooks.md) - Webhook endpoints and events
 

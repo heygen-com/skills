@@ -194,20 +194,6 @@ Custom avatars created from your own training footage:
 const customAvatars = avatars.filter((a) => a.avatar_id.startsWith("custom_"));
 ```
 
-### Instant Avatars
-
-Quick avatars created from a single photo or short video:
-
-```typescript
-// List instant avatars
-const response = await fetch("https://api.heygen.com/v1/instant_avatar.list", {
-  headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! },
-});
-
-const { data } = await response.json();
-console.log(data.avatars);
-```
-
 ## Avatar Styles
 
 Avatars support different rendering styles:
@@ -299,14 +285,12 @@ const results = searchByName(avatars, "josh");
 
 ## Avatar Groups
 
-Avatars are organized into groups for better management. Use the v3 APIs for paginated listing with search capabilities.
+Avatars are organized into groups for better management.
 
-### List Avatar Groups (v3 - Recommended)
-
-The v3 API provides pagination and search capabilities:
+### List Avatar Groups
 
 ```bash
-curl -X GET "https://api.heygen.com/v3/avatar_group.list?page=1&page_size=20&include_public=true" \
+curl -X GET "https://api.heygen.com/v2/avatar_group.list?include_public=true" \
   -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
 
@@ -314,9 +298,6 @@ curl -X GET "https://api.heygen.com/v3/avatar_group.list?page=1&page_size=20&inc
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `page` | int | 1 | Page number (1-10000) |
-| `page_size` | int | 20 | Items per page (1-1000) |
-| `query` | string | null | Search query for filtering |
 | `include_public` | bool | false | Include public avatars in results |
 
 #### TypeScript
@@ -337,30 +318,18 @@ interface AvatarGroupListResponse {
   error: null | string;
   data: {
     avatar_group_list: AvatarGroupItem[];
-    total_count: number;
-    current_page: number;
-    page_size: number;
   };
 }
 
 async function listAvatarGroups(
-  page = 1,
-  pageSize = 20,
-  includePublic = true,
-  query?: string
+  includePublic = true
 ): Promise<AvatarGroupListResponse["data"]> {
   const params = new URLSearchParams({
-    page: page.toString(),
-    page_size: pageSize.toString(),
     include_public: includePublic.toString(),
   });
 
-  if (query) {
-    params.set("query", query);
-  }
-
   const response = await fetch(
-    `https://api.heygen.com/v3/avatar_group.list?${params}`,
+    `https://api.heygen.com/v2/avatar_group.list?${params}`,
     { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
   );
 
@@ -372,73 +341,6 @@ async function listAvatarGroups(
 
   return json.data;
 }
-```
-
-### Search Public Avatars (v3)
-
-Search and filter public avatars with pagination:
-
-```bash
-curl -X GET "https://api.heygen.com/v3/avatar_groups/search?page=1&page_size=20&query=professional" \
-  -H "X-Api-Key: $HEYGEN_API_KEY"
-```
-
-#### Query Parameters
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `page` | int | 1 | Page number (1-1000) |
-| `page_size` | int | 20 | Items per page (1-1000) |
-| `search_tags` | string[] | null | Filter by tags (comma-separated) |
-| `query` | string | null | Text search query |
-| `list_filter` | string | null | Additional filter criteria |
-
-#### TypeScript
-
-```typescript
-async function searchPublicAvatars(
-  page = 1,
-  pageSize = 20,
-  query?: string,
-  searchTags?: string[]
-): Promise<AvatarGroupListResponse["data"]> {
-  const params = new URLSearchParams({
-    page: page.toString(),
-    page_size: pageSize.toString(),
-  });
-
-  if (query) {
-    params.set("query", query);
-  }
-
-  if (searchTags?.length) {
-    params.set("search_tags", searchTags.join(","));
-  }
-
-  const response = await fetch(
-    `https://api.heygen.com/v3/avatar_groups/search?${params}`,
-    { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
-  );
-
-  const json: AvatarGroupListResponse = await response.json();
-
-  if (json.error) {
-    throw new Error(json.error);
-  }
-
-  return json.data;
-}
-
-// Usage examples
-const businessAvatars = await searchPublicAvatars(1, 20, "business");
-const femaleAvatars = await searchPublicAvatars(1, 20, undefined, ["female"]);
-```
-
-### List Avatar Groups (v2 - Legacy)
-
-```bash
-curl -X GET "https://api.heygen.com/v2/avatar_group.list" \
-  -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
 
 ### Get Avatars in a Group

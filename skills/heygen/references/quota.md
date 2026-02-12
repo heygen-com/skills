@@ -12,7 +12,7 @@ HeyGen uses a credit-based system for video generation. Understanding quota mana
 ### curl
 
 ```bash
-curl -X GET "https://api.heygen.com/v1/video_generate.quota" \
+curl -X GET "https://api.heygen.com/v2/user/remaining_quota" \
   -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
 
@@ -27,7 +27,7 @@ interface QuotaResponse {
   };
 }
 
-const response = await fetch("https://api.heygen.com/v1/video_generate.quota", {
+const response = await fetch("https://api.heygen.com/v2/user/remaining_quota", {
   headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! },
 });
 
@@ -42,7 +42,7 @@ import requests
 import os
 
 response = requests.get(
-    "https://api.heygen.com/v1/video_generate.quota",
+    "https://api.heygen.com/v2/user/remaining_quota",
     headers={"X-Api-Key": os.environ["HEYGEN_API_KEY"]}
 )
 
@@ -82,7 +82,7 @@ Always verify sufficient quota before generating videos:
 async function generateVideoWithQuotaCheck(videoConfig: VideoConfig) {
   // Check quota first
   const quotaResponse = await fetch(
-    "https://api.heygen.com/v1/video_generate.quota",
+    "https://api.heygen.com/v2/user/remaining_quota",
     { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
   );
 
@@ -110,7 +110,7 @@ async function generateVideoWithQuotaCheck(videoConfig: VideoConfig) {
 ```typescript
 async function logQuotaUsage() {
   const response = await fetch(
-    "https://api.heygen.com/v1/video_generate.quota",
+    "https://api.heygen.com/v2/user/remaining_quota",
     { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
   );
 
@@ -134,7 +134,7 @@ const QUOTA_WARNING_THRESHOLD = 50;
 
 async function checkQuotaWithAlert() {
   const response = await fetch(
-    "https://api.heygen.com/v1/video_generate.quota",
+    "https://api.heygen.com/v2/user/remaining_quota",
     { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
   );
 

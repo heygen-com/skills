@@ -223,7 +223,7 @@ const customSrtConfig = {
 ### curl
 
 ```bash
-curl -X GET "https://api.heygen.com/v1/video_translate/{translate_id}" \
+curl -X GET "https://api.heygen.com/v2/video_translate/{translate_id}" \
   -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
 
@@ -242,7 +242,7 @@ interface TranslateStatusResponse {
 
 async function getTranslateStatus(translateId: string): Promise<TranslateStatusResponse["data"]> {
   const response = await fetch(
-    `https://api.heygen.com/v1/video_translate/${translateId}`,
+    `https://api.heygen.com/v2/video_translate/${translateId}`,
     { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
   );
 
