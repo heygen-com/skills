@@ -1,0 +1,32 @@
+name: Publish to ClawHub
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'skills/**'
+  workflow_dispatch:  # Manual trigger option
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install ClawHub CLI
+        run: npm install -g clawhub
+
+      - name: Publish to ClawHub
+        env:
+          CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_TOKEN }}
+        run: |
+          clawhub publish ./skills/heygen \
+            --slug video-agent \
+            --name "Video Agent" \
+            --version 2.${{ github.run_number }}.0 \
+            --tags latest,video,heygen,ai-avatar \
+            --changelog "Auto-publish from commit ${{ github.sha }}"
