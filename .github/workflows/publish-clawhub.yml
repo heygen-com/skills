@@ -29,5 +29,5 @@ jobs:
             --slug video-agent \
             --name "Video Agent" \
             --version 2.${{ github.run_number }}.0 \
-            --tags latest,video,heygen,ai-avatar \
+            --tags latest,video,heygen,ai-avatar,text-to-video,talking-head,video-generation,avatar,ai-video,digital-human \
             --changelog "Auto-publish from commit ${{ github.sha }}"

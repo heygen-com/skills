@@ -1,7 +1,14 @@
 ---
 name: heygen
 description: |
-  HeyGen AI avatar video creation API. Use when: (1) Generating AI avatar videos with /v2/video/generate, (2) Using Video Agent for one-shot prompt-to-video generation, (3) Working with HeyGen avatars, voices, backgrounds, or captions, (4) Creating transparent WebM videos for compositing, (5) Polling video status or handling webhooks, (6) Integrating HeyGen with Remotion for programmatic video, (7) Translating or dubbing existing videos, (8) Generating standalone TTS audio with the Starfish model via /v1/audio.
+  HeyGen AI video creation API. Use when: (1) Using Video Agent for one-shot prompt-to-video generation, (2) Generating AI avatar videos with /v2/video/generate, (3) Working with HeyGen avatars, voices, backgrounds, or captions, (4) Creating transparent WebM videos for compositing, (5) Polling video status or handling webhooks, (6) Integrating HeyGen with Remotion for programmatic video, (7) Translating or dubbing existing videos, (8) Generating standalone TTS audio with the Starfish model via /v1/audio.
+homepage: https://docs.heygen.com/reference/generate-video-agent
+metadata:
+  openclaw:
+    requires:
+      env:
+        - HEYGEN_API_KEY
+    primaryEnv: HEYGEN_API_KEY
 ---
 
 # HeyGen API
