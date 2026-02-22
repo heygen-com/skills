@@ -100,7 +100,17 @@ See [Scene Types and Layout](#scene-types-and-layout) and [The Visual Layer Syst
 
 ## Visual Style Library
 
-**The single most impactful thing you can do is name a visual style.** Each style below includes a designer reference, color palette, typography rules, motion behavior, and transition types. Pick one and use it as a starting point.
+**The single most impactful thing you can do is name a visual style.** Give it a name, reference a designer or aesthetic movement, and define its colors, typography, motion, and transitions.
+
+The styles below are **examples to use directly or as inspiration for creating your own.** You are not limited to this list — invent new styles by combining elements, referencing other designers, art movements, film genres, or cultural aesthetics. The pattern is what matters: **a named style + designer/movement reference + color palette + typography + motion rules + transition types.**
+
+For example, you could create:
+- **"Noir Signal" (Saul Bass)** — high-contrast black/white/red, dramatic shadows, bold silhouettes
+- **"Vapor Grid" (Vaporwave)** — pastel gradients, Roman busts, retro computing, VHS scan lines
+- **"Paper Cut" (Matisse)** — bold organic shapes, primary colors, hand-cut collage feel
+- **"Wire Frame" (Dieter Rams)** — ultra-minimal, thin lines, grey/white/one accent, form follows function
+
+Use the examples below as starting points or pick one that fits your content:
 
 ### Swiss Pulse
 **Reference:** Josef Muller-Brockmann
