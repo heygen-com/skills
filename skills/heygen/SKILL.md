@@ -31,7 +31,7 @@ Only use v2/video/generate when user explicitly needs:
 
 | Task | Read |
 |------|------|
-| Generate video from prompt (easy) | [prompt-optimizer.md](references/prompt-optimizer.md) → [video-agent.md](references/video-agent.md) |
+| Generate video from prompt (easy) | [prompt-optimizer.md](references/prompt-optimizer.md) → [visual-styles.md](references/visual-styles.md) → [video-agent.md](references/video-agent.md) |
 | Generate video with precise control | [video-generation.md](references/video-generation.md), [avatars.md](references/avatars.md), [voices.md](references/voices.md) |
 | Check video status / get download URL | [video-status.md](references/video-status.md) |
 | Add captions or text overlays | [captions.md](references/captions.md), [text-overlays.md](references/text-overlays.md) |
@@ -54,7 +54,9 @@ Only use v2/video/generate when user explicitly needs:
 - [references/scripts.md](references/scripts.md) - Writing scripts, pauses, pacing
 - [references/video-generation.md](references/video-generation.md) - POST /v2/video/generate and multi-scene videos
 - [references/video-agent.md](references/video-agent.md) - One-shot prompt video generation
-- [references/prompt-optimizer.md](references/prompt-optimizer.md) - Writing effective Video Agent prompts
+- [references/prompt-optimizer.md](references/prompt-optimizer.md) - Writing effective Video Agent prompts (core workflow + rules)
+- [references/visual-styles.md](references/visual-styles.md) - 20 named visual styles with full specs
+- [references/prompt-examples.md](references/prompt-examples.md) - Full production prompt example + ready-to-use templates
 - [references/dimensions.md](references/dimensions.md) - Resolution and aspect ratios
 
 ### Video Customization
