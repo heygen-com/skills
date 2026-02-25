@@ -7,6 +7,26 @@ description: One-shot prompt video generation with HeyGen Video Agent API
 
 The Video Agent API generates complete videos from a single text prompt. Unlike the standard video generation API which requires detailed scene-by-scene configuration, Video Agent automatically handles script writing, avatar selection, visuals, voiceover, pacing, and captions.
 
+## MCP Tool (Preferred)
+
+If the HeyGen MCP server is connected, use `mcp__heygen__generate_video_agent` instead of direct API calls:
+
+```
+Tool: mcp__heygen__generate_video_agent
+Parameters:
+  prompt: "<optimized prompt from prompt-optimizer.md>"
+  config:
+    duration_sec: 90          # optional, 5-300
+    avatar_id: "avatar_id"    # optional, agent selects if omitted
+    orientation: "landscape"   # optional, "landscape" or "portrait"
+  files:                       # optional
+    - asset_id: "uploaded_asset_id"
+```
+
+Then check status with `mcp__heygen__get_video` using the returned `video_id`.
+
+The prompt quality is still the critical factor — always follow [prompt-optimizer.md](prompt-optimizer.md) regardless of whether you use MCP or direct API.
+
 ## When to Use Video Agent vs Standard API
 
 | Use Case | Recommended API |
@@ -23,12 +43,12 @@ The Video Agent API generates complete videos from a single text prompt. Unlike 
 **Required step:** Optimize your prompt using [prompt-optimizer.md](prompt-optimizer.md) before generating a video. The difference between mediocre and professional results depends entirely on prompt quality.
 
 Quick checklist:
-1. Define visual style (colors, aesthetic)
+1. Define visual style (colors, aesthetic) — see [visual-styles.md](visual-styles.md)
 2. Structure scenes with specific scene types
 3. Write VO script at ~150 words/minute
 4. Specify media types for each scene (Motion Graphics, Stock, AI-generated)
 
-## Endpoint
+## Direct API Endpoint
 
 ```
 POST https://api.heygen.com/v1/video_agent/generate

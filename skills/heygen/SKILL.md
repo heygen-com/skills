@@ -3,6 +3,7 @@ name: heygen
 description: |
   HeyGen AI video creation API. Use when: (1) Using Video Agent for one-shot prompt-to-video generation, (2) Generating AI avatar videos with /v2/video/generate, (3) Working with HeyGen avatars, voices, backgrounds, or captions, (4) Creating transparent WebM videos for compositing, (5) Polling video status or handling webhooks, (6) Integrating HeyGen with Remotion for programmatic video, (7) Translating or dubbing existing videos, (8) Generating standalone TTS audio with the Starfish model via /v1/audio.
 homepage: https://docs.heygen.com/reference/generate-video-agent
+allowed-tools: mcp__heygen__*
 metadata:
   openclaw:
     requires:
@@ -15,10 +16,35 @@ metadata:
 
 AI avatar video creation API for generating talking-head videos, explainers, and presentations.
 
+## Tool Selection
+
+If HeyGen MCP tools are available (`mcp__heygen__*`), **prefer them** over direct HTTP API calls — they handle authentication and request formatting automatically.
+
+| Task | MCP Tool | Fallback (Direct API) |
+|------|----------|----------------------|
+| Generate video from prompt | `mcp__heygen__generate_video_agent` | `POST /v1/video_agent/generate` |
+| Check video status / get URL | `mcp__heygen__get_video` | `GET /v1/video_status.get` |
+| List account videos | `mcp__heygen__list_videos` | `GET /v1/video.list` |
+| Generate TTS audio | `mcp__heygen__text_to_speech` | `POST /v1/audio/text_to_speech` |
+| List TTS voices | `mcp__heygen__list_audio_voices` | `GET /v1/audio/voices` |
+| Delete a video | `mcp__heygen__delete_video` | `DELETE /v1/video.delete` |
+
+If no HeyGen MCP tools are available, use direct HTTP API calls with `X-Api-Key: $HEYGEN_API_KEY` header as documented in the reference files.
+
 ## Default Workflow
 
-**Prefer Video Agent API** (`POST /v1/video_agent/generate`) for most video requests.
+**Prefer Video Agent** for most video requests.
 Always use [prompt-optimizer.md](references/prompt-optimizer.md) guidelines to structure prompts with scenes, timing, and visual styles.
+
+**With MCP tools:**
+1. Write an optimized prompt using [prompt-optimizer.md](references/prompt-optimizer.md) → [visual-styles.md](references/visual-styles.md)
+2. Call `mcp__heygen__generate_video_agent` with prompt and config (duration_sec, orientation, avatar_id)
+3. Call `mcp__heygen__get_video` with the returned video_id to poll status and get the download URL
+
+**Without MCP tools (direct API):**
+1. Write an optimized prompt using [prompt-optimizer.md](references/prompt-optimizer.md) → [visual-styles.md](references/visual-styles.md)
+2. `POST /v1/video_agent/generate` — see [video-agent.md](references/video-agent.md)
+3. `GET /v1/video_status.get?video_id=<id>` — see [video-status.md](references/video-status.md)
 
 Only use v2/video/generate when user explicitly needs:
 - Exact script without AI modification
@@ -29,16 +55,17 @@ Only use v2/video/generate when user explicitly needs:
 
 ## Quick Reference
 
-| Task | Read |
-|------|------|
-| Generate video from prompt (easy) | [prompt-optimizer.md](references/prompt-optimizer.md) → [visual-styles.md](references/visual-styles.md) → [video-agent.md](references/video-agent.md) |
-| Generate video with precise control | [video-generation.md](references/video-generation.md), [avatars.md](references/avatars.md), [voices.md](references/voices.md) |
-| Check video status / get download URL | [video-status.md](references/video-status.md) |
-| Add captions or text overlays | [captions.md](references/captions.md), [text-overlays.md](references/text-overlays.md) |
-| Transparent video for compositing | [video-generation.md](references/video-generation.md) (WebM section) |
-| Generate standalone TTS audio | [text-to-speech.md](references/text-to-speech.md) |
-| Translate/dub existing video | [video-translation.md](references/video-translation.md) |
-| Use with Remotion | [remotion-integration.md](references/remotion-integration.md) |
+| Task | MCP Tool | Read |
+|------|----------|------|
+| Generate video from prompt (easy) | `mcp__heygen__generate_video_agent` | [prompt-optimizer.md](references/prompt-optimizer.md) → [visual-styles.md](references/visual-styles.md) → [video-agent.md](references/video-agent.md) |
+| Generate video with precise control | — | [video-generation.md](references/video-generation.md), [avatars.md](references/avatars.md), [voices.md](references/voices.md) |
+| Check video status / get download URL | `mcp__heygen__get_video` | [video-status.md](references/video-status.md) |
+| Add captions or text overlays | — | [captions.md](references/captions.md), [text-overlays.md](references/text-overlays.md) |
+| Transparent video for compositing | — | [video-generation.md](references/video-generation.md) (WebM section) |
+| Generate standalone TTS audio | `mcp__heygen__text_to_speech` | [text-to-speech.md](references/text-to-speech.md) |
+| List TTS voices | `mcp__heygen__list_audio_voices` | [voices.md](references/voices.md) |
+| Translate/dub existing video | — | [video-translation.md](references/video-translation.md) |
+| Use with Remotion | — | [remotion-integration.md](references/remotion-integration.md) |
 
 ## Reference Files
 
