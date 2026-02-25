@@ -7,7 +7,13 @@ description: Generate speech audio from text using HeyGen's Starfish TTS model
 
 Generate speech audio files from text using HeyGen's in-house Starfish TTS model. Use this for standalone audio generation — separate from video creation.
 
-## List Compatible TTS Voices
+## MCP Tools (Preferred)
+
+If the HeyGen MCP server is connected:
+- **List voices:** `mcp__heygen__list_audio_voices` — filter by type (public/private), language, gender
+- **Generate audio:** `mcp__heygen__text_to_speech` — params: text, voiceId, speed, locale, language
+
+## List Compatible TTS Voices (Direct API)
 
 Retrieve voices compatible with the Starfish TTS model.
 

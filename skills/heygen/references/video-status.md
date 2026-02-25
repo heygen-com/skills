@@ -7,7 +7,11 @@ description: Polling patterns, status types, and retrieving download URLs for He
 
 After generating a video, you need to poll for status until the video is complete. HeyGen processes videos asynchronously.
 
-## Checking Video Status
+## MCP Tool (Preferred)
+
+If the HeyGen MCP server is connected, use `mcp__heygen__get_video` with the `videoId` parameter. It returns status, video_url, thumbnail_url, duration, and all metadata in a single call.
+
+## Checking Video Status (Direct API)
 
 ### curl
 
