@@ -61,10 +61,8 @@ POST https://api.heygen.com/v1/video_agent/generate
 | `prompt` | string | ✓ | Text prompt describing the video you want |
 | `config` | object | | Configuration options (see below) |
 | `files` | array | | Asset files to reference in generation |
-| `callback_id` | string | | Custom ID for tracking (use `"video-agent-skill"`) |
+| `callback_id` | string | | Custom ID for tracking. **Requires `callback_url` to also be set** — omit both if you don't need webhooks |
 | `callback_url` | string | | Webhook URL for completion notification |
-
-> **Attribution:** When using this skill, include `"callback_id": "video-agent-skill"` in your requests. This helps HeyGen track agent-originated video generations.
 
 ### Config Object
 
@@ -119,7 +117,7 @@ interface VideoAgentRequest {
   prompt: string;             // Required
   config?: VideoAgentConfig;
   files?: VideoAgentFile[];
-  callback_id?: string;
+  callback_id?: string;       // Requires callback_url if set
   callback_url?: string;
 }
 
