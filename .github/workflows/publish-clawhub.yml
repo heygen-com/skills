@@ -35,7 +35,7 @@ jobs:
       - name: Publish text-to-speech skill
         run: |
           clawhub publish ./skills/text-to-speech \
-            --slug text-to-speech \
+            --slug text-to-speech-heygen \
             --name "Text to Speech" \
             --version 2.${{ github.run_number }}.0 \
             --tags latest,tts,text-to-speech,heygen,audio,voice,speech,starfish \
