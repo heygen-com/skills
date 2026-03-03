@@ -1,0 +1,22 @@
+{
+  "name": "heygen",
+  "version": "1.0.0",
+  "description": "Create AI avatar videos, generate speech audio, and translate videos with the HeyGen API.",
+  "author": {
+    "name": "HeyGen",
+    "url": "https://heygen.com"
+  },
+  "repository": "https://github.com/heygen-com/skills",
+  "license": "MIT",
+  "keywords": [
+    "heygen",
+    "video",
+    "avatar",
+    "ai",
+    "text-to-speech",
+    "tts",
+    "video-translation",
+    "text-to-video",
+    "talking-head"
+  ]
+}

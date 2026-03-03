@@ -1,7 +1,7 @@
 ---
 name: heygen
 description: |
-  HeyGen AI video creation API. Use when: (1) Using Video Agent for one-shot prompt-to-video generation, (2) Generating AI avatar videos with /v2/video/generate, (3) Working with HeyGen avatars, voices, backgrounds, or captions, (4) Creating transparent WebM videos for compositing, (5) Polling video status or handling webhooks, (6) Integrating HeyGen with Remotion for programmatic video, (7) Translating or dubbing existing videos, (8) Generating standalone TTS audio with the Starfish model via /v1/audio.
+  HeyGen AI video creation API. Use when: (1) Using Video Agent for one-shot prompt-to-video generation, (2) Generating AI avatar videos with /v2/video/generate, (3) Working with HeyGen avatars, voices, backgrounds, or captions, (4) Creating transparent WebM videos for compositing, (5) Polling video status or handling webhooks, (6) Integrating HeyGen with Remotion for programmatic video, (7) Creating photo avatars from images.
 homepage: https://docs.heygen.com/reference/generate-video-agent
 allowed-tools: mcp__heygen__*
 metadata:
@@ -25,8 +25,6 @@ If HeyGen MCP tools are available (`mcp__heygen__*`), **prefer them** over direc
 | Generate video from prompt | `mcp__heygen__generate_video_agent` | `POST /v1/video_agent/generate` |
 | Check video status / get URL | `mcp__heygen__get_video` | `GET /v1/video_status.get` |
 | List account videos | `mcp__heygen__list_videos` | `GET /v1/video.list` |
-| Generate TTS audio | `mcp__heygen__text_to_speech` | `POST /v1/audio/text_to_speech` |
-| List TTS voices | `mcp__heygen__list_audio_voices` | `GET /v1/audio/voices` |
 | Delete a video | `mcp__heygen__delete_video` | `DELETE /v1/video.delete` |
 
 If no HeyGen MCP tools are available, use direct HTTP API calls with `X-Api-Key: $HEYGEN_API_KEY` header as documented in the reference files.
@@ -62,9 +60,6 @@ Only use v2/video/generate when user explicitly needs:
 | Check video status / get download URL | `mcp__heygen__get_video` | [video-status.md](references/video-status.md) |
 | Add captions or text overlays | — | [captions.md](references/captions.md), [text-overlays.md](references/text-overlays.md) |
 | Transparent video for compositing | — | [video-generation.md](references/video-generation.md) (WebM section) |
-| Generate standalone TTS audio | `mcp__heygen__text_to_speech` | [text-to-speech.md](references/text-to-speech.md) |
-| List TTS voices | `mcp__heygen__list_audio_voices` | [voices.md](references/voices.md) |
-| Translate/dub existing video | — | [video-translation.md](references/video-translation.md) |
 | Use with Remotion | — | [remotion-integration.md](references/remotion-integration.md) |
 
 ## Reference Files
@@ -93,8 +88,6 @@ Only use v2/video/generate when user explicitly needs:
 
 ### Advanced Features
 - [references/templates.md](references/templates.md) - Template listing and variable replacement
-- [references/video-translation.md](references/video-translation.md) - Translating videos and dubbing
-- [references/text-to-speech.md](references/text-to-speech.md) - Standalone TTS audio with Starfish model
 - [references/photo-avatars.md](references/photo-avatars.md) - Creating avatars from photos
 - [references/webhooks.md](references/webhooks.md) - Webhook endpoints and events
 

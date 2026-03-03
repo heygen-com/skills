@@ -1,11 +1,37 @@
 ---
-name: video-translation
-description: Translating videos, quality/fast modes, and dubbing for HeyGen
+name: video-translate
+description: |
+  Translate and dub existing videos into multiple languages using HeyGen. Use when: (1) Translating a video into another language, (2) Dubbing video content with lip-sync, (3) Creating multi-language versions of existing videos, (4) Audio-only translation without lip-sync, (5) Working with HeyGen's /v2/video_translate endpoint.
+allowed-tools: mcp__heygen__*
+metadata:
+  openclaw:
+    requires:
+      env:
+        - HEYGEN_API_KEY
+    primaryEnv: HEYGEN_API_KEY
 ---
 
-# Video Translation
+# Video Translation (HeyGen)
 
-HeyGen's Video Translation feature allows you to translate and dub existing videos into multiple languages, preserving lip-sync and natural speech patterns.
+Translate and dub existing videos into multiple languages, preserving lip-sync and natural speech patterns. Provide a video URL or HeyGen video ID — no need to create the video on HeyGen first.
+
+## Authentication
+
+All requests require the `X-Api-Key` header. Set the `HEYGEN_API_KEY` environment variable.
+
+```bash
+curl -X POST "https://api.heygen.com/v2/video_translate" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"video_url": "https://example.com/video.mp4", "output_language": "es-ES"}'
+```
+
+## Default Workflow
+
+1. Provide a video URL or HeyGen video ID
+2. Call `POST /v2/video_translate` with the target language
+3. Poll `GET /v2/video_translate/{translate_id}` until status is `completed`
+4. Download the translated video from the returned URL
 
 ## Creating a Translation Job
 
@@ -13,16 +39,16 @@ HeyGen's Video Translation feature allows you to translate and dub existing vide
 
 | Field | Type | Req | Description |
 |-------|------|:---:|-------------|
-| `video_url` | string | ✓* | URL of video to translate (*or `video_id`) |
-| `video_id` | string | ✓* | HeyGen video ID (*or `video_url`) |
-| `output_language` | string | ✓ | Target language code (e.g., "es-ES") |
+| `video_url` | string | Y* | URL of video to translate (*or `video_id`) |
+| `video_id` | string | Y* | HeyGen video ID (*or `video_url`) |
+| `output_language` | string | Y | Target language code (e.g., `"es-ES"`) |
 | `title` | string | | Name for the translated video |
 | `translate_audio_only` | boolean | | Audio only, no lip-sync (faster) |
 | `speaker_num` | number | | Number of speakers in video |
 | `callback_id` | string | | Custom ID for webhook tracking |
 | `callback_url` | string | | URL for completion notification |
 
-**Either** `video_url` **OR** `video_id` must be provided.
+**Either** `video_url` **or** `video_id` must be provided.
 
 ### curl
 
@@ -41,9 +67,9 @@ curl -X POST "https://api.heygen.com/v2/video_translate" \
 
 ```typescript
 interface VideoTranslateRequest {
-  video_url?: string;                          // Required (or video_id)
-  video_id?: string;                           // Required (or video_url)
-  output_language: string;                     // Required
+  video_url?: string;
+  video_id?: string;
+  output_language: string;
   title?: string;
   translate_audio_only?: boolean;
   speaker_num?: number;
@@ -120,24 +146,20 @@ def translate_video(config: dict) -> str:
 
 ## Translation Options
 
-### Basic Translation
-
-Translate video with lip-sync:
+### Basic Translation (with lip-sync)
 
 ```typescript
-const translateConfig = {
+const config = {
   video_url: "https://example.com/original.mp4",
   output_language: "es-ES",
   title: "Spanish Translation",
 };
 ```
 
-### Audio-Only Translation
-
-Keep original video, only translate audio:
+### Audio-Only Translation (faster, no lip-sync)
 
 ```typescript
-const audioOnlyConfig = {
+const config = {
   video_url: "https://example.com/original.mp4",
   output_language: "es-ES",
   translate_audio_only: true,
@@ -146,13 +168,11 @@ const audioOnlyConfig = {
 
 ### Multi-Speaker Videos
 
-Specify number of speakers for better detection:
-
 ```typescript
-const multiSpeakerConfig = {
+const config = {
   video_url: "https://example.com/interview.mp4",
   output_language: "fr-FR",
-  speaker_num: 2, // Two speakers in video
+  speaker_num: 2,
 };
 ```
 
@@ -164,14 +184,13 @@ For more control over translation:
 interface VideoTranslateV4Request {
   input_video_id?: string;
   google_url?: string;
-  output_languages: string[];
+  output_languages: string[];        // Multiple languages in one call
   name: string;
-  srt_key?: string;
+  srt_key?: string;                  // Custom SRT subtitles
   instruction?: string;
-  vocabulary?: string[];
+  vocabulary?: string[];             // Terms to preserve as-is
   brand_voice_id?: string;
   speaker_num?: number;
-  project_id?: string;
   keep_the_same_format?: boolean;
   input_language?: string;
   enable_video_stretching?: boolean;
@@ -185,36 +204,31 @@ interface VideoTranslateV4Request {
 ### Multiple Output Languages
 
 ```typescript
-const multiLanguageConfig = {
+const config = {
   input_video_id: "original_video_id",
   output_languages: ["es-ES", "fr-FR", "de-DE"],
   name: "Multi-language translations",
 };
 ```
 
-### Custom Vocabulary
-
-Preserve specific terms:
+### Custom Vocabulary (preserve specific terms)
 
 ```typescript
-const customVocabConfig = {
+const config = {
   video_url: "https://example.com/product-demo.mp4",
   output_language: "ja-JP",
   vocabulary: ["SuperWidget", "Pro Max", "TechCorp"],
-  // These terms will be kept as-is or transliterated appropriately
 };
 ```
 
-### Using Custom SRT
-
-Provide your own subtitles:
+### Custom SRT Subtitles
 
 ```typescript
-const customSrtConfig = {
+const config = {
   video_url: "https://example.com/video.mp4",
   output_language: "es-ES",
   srt_key: "path/to/custom-subtitles.srt",
-  srt_role: "input", // Use SRT as source transcript
+  srt_role: "input",
 };
 ```
 
@@ -258,11 +272,13 @@ async function getTranslateStatus(translateId: string): Promise<TranslateStatusR
 
 ## Polling for Completion
 
+Translations take longer than standard video generation — allow up to 30 minutes.
+
 ```typescript
 async function waitForTranslation(
   translateId: string,
-  maxWaitMs = 1800000, // 30 minutes (translations can take longer)
-  pollIntervalMs = 30000 // 30 seconds
+  maxWaitMs = 1800000,
+  pollIntervalMs = 30000
 ): Promise<string> {
   const startTime = Date.now();
 
@@ -284,14 +300,13 @@ async function waitForTranslation(
 }
 ```
 
-## Complete Translation Workflow
+## Complete Workflow
 
 ```typescript
 async function translateAndDownload(
   videoUrl: string,
   targetLanguage: string
 ): Promise<string> {
-  // 1. Start translation
   console.log(`Starting translation to ${targetLanguage}...`);
   const translateId = await translateVideo({
     video_url: videoUrl,
@@ -299,7 +314,6 @@ async function translateAndDownload(
   });
   console.log(`Translation ID: ${translateId}`);
 
-  // 2. Wait for completion
   console.log("Processing translation...");
   const translatedVideoUrl = await waitForTranslation(translateId);
   console.log(`Translation complete: ${translatedVideoUrl}`);
@@ -307,7 +321,6 @@ async function translateAndDownload(
   return translatedVideoUrl;
 }
 
-// Usage
 const spanishVideo = await translateAndDownload(
   "https://example.com/my-video.mp4",
   "es-ES"
@@ -316,7 +329,7 @@ const spanishVideo = await translateAndDownload(
 
 ## Batch Translation
 
-Translate to multiple languages:
+Translate to multiple languages in parallel:
 
 ```typescript
 async function translateToMultipleLanguages(
@@ -325,7 +338,6 @@ async function translateToMultipleLanguages(
 ): Promise<Record<string, string>> {
   const results: Record<string, string> = {};
 
-  // Start all translations in parallel
   const translatePromises = targetLanguages.map(async (lang) => {
     const translateId = await translateVideo({
       video_url: sourceVideoUrl,
@@ -336,14 +348,11 @@ async function translateToMultipleLanguages(
 
   const translationJobs = await Promise.all(translatePromises);
 
-  // Wait for all to complete
   for (const job of translationJobs) {
     try {
       const videoUrl = await waitForTranslation(job.translateId);
       results[job.lang] = videoUrl;
-      console.log(`✓ ${job.lang} complete`);
     } catch (error) {
-      console.error(`✗ ${job.lang} failed: ${error.message}`);
       results[job.lang] = `error: ${error.message}`;
     }
   }
@@ -351,61 +360,31 @@ async function translateToMultipleLanguages(
   return results;
 }
 
-// Usage
 const translations = await translateToMultipleLanguages(
   "https://example.com/original.mp4",
   ["es-ES", "fr-FR", "de-DE", "ja-JP"]
 );
 ```
 
-## Video Translation Features
+## Features
 
-### Lip Sync
-
-HeyGen automatically adjusts the speaker's lip movements to match the translated audio, creating a natural-looking result.
-
-### Voice Cloning
-
-The translated audio attempts to match the original speaker's voice characteristics while speaking the target language.
-
-### Music Track Handling
-
-```typescript
-const config = {
-  video_url: "https://example.com/video-with-music.mp4",
-  output_language: "fr-FR",
-  disable_music_track: true, // Remove background music
-};
-```
-
-### Speech Enhancement
-
-```typescript
-const config = {
-  video_url: "https://example.com/video.mp4",
-  output_language: "de-DE",
-  enable_speech_enhancement: true, // Improve audio quality
-};
-```
+- **Lip Sync** — Automatically adjusts speaker's lip movements to match translated audio
+- **Voice Cloning** — Translated audio matches the original speaker's voice characteristics
+- **Music Track Control** — Optionally remove background music with `disable_music_track: true`
+- **Speech Enhancement** — Improve audio quality with `enable_speech_enhancement: true`
 
 ## Best Practices
 
-1. **Source quality matters** - Use high-quality source videos for better results
-2. **Clear audio** - Videos with clear speech translate better
-3. **Single speaker** - Best results with single-speaker content
-4. **Moderate pacing** - Very fast speech may affect quality
-5. **Test first** - Try with shorter clips before translating long videos
-6. **Allow extra time** - Translation takes longer than generation
-
-## Limitations
-
-- Maximum video duration varies by subscription tier
-- Some complex audio scenarios may reduce quality
-- Background noise can affect translation accuracy
-- Processing time is longer than standard video generation
-- Multi-speaker detection has limitations
+1. **Source quality matters** — Use high-quality source videos for better results
+2. **Clear audio** — Videos with clear speech translate better
+3. **Single speaker** — Best results with single-speaker content
+4. **Moderate pacing** — Very fast speech may affect quality
+5. **Test first** — Try with shorter clips before translating long videos
+6. **Allow extra time** — Translation takes longer than video generation (up to 30 min)
 
 ## Error Handling
+
+Common errors and how to handle them:
 
 ```typescript
 async function safeTranslate(
@@ -416,9 +395,6 @@ async function safeTranslate(
     const url = await translateAndDownload(videoUrl, targetLanguage);
     return { success: true, result: url };
   } catch (error) {
-    console.error(`Translation failed: ${error.message}`);
-
-    // Common error handling
     if (error.message.includes("quota")) {
       return { success: false, error: "Insufficient credits" };
     }
@@ -428,7 +404,6 @@ async function safeTranslate(
     if (error.message.includes("format")) {
       return { success: false, error: "Unsupported video format" };
     }
-
     return { success: false, error: error.message };
   }
 }

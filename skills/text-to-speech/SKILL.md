@@ -1,27 +1,56 @@
 ---
 name: text-to-speech
-description: Generate speech audio from text using HeyGen's Starfish TTS model
+description: |
+  Generate speech audio from text using HeyGen's Starfish TTS model. Use when: (1) Generating standalone speech audio files from text, (2) Converting text to speech with voice selection, speed, and pitch control, (3) Creating audio for voiceovers, narration, or podcasts, (4) Working with HeyGen's /v1/audio endpoints, (5) Listing available TTS voices by language or gender.
+allowed-tools: mcp__heygen__*
+metadata:
+  openclaw:
+    requires:
+      env:
+        - HEYGEN_API_KEY
+    primaryEnv: HEYGEN_API_KEY
 ---
 
-# Text-to-Speech (Starfish)
+# Text-to-Speech (HeyGen Starfish)
 
-Generate speech audio files from text using HeyGen's in-house Starfish TTS model. Use this for standalone audio generation — separate from video creation.
+Generate speech audio files from text using HeyGen's in-house Starfish TTS model. This skill is for standalone audio generation — separate from video creation.
 
-## MCP Tools (Preferred)
+## Authentication
 
-If the HeyGen MCP server is connected:
-- **List voices:** `mcp__heygen__list_audio_voices` — filter by type (public/private), language, gender
-- **Generate audio:** `mcp__heygen__text_to_speech` — params: text, voiceId, speed, locale, language
+All requests require the `X-Api-Key` header. Set the `HEYGEN_API_KEY` environment variable.
 
-## List Compatible TTS Voices (Direct API)
+```bash
+curl -X GET "https://api.heygen.com/v1/audio/voices" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+```
+
+## Tool Selection
+
+If HeyGen MCP tools are available (`mcp__heygen__*`), **prefer them** over direct HTTP API calls.
+
+| Task | MCP Tool | Fallback (Direct API) |
+|------|----------|----------------------|
+| List TTS voices | `mcp__heygen__list_audio_voices` | `GET /v1/audio/voices` |
+| Generate speech audio | `mcp__heygen__text_to_speech` | `POST /v1/audio/text_to_speech` |
+
+## Default Workflow
+
+1. List voices with `mcp__heygen__list_audio_voices` (or `GET /v1/audio/voices`)
+2. Pick a voice matching desired language, gender, and features
+3. Call `mcp__heygen__text_to_speech` (or `POST /v1/audio/text_to_speech`) with text and voice_id
+4. Use the returned `audio_url` to download or play the audio
+
+## List TTS Voices
 
 Retrieve voices compatible with the Starfish TTS model.
+
+> **Note:** This uses `GET /v1/audio/voices` — a different endpoint from the video voices API (`GET /v2/voices`). Not all video voices support Starfish TTS.
 
 ### curl
 
 ```bash
 curl -X GET "https://api.heygen.com/v1/audio/voices" \
-  -H "x-api-key: $HEYGEN_API_KEY"
+  -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
 
 ### TypeScript
@@ -35,7 +64,7 @@ interface TTSVoice {
   preview_audio_url: string | null;
   support_pause: boolean;
   support_locale: boolean;
-  type: string;                    // e.g., "public"
+  type: string;
 }
 
 interface TTSVoicesResponse {
@@ -47,7 +76,7 @@ interface TTSVoicesResponse {
 
 async function listTTSVoices(): Promise<TTSVoice[]> {
   const response = await fetch("https://api.heygen.com/v1/audio/voices", {
-    headers: { "x-api-key": process.env.HEYGEN_API_KEY! },
+    headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! },
   });
 
   const json: TTSVoicesResponse = await response.json();
@@ -69,7 +98,7 @@ import os
 def list_tts_voices() -> list:
     response = requests.get(
         "https://api.heygen.com/v1/audio/voices",
-        headers={"x-api-key": os.environ["HEYGEN_API_KEY"]}
+        headers={"X-Api-Key": os.environ["HEYGEN_API_KEY"]}
     )
 
     data = response.json()
@@ -101,8 +130,6 @@ def list_tts_voices() -> list:
 }
 ```
 
-> **Note:** This endpoint returns voices compatible with the Starfish TTS model specifically. For voices used in video generation, see [voices.md](voices.md) which uses `GET /v2/voices`.
-
 ## Generate Speech Audio
 
 Convert text to speech audio using a specified voice.
@@ -115,28 +142,27 @@ Convert text to speech audio using a specified voice.
 
 | Field | Type | Req | Description |
 |-------|------|:---:|-------------|
-| `text` | string | ✓ | Text content to convert to speech |
-| `voice_id` | string | ✓ | Voice ID from `GET /v1/audio/voices` |
-| `speed` | number | | Speech speed, 0.5–1.5 (default: 1) |
+| `text` | string | Y | Text content to convert to speech |
+| `voice_id` | string | Y | Voice ID from `GET /v1/audio/voices` |
+| `speed` | number | | Speech speed, 0.5-1.5 (default: 1) |
 | `pitch` | integer | | Voice pitch, -50 to 50 (default: 0) |
-| `emotion` | string | | Tone: `"Excited"`, `"Friendly"`, `"Serious"`, `"Soothing"`, or `"Broadcaster"` |
 | `locale` | string | | Accent/locale for multilingual voices (e.g., `en-US`, `pt-BR`) |
-| `elevenlabs_settings` | object | | Advanced settings for ElevenLabs voices (see below) |
+| `elevenlabs_settings` | object | | Advanced settings for ElevenLabs voices |
 
 ### ElevenLabs Settings (optional)
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `model` | string | Model selection (`eleven_v3`, `eleven_turbo_v2_5`, etc.) |
-| `similarity_boost` | number | Voice similarity, 0.0–1.0 |
-| `stability` | number | Output consistency, 0.0–1.0 |
-| `style` | number | Style intensity, 0.0–1.0 |
+| `similarity_boost` | number | Voice similarity, 0.0-1.0 |
+| `stability` | number | Output consistency, 0.0-1.0 |
+| `style` | number | Style intensity, 0.0-1.0 |
 
 ### curl
 
 ```bash
 curl -X POST "https://api.heygen.com/v1/audio/text_to_speech" \
-  -H "x-api-key: $HEYGEN_API_KEY" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "Hello! Welcome to our product demo.",
@@ -151,10 +177,9 @@ curl -X POST "https://api.heygen.com/v1/audio/text_to_speech" \
 interface TTSRequest {
   text: string;
   voice_id: string;
-  speed?: number;                     // 0.5–1.5, default 1
-  pitch?: number;                     // -50 to 50, default 0
-  emotion?: "Excited" | "Friendly" | "Serious" | "Soothing" | "Broadcaster";
-  locale?: string;                    // e.g., "en-US", "pt-BR"
+  speed?: number;
+  pitch?: number;
+  locale?: string;
   elevenlabs_settings?: {
     model?: string;
     similarity_boost?: number;
@@ -185,7 +210,7 @@ async function textToSpeech(request: TTSRequest): Promise<TTSResponse["data"]> {
     {
       method: "POST",
       headers: {
-        "x-api-key": process.env.HEYGEN_API_KEY!,
+        "X-Api-Key": process.env.HEYGEN_API_KEY!,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(request),
@@ -213,7 +238,6 @@ def text_to_speech(
     voice_id: str,
     speed: float = 1.0,
     pitch: int = 0,
-    emotion: str | None = None,
     locale: str | None = None,
 ) -> dict:
     payload = {
@@ -223,15 +247,13 @@ def text_to_speech(
         "pitch": pitch,
     }
 
-    if emotion:
-        payload["emotion"] = emotion
     if locale:
         payload["locale"] = locale
 
     response = requests.post(
         "https://api.heygen.com/v1/audio/text_to_speech",
         headers={
-            "x-api-key": os.environ["HEYGEN_API_KEY"],
+            "X-Api-Key": os.environ["HEYGEN_API_KEY"],
             "Content-Type": "application/json",
         },
         json=payload,
@@ -277,14 +299,13 @@ console.log(`Audio URL: ${result.audio_url}`);
 console.log(`Duration: ${result.duration}s`);
 ```
 
-### With Emotion and Speed
+### With Speed Adjustment
 
 ```typescript
 const result = await textToSpeech({
   text: "We're thrilled to announce our newest feature!",
   voice_id: "YOUR_VOICE_ID",
   speed: 1.1,
-  emotion: "Excited",
 });
 ```
 
@@ -302,7 +323,6 @@ const result = await textToSpeech({
 
 ```typescript
 async function generateSpeech(text: string, language: string): Promise<string> {
-  // 1. Find a compatible voice
   const voices = await listTTSVoices();
   const voice = voices.find(
     (v) => v.language.toLowerCase().includes(language.toLowerCase())
@@ -312,7 +332,6 @@ async function generateSpeech(text: string, language: string): Promise<string> {
     throw new Error(`No TTS voice found for language: ${language}`);
   }
 
-  // 2. Generate audio
   const result = await textToSpeech({
     text,
     voice_id: voice.voice_id,
@@ -321,48 +340,27 @@ async function generateSpeech(text: string, language: string): Promise<string> {
   return result.audio_url;
 }
 
-// Usage
-const audioUrl = await generateSpeech(
-  "Hello and welcome!",
-  "english"
-);
+const audioUrl = await generateSpeech("Hello and welcome!", "english");
 ```
 
-### Use TTS Audio in Video Generation
+## Pauses with Break Tags
 
-Generate audio first, then use it as a custom audio track in a video:
+Use SSML-style break tags in your text for pauses:
 
-```typescript
-// 1. Generate TTS audio
-const ttsResult = await textToSpeech({
-  text: "This audio was generated with Starfish TTS.",
-  voice_id: "YOUR_VOICE_ID",
-  emotion: "Friendly",
-});
-
-// 2. Use the audio URL in video generation
-const videoConfig = {
-  video_inputs: [
-    {
-      character: {
-        type: "avatar",
-        avatar_id: "josh_lite3_20230714",
-        avatar_style: "normal",
-      },
-      voice: {
-        type: "audio",
-        audio_url: ttsResult.audio_url, // Use TTS-generated audio
-      },
-    },
-  ],
-};
 ```
+word <break time="1s"/> word
+```
+
+Rules:
+- Use seconds with `s` suffix: `<break time="1.5s"/>`
+- Must have spaces before and after the tag
+- Self-closing tag format
 
 ## Best Practices
 
 1. **Use `GET /v1/audio/voices`** to find compatible voices — not all voices from `GET /v2/voices` support Starfish TTS
 2. **Check `support_locale`** before setting a `locale` — only multilingual voices support locale selection
-3. **Keep speed between 0.8–1.2** for natural-sounding output
+3. **Keep speed between 0.8-1.2** for natural-sounding output
 4. **Preview voices** using the `preview_audio_url` before generating (may be null for some voices)
 5. **Use `word_timestamps`** in the response for caption syncing or timed text overlays
 6. **Use SSML break tags** in your text for pauses: `word <break time="1s"/> word`

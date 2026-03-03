@@ -23,11 +23,29 @@ jobs:
       - name: Login to ClawHub
         run: clawhub login --token "${{ secrets.CLAWHUB_TOKEN }}" --no-browser
 
-      - name: Publish to ClawHub
+      - name: Publish heygen skill
         run: |
           clawhub publish ./skills/heygen \
             --slug video-agent \
             --name "Video Agent" \
             --version 2.${{ github.run_number }}.0 \
             --tags latest,video,heygen,ai-avatar,text-to-video,talking-head,video-generation,avatar,ai-video,digital-human \
+            --changelog "Auto-publish from commit ${{ github.sha }}"
+
+      - name: Publish text-to-speech skill
+        run: |
+          clawhub publish ./skills/text-to-speech \
+            --slug text-to-speech \
+            --name "Text to Speech" \
+            --version 2.${{ github.run_number }}.0 \
+            --tags latest,tts,text-to-speech,heygen,audio,voice,speech,starfish \
+            --changelog "Auto-publish from commit ${{ github.sha }}"
+
+      - name: Publish video-translate skill
+        run: |
+          clawhub publish ./skills/video-translate \
+            --slug video-translate \
+            --name "Video Translate" \
+            --version 2.${{ github.run_number }}.0 \
+            --tags latest,translation,dubbing,heygen,video-translate,localization,lip-sync \
             --changelog "Auto-publish from commit ${{ github.sha }}"

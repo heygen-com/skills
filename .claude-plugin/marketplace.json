@@ -1,0 +1,15 @@
+{
+  "name": "heygen-skills",
+  "owner": {
+    "name": "HeyGen",
+    "url": "https://heygen.com"
+  },
+  "plugins": [
+    {
+      "name": "heygen",
+      "source": "./",
+      "description": "Claude Skills for HeyGen AI video creation, text-to-speech, and video translation",
+      "version": "1.0.0"
+    }
+  ]
+}

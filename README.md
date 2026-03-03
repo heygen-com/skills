@@ -1,29 +1,30 @@
 # HeyGen Skills for Claude Code
 
-A knowledge base of best practices and API documentation for working with the HeyGen AI avatar video creation API, designed for use with Claude Code.
+A collection of skills for working with the HeyGen AI video creation API, designed for use with Claude Code and other skills-compatible agents.
 
-## Overview
+## Skills
 
-This skills package provides Claude Code with domain-specific knowledge about the HeyGen API, enabling it to:
-
-- Generate AI avatar videos with precise control (v2 API)
-- Create videos from simple prompts using Video Agent
-- Optimize prompts for better Video Agent results
-- Work with avatars, voices, and backgrounds
-- Handle video translation and dubbing
-- Manage streaming avatars for real-time interaction
-- Create photo avatars (talking photos)
-- Integrate with Remotion for programmatic video composition
-- Configure webhooks and callbacks
+| Skill | Description |
+|-------|-------------|
+| [heygen](skills/heygen) | Create AI avatar videos with Video Agent or precise v2 API control. Covers avatars, voices, backgrounds, captions, prompts, and Remotion integration |
+| [text-to-speech](skills/text-to-speech) | Generate standalone speech audio from text using HeyGen's Starfish TTS model with voice, speed, pitch, and emotion control |
+| [video-translate](skills/video-translate) | Translate and dub existing videos into 12+ languages with lip-sync, voice cloning, and multi-speaker support |
 
 ## Installation
 
-### Option 1: Using add-skill CLI (Recommended)
-
-Install using the [add-skill](https://github.com/vercel-labs/add-skill) CLI:
+### Option 1: Claude Code Plugin Marketplace
 
 ```bash
-# Install to Claude Code globally
+/plugin marketplace add heygen-com/skills
+/plugin install heygen@heygen-skills
+```
+
+### Option 2: Using add-skill CLI (Recommended for multi-agent)
+
+Install using the [skills](https://github.com/vercel-labs/skills) CLI:
+
+```bash
+# Install all skills globally
 npx skills add heygen-com/skills -a claude-code -g
 
 # Or install to current project only
@@ -31,11 +32,14 @@ npx skills add heygen-com/skills -a claude-code
 
 # List available skills first
 npx skills add heygen-com/skills --list
+
+# Install a specific skill only
+npx skills add heygen-com/skills --skill text-to-speech
 ```
 
-This works with Claude Code, Cursor, Codex, and [13 other agents](https://github.com/vercel-labs/add-skill#available-agents).
+This works with Claude Code, Cursor, Codex, and [other agents](https://github.com/vercel-labs/skills#available-agents).
 
-### Option 2: Manual Installation
+### Option 3: Manual Installation
 
 Clone and symlink to your Claude skills directory:
 
@@ -43,132 +47,81 @@ Clone and symlink to your Claude skills directory:
 # Clone the repository
 git clone https://github.com/heygen-com/skills.git
 
-# Symlink to personal skills (available in all projects)
-ln -s $(pwd)/skills/skills/heygen ~/.claude/skills/heygen
+# Symlink all skills to personal skills directory (available in all projects)
+for skill in skills/skills/*/; do
+  ln -s "$(pwd)/$skill" ~/.claude/skills/$(basename "$skill")
+done
 
 # OR symlink to project skills (available in current project only)
 mkdir -p .claude/skills
-ln -s $(pwd)/skills/skills/heygen .claude/skills/heygen
-```
-
-### Option 3: Direct Copy
-
-Copy the skill directly to your project:
-
-```bash
-git clone https://github.com/heygen-com/skills.git
-mkdir -p .claude/skills
-cp -r skills/skills/heygen .claude/skills/
+for skill in skills/skills/*/; do
+  ln -s "$(pwd)/$skill" .claude/skills/$(basename "$skill")
+done
 ```
 
 ### Verify Installation
 
-The skill should appear when Claude Code loads. You can verify by asking Claude about HeyGen APIs.
+The skills should appear when Claude Code loads. You can verify by asking Claude about HeyGen APIs.
 
 ## Quick Reference
 
-| Task | Reference Files |
-|------|-----------------|
-| Generate video from prompt (easy) | [prompt-optimizer.md](skills/heygen/references/prompt-optimizer.md) → [video-agent.md](skills/heygen/references/video-agent.md) |
-| Generate video with precise control | [video-generation.md](skills/heygen/references/video-generation.md), [avatars.md](skills/heygen/references/avatars.md), [voices.md](skills/heygen/references/voices.md) |
-| Check video status / get download URL | [video-status.md](skills/heygen/references/video-status.md) |
-| Add captions or text overlays | [captions.md](skills/heygen/references/captions.md), [text-overlays.md](skills/heygen/references/text-overlays.md) |
-| Transparent video for compositing | [video-generation.md](skills/heygen/references/video-generation.md) (WebM section) |
-| Real-time interactive avatar | [streaming-avatars.md](skills/heygen/references/streaming-avatars.md) |
-| Translate/dub existing video | [video-translation.md](skills/heygen/references/video-translation.md) |
-| Use with Remotion | [remotion-integration.md](skills/heygen/references/remotion-integration.md) |
+| Task | Skill |
+|------|-------|
+| Generate video from a prompt | `heygen` |
+| Generate video with precise scene control | `heygen` |
+| List avatars and voices | `heygen` |
+| Generate speech audio from text | `text-to-speech` |
+| List TTS voices | `text-to-speech` |
+| Translate/dub an existing video | `video-translate` |
+| Batch translate to multiple languages | `video-translate` |
 
-## Contents
-
-### Foundation
-- **authentication.md** - API key setup and X-Api-Key header
-- **quota.md** - Credit system and usage limits
-- **video-status.md** - Polling patterns and download URLs
-- **assets.md** - Uploading images, videos, audio
-
-### Core Video Creation
-- **avatars.md** - Listing avatars, styles, avatar_id selection
-- **voices.md** - Voice configuration, locales, speed/pitch
-- **scripts.md** - Writing scripts, pauses, pacing
-- **video-generation.md** - Video creation workflow (v2 API)
-- **video-agent.md** - One-shot prompt-to-video generation
-- **prompt-optimizer.md** - Writing effective Video Agent prompts (scene-by-scene structure, timing, visual styles)
-- **dimensions.md** - Resolution and aspect ratios
-
-### Video Customization
-- **backgrounds.md** - Solid colors, images, and video backgrounds
-- **text-overlays.md** - Adding text with fonts and positioning
-- **captions.md** - Auto-generated captions and subtitles
-
-### Advanced Features
-- **templates.md** - Template-based video generation
-- **video-translation.md** - Translation and dubbing
-- **streaming-avatars.md** - Real-time interactive avatars
-- **photo-avatars.md** - Photo-based avatar creation
-- **webhooks.md** - Event notifications
-
-### Integration
-- **remotion-integration.md** - Using HeyGen in Remotion compositions
-
-## Usage
-
-When working with HeyGen code, Claude Code will automatically reference these files to provide accurate, up-to-date guidance.
-
-### Example Prompts
+## Example Prompts
 
 ```
 "Create a 60-second product demo video using the Video Agent API"
 
-"Help me generate a HeyGen video with a custom background"
+"Generate a TTS audio file with an excited female voice"
 
-"How do I list available avatars in HeyGen?"
+"Translate this YouTube video to Spanish and French"
 
-"Create a video translation workflow for Spanish and French"
+"Help me list available HeyGen avatars and pick one for my video"
 
-"Set up webhooks for video completion notifications"
-
-"Use the prompt optimizer to create a scene-by-scene script for my video"
+"Use the prompt optimizer to create a scene-by-scene script"
 ```
-
-### Video Agent Workflow
-
-For quick video generation from a text prompt:
-
-1. Use the **prompt-optimizer.md** guidelines to structure your prompt with scenes, timing, and visual styles
-2. Call the Video Agent API endpoint (`POST /v1/video_agent/generate`)
-3. Poll for status using **video-status.md** patterns
-4. Download the completed video
 
 ## API Reference
 
-The references are based on the HeyGen API documentation:
+All skills use the HeyGen API:
 - Base URL: `https://api.heygen.com`
 - Authentication: `X-Api-Key` header
 - API Versions: v1, v2 (varies by endpoint)
 
 ### Key Endpoints
 
-| Endpoint | Purpose |
-|----------|---------|
-| `POST /v1/video_agent/generate` | One-shot prompt-to-video (Video Agent) |
-| `POST /v2/video/generate` | Precise multi-scene video generation |
-| `GET /v1/video_status.get` | Check video generation status |
-| `GET /v2/avatars` | List available avatars |
-| `GET /v2/voices` | List available voices |
+| Endpoint | Skill | Purpose |
+|----------|-------|---------|
+| `POST /v1/video_agent/generate` | heygen | One-shot prompt-to-video |
+| `POST /v2/video/generate` | heygen | Precise multi-scene video generation |
+| `GET /v1/video_status.get` | heygen | Check video generation status |
+| `GET /v2/avatars` | heygen | List available avatars |
+| `GET /v2/voices` | heygen | List available voices |
+| `POST /v1/audio/text_to_speech` | text-to-speech | Generate speech audio |
+| `GET /v1/audio/voices` | text-to-speech | List TTS-compatible voices |
+| `POST /v2/video_translate` | video-translate | Start video translation |
 
 ## Requirements
 
 - HeyGen API key (get one at [HeyGen Developer Portal](https://app.heygen.com/settings?from=&nav=API))
-- Claude Code CLI
+- Claude Code CLI (or any skills-compatible agent)
 
 ## Contributing
 
-To add or update references:
+To add or update skills:
 
-1. Edit the relevant `.md` file in `skills/heygen/references/`
-2. Update `skills/heygen/SKILL.md` if adding new files
-3. Include both curl and TypeScript/Python examples where applicable
-4. Test that the skill loads correctly
+1. Edit the relevant `SKILL.md` or reference files in `skills/<skill-name>/`
+2. Include curl, TypeScript, and Python examples where applicable
+3. Test that the skill loads correctly
+4. Each skill should be self-contained — no cross-skill dependencies
 
 ## License
 
@@ -179,3 +132,4 @@ MIT
 - [HeyGen API Documentation](https://docs.heygen.com)
 - [HeyGen Developer Portal](https://app.heygen.com/settings?from=&nav=API)
 - [Claude Code Documentation](https://docs.anthropic.com/en/docs/claude-code)
+- [Agent Skills Specification](https://agentskills.io/specification)
