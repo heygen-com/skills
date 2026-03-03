@@ -246,10 +246,11 @@ Once the video is complete, download it. **Important**: The video URL may not be
 
 ```typescript
 import fs from "fs";
+import path from "path";
 
 async function downloadVideoWithRetry(
   videoUrl: string,
-  outputPath: string,
+  outputPath = "./output/video.mp4",
   maxRetries = 5,
   initialDelayMs = 2000
 ): Promise<void> {
@@ -264,7 +265,7 @@ async function downloadVideoWithRetry(
       }
 
       const arrayBuffer = await response.arrayBuffer();
-      fs.writeFileSync(outputPath, Buffer.from(arrayBuffer));
+      fs.writeFileSync(path.resolve(outputPath), Buffer.from(arrayBuffer));
       console.log(`Video downloaded to ${outputPath}`);
       return;
     } catch (error) {
@@ -318,13 +319,13 @@ def download_video_with_retry(
 For quick scripts where you'll retry manually:
 
 ```typescript
-async function downloadVideo(videoUrl: string, outputPath: string) {
+async function downloadVideo(videoUrl: string, outputPath = "./output/video.mp4") {
   const response = await fetch(videoUrl);
   if (!response.ok) {
     throw new Error(`Failed to download: ${response.status}`);
   }
   const arrayBuffer = await response.arrayBuffer();
-  fs.writeFileSync(outputPath, Buffer.from(arrayBuffer));
+  fs.writeFileSync(path.resolve(outputPath), Buffer.from(arrayBuffer));
 }
 ```
 

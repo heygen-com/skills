@@ -51,6 +51,7 @@ curl -X POST "https://upload.heygen.com/v1/asset" \
 
 ```typescript
 import fs from "fs";
+import path from "path";
 
 interface AssetUploadResponse {
   code: number;
@@ -69,7 +70,8 @@ interface AssetUploadResponse {
 }
 
 async function uploadAsset(filePath: string, contentType: string): Promise<AssetUploadResponse["data"]> {
-  const fileBuffer = fs.readFileSync(filePath);
+  const resolvedPath = path.resolve(filePath);
+  const fileBuffer = fs.readFileSync(resolvedPath);
 
   const response = await fetch("https://upload.heygen.com/v1/asset", {
     method: "POST",
@@ -99,11 +101,13 @@ console.log(`Asset URL: ${asset.url}`);
 
 ```typescript
 import fs from "fs";
+import path from "path";
 import { stat } from "fs/promises";
 
 async function uploadLargeAsset(filePath: string, contentType: string): Promise<AssetUploadResponse["data"]> {
-  const fileStats = await stat(filePath);
-  const fileStream = fs.createReadStream(filePath);
+  const resolvedPath = path.resolve(filePath);
+  const fileStats = await stat(resolvedPath);
+  const fileStream = fs.createReadStream(resolvedPath);
 
   const response = await fetch("https://upload.heygen.com/v1/asset", {
     method: "POST",
@@ -174,7 +178,11 @@ If your asset is already hosted online:
 
 ```typescript
 async function uploadFromUrl(sourceUrl: string, contentType: string): Promise<AssetUploadResponse["data"]> {
-  // 1. Download the file
+  // 1. Validate and download the file
+  const url = new URL(sourceUrl);
+  if (url.protocol !== "https:") {
+    throw new Error("Only HTTPS URLs are supported");
+  }
   const sourceResponse = await fetch(sourceUrl);
   const buffer = Buffer.from(await sourceResponse.arrayBuffer());
 

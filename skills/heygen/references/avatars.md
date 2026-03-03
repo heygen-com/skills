@@ -46,18 +46,12 @@ async function listAndPreviewAvatars(openInBrowser = true): Promise<void> {
     console.log(`  Preview: ${avatar.preview_image_url}`);
   }
 
-  // Open preview URLs directly in browser (no download needed)
-  if (openInBrowser) {
-    const { execSync } = require("child_process");
-    for (const avatar of data.avatars.slice(0, 3)) {
-      // 'open' on macOS opens the URL in default browser - doesn't download
-      execSync(`open "${avatar.preview_image_url}"`);
-    }
+  // Preview URLs can be opened directly in any browser
+  for (const avatar of data.avatars.slice(0, 3)) {
+    console.log(`Open in browser: ${avatar.preview_image_url}`);
   }
 }
 ```
-
-**Note:** The `open` command passes the URL to the browser - it does not download. The browser fetches and displays the image directly.
 
 ### Workflow: Preview Before Generate
 

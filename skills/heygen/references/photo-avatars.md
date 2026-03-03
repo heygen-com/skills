@@ -121,6 +121,7 @@ const videoConfig = {
 
 ```typescript
 import fs from "fs";
+import path from "path";
 
 interface AssetUploadResponse {
   code: number;
@@ -149,7 +150,8 @@ async function createPhotoAvatar(
   name: string
 ): Promise<string> {
   // 1. Upload image
-  const fileBuffer = fs.readFileSync(imagePath);
+  const resolvedPath = path.resolve(imagePath);
+  const fileBuffer = fs.readFileSync(resolvedPath);
   const uploadResponse = await fetch("https://upload.heygen.com/v1/asset", {
     method: "POST",
     headers: {
