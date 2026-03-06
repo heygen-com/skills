@@ -11,27 +11,7 @@ Avatars are the AI-generated presenters in HeyGen videos. You can use public ava
 
 Always preview avatars before generating a video to ensure they match user preferences. Each avatar has preview URLs that can be opened directly in the browser - no downloading required.
 
-### Quick Preview: Open URL in Browser (Recommended)
-
-The fastest way to preview avatars is to open the URL directly in the default browser. **Do not download the image first** - just pass the URL to `open`:
-
-```bash
-# macOS: Open URL directly in default browser (no download)
-open "https://files.heygen.ai/avatar/preview/josh.jpg"
-
-# Open preview video to see animation
-open "https://files.heygen.ai/avatar/preview/josh.mp4"
-
-# Linux: Use xdg-open
-xdg-open "https://files.heygen.ai/avatar/preview/josh.jpg"
-
-# Windows: Use start
-start "https://files.heygen.ai/avatar/preview/josh.jpg"
-```
-
-The `open` command on macOS opens URLs directly in the default browser - it does not download the file. This is the quickest way to let users see avatar previews.
-
-### List Avatars and Open Previews
+### List Avatars and Show Previews
 
 ```typescript
 async function listAndPreviewAvatars(openInBrowser = true): Promise<void> {
@@ -56,25 +36,16 @@ async function listAndPreviewAvatars(openInBrowser = true): Promise<void> {
 ### Workflow: Preview Before Generate
 
 1. **List available avatars** - get names, genders, and preview URLs
-2. **Open previews in browser** - `open <preview_image_url>` for quick visual check
+2. **Show preview URLs to user** - share `preview_image_url` for visual check
 3. **User selects** preferred avatar by name or ID
 4. **Get avatar details** for `default_voice_id`
 5. **Generate video** with selected avatar
-
-```bash
-# Example workflow in terminal
-# 1. List avatars (agent shows options)
-# 2. Open preview for candidate
-open "https://files.heygen.ai/avatar/preview/josh.jpg"
-# 3. User says "use Josh"
-# 4. Agent gets details and generates
-```
 
 ### Preview Fields in API Response
 
 | Field | Description |
 |-------|-------------|
-| `preview_image_url` | Static image of the avatar (JPG) - open in browser |
+| `preview_image_url` | Static image of the avatar (JPG) - publicly accessible URL |
 | `preview_video_url` | Short video clip showing avatar animation |
 
 Both URLs are publicly accessible - no authentication needed to view.
@@ -553,7 +524,7 @@ HeyGen avatars fall into distinct categories. Match the category to your use cas
 ### Common Mistakes to Avoid
 
 1. **Using themed avatars for business content** - A holiday-themed avatar looks unprofessional in a product demo
-2. **Not previewing before generation** - Always `open <preview_url>` to verify appearance
+2. **Not previewing before generation** - Always check the preview URL to verify appearance
 3. **Ignoring avatar style** - A `circle` style avatar may not work for full-screen presentations
 4. **Mismatched voice gender** - Always use the avatar's `default_voice_id` or match genders manually
 
