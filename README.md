@@ -4,10 +4,29 @@ A collection of skills for working with the HeyGen AI video creation API, design
 
 ## Skills
 
+### Video Creation
+
 | Skill | Description |
 |-------|-------------|
 | [heygen](skills/heygen) | Create AI avatar videos with Video Agent or precise v2 API control. Covers avatars, voices, backgrounds, captions, prompts, and Remotion integration |
+
+### Media Generation
+
+| Skill | Description |
+|-------|-------------|
+| [generate-video](skills/generate-video) | Generate AI videos from text prompts with multiple provider options (VEO, Kling, Sora, Runway) via the Node Gateway |
+| [faceswap](skills/faceswap) | Swap a face from a source image into a target video using GPU-accelerated AI via the Node Gateway |
+
+### Audio & Speech
+
+| Skill | Description |
+|-------|-------------|
 | [text-to-speech](skills/text-to-speech) | Generate standalone speech audio from text using HeyGen's Starfish TTS model with voice, speed, pitch, and emotion control |
+
+### Translation
+
+| Skill | Description |
+|-------|-------------|
 | [video-translate](skills/video-translate) | Translate and dub existing videos into 12+ languages with lip-sync, voice cloning, and multi-speaker support |
 
 ## Installation
@@ -70,6 +89,8 @@ The skills should appear when Claude Code loads. You can verify by asking Claude
 | Generate video from a prompt | `heygen` |
 | Generate video with precise scene control | `heygen` |
 | List avatars and voices | `heygen` |
+| Generate AI video from a text prompt | `generate-video` |
+| Swap a face into a video | `faceswap` |
 | Generate speech audio from text | `text-to-speech` |
 | List TTS voices | `text-to-speech` |
 | Translate/dub an existing video | `video-translate` |
@@ -84,9 +105,11 @@ The skills should appear when Claude Code loads. You can verify by asking Claude
 
 "Translate this YouTube video to Spanish and French"
 
-"Help me list available HeyGen avatars and pick one for my video"
+"Generate a 10-second video of a drone shot over a city at sunset"
 
-"Use the prompt optimizer to create a scene-by-scene script"
+"Swap my face into this avatar video"
+
+"Help me list available HeyGen avatars and pick one for my video"
 ```
 
 ## API Reference
@@ -108,6 +131,8 @@ All skills use the HeyGen API:
 | `POST /v1/audio/text_to_speech` | text-to-speech | Generate speech audio |
 | `GET /v1/audio/voices` | text-to-speech | List TTS-compatible voices |
 | `POST /v2/video_translate` | video-translate | Start video translation |
+| `POST /v1/nodes/executions` | generate-video, faceswap | Execute a node (video generation, face swap) |
+| `GET /v1/nodes/executions/{id}` | generate-video, faceswap | Check node execution status |
 
 ## Requirements
 
