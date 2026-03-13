@@ -20,6 +20,6 @@
     "talking-head",
     "video-generation",
     "faceswap",
-    "node-gateway"
+    "workflow-gateway"
   ]
 }

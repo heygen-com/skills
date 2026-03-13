@@ -14,8 +14,8 @@ A collection of skills for working with the HeyGen AI video creation API, design
 
 | Skill | Description |
 |-------|-------------|
-| [generate-video](skills/generate-video) | Generate AI videos from text prompts with multiple provider options (VEO, Kling, Sora, Runway) via the Node Gateway |
-| [faceswap](skills/faceswap) | Swap a face from a source image into a target video using GPU-accelerated AI via the Node Gateway |
+| [ai-video-gen](skills/ai-video-gen) | Generate AI videos from text prompts with multiple provider options (VEO, Kling, Sora, Runway) via the Workflow Gateway |
+| [faceswap](skills/faceswap) | Swap a face from a source image into a target video using GPU-accelerated AI via the Workflow Gateway |
 
 ### Audio & Speech
 
@@ -89,7 +89,7 @@ The skills should appear when Claude Code loads. You can verify by asking Claude
 | Generate video from a prompt | `heygen` |
 | Generate video with precise scene control | `heygen` |
 | List avatars and voices | `heygen` |
-| Generate AI video from a text prompt | `generate-video` |
+| Generate AI video from a text prompt | `ai-video-gen` |
 | Swap a face into a video | `faceswap` |
 | Generate speech audio from text | `text-to-speech` |
 | List TTS voices | `text-to-speech` |
@@ -131,8 +131,8 @@ All skills use the HeyGen API:
 | `POST /v1/audio/text_to_speech` | text-to-speech | Generate speech audio |
 | `GET /v1/audio/voices` | text-to-speech | List TTS-compatible voices |
 | `POST /v2/video_translate` | video-translate | Start video translation |
-| `POST /v1/nodes/executions` | generate-video, faceswap | Execute a node (video generation, face swap) |
-| `GET /v1/nodes/executions/{id}` | generate-video, faceswap | Check node execution status |
+| `POST /v1/workflows/executions` | ai-video-gen, faceswap | Execute a workflow (video generation, face swap) |
+| `GET /v1/workflows/executions/{id}` | ai-video-gen, faceswap | Check workflow execution status |
 
 ## Requirements
 
