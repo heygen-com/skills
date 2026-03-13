@@ -7,9 +7,15 @@ This repo contains Claude Code skills for the HeyGen AI video creation API. It i
 ```
 heygen-skills/
 ├── skills/
-│   ├── heygen/                      # Video creation (main skill)
-│   │   ├── SKILL.md                 # Skill manifest + routing table
-│   │   └── references/              # On-demand reference docs
+│   ├── create-video/                # Prompt-based video creation (Video Agent)
+│   │   ├── SKILL.md                 # Skill manifest + workflow
+│   │   └── references/              # Prompt optimizer, visual styles, etc.
+│   ├── avatar-video/                # Precise avatar/scene video creation (v2 API)
+│   │   ├── SKILL.md                 # Skill manifest + workflow
+│   │   └── references/              # Avatars, voices, video-generation, etc.
+│   ├── heygen/                      # [DEPRECATED] Legacy combined skill
+│   │   ├── SKILL.md                 # Deprecation notice + original content
+│   │   └── references/              # Original reference docs
 │   ├── text-to-speech/              # Standalone TTS audio
 │   │   └── SKILL.md                 # Self-contained (no references/)
 │   └── video-translate/             # Video translation & dubbing
@@ -29,7 +35,7 @@ heygen-skills/
 
 1. **Each skill is self-contained.** No cross-skill dependencies. Skills must not reference files in sibling skill directories.
 2. **Split by distinct user intent and output type.** A new skill is warranted when it has a different output type (audio vs video), different API surface, and can stand alone.
-3. **The `heygen` skill is the main skill.** It covers video creation (Video Agent + v2 API), avatars, voices, backgrounds, captions, prompts, and Remotion integration. Shared concepts like avatars and voices live here.
+3. **Video creation is split by intent.** `create-video` covers prompt-based generation (Video Agent API). `avatar-video` covers precise avatar/scene control (v2 API). The legacy `heygen` skill is deprecated.
 4. **Smaller skills inline everything.** `text-to-speech` and `video-translate` have no `references/` directory — all content is in SKILL.md. Only split into references when SKILL.md would exceed ~500 lines.
 5. **Auth is inlined per skill.** Each skill includes a brief authentication section rather than referencing a shared auth file.
 
