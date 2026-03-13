@@ -6,9 +6,11 @@ A collection of skills for working with the HeyGen AI video creation API, design
 
 | Skill | Description |
 |-------|-------------|
-| [heygen](skills/heygen) | Create AI avatar videos with Video Agent or precise v2 API control. Covers avatars, voices, backgrounds, captions, prompts, and Remotion integration |
+| [create-video](skills/create-video) | Create videos from a text prompt — describe what you want and AI handles the rest (Video Agent API) |
+| [avatar-video](skills/avatar-video) | Build videos with precise control over avatars, voices, scripts, scenes, and backgrounds (v2 API) |
 | [text-to-speech](skills/text-to-speech) | Generate standalone speech audio from text using HeyGen's Starfish TTS model with voice, speed, pitch, and emotion control |
 | [video-translate](skills/video-translate) | Translate and dub existing videos into 12+ languages with lip-sync, voice cloning, and multi-speaker support |
+| [heygen](skills/heygen) | *(Deprecated)* Legacy combined skill — use `create-video` or `avatar-video` instead |
 
 ## Installation
 
@@ -34,7 +36,7 @@ npx skills add heygen-com/skills -a claude-code
 npx skills add heygen-com/skills --list
 
 # Install a specific skill only
-npx skills add heygen-com/skills --skill text-to-speech
+npx skills add heygen-com/skills --skill create-video
 ```
 
 This works with Claude Code, Cursor, Codex, and [other agents](https://github.com/vercel-labs/skills#available-agents).
@@ -67,9 +69,9 @@ The skills should appear when Claude Code loads. You can verify by asking Claude
 
 | Task | Skill |
 |------|-------|
-| Generate video from a prompt | `heygen` |
-| Generate video with precise scene control | `heygen` |
-| List avatars and voices | `heygen` |
+| Generate video from a prompt | `create-video` |
+| Generate video with precise scene control | `avatar-video` |
+| List avatars and voices | `avatar-video` |
 | Generate speech audio from text | `text-to-speech` |
 | List TTS voices | `text-to-speech` |
 | Translate/dub an existing video | `video-translate` |
@@ -78,13 +80,15 @@ The skills should appear when Claude Code loads. You can verify by asking Claude
 ## Example Prompts
 
 ```
-"Create a 60-second product demo video using the Video Agent API"
+"Create a 60-second product demo video"
+
+"I need avatar Josh to read this exact script with a blue background"
 
 "Generate a TTS audio file with an excited female voice"
 
 "Translate this YouTube video to Spanish and French"
 
-"Help me list available HeyGen avatars and pick one for my video"
+"Build a 3-scene video: intro, feature demo, and CTA with different backgrounds"
 
 "Use the prompt optimizer to create a scene-by-scene script"
 ```
@@ -100,13 +104,13 @@ All skills use the HeyGen API:
 
 | Endpoint | Skill | Purpose |
 |----------|-------|---------|
-| `POST /v1/video_agent/generate` | heygen | One-shot prompt-to-video |
-| `POST /v2/video/generate` | heygen | Precise multi-scene video generation |
-| `GET /v2/videos/{video_id}` | heygen | Get video details and status |
-| `GET /v2/videos` | heygen | List account videos |
-| `DELETE /v2/videos/{video_id}` | heygen | Delete a video |
-| `GET /v2/avatars` | heygen | List available avatars |
-| `GET /v2/voices` | heygen | List available voices |
+| `POST /v1/video_agent/generate` | create-video | One-shot prompt-to-video |
+| `POST /v2/video/generate` | avatar-video | Precise multi-scene video generation |
+| `GET /v2/videos/{video_id}` | create-video, avatar-video | Get video details and status |
+| `GET /v2/videos` | create-video, avatar-video | List account videos |
+| `DELETE /v2/videos/{video_id}` | create-video, avatar-video | Delete a video |
+| `GET /v2/avatars` | avatar-video | List available avatars |
+| `GET /v2/voices` | avatar-video | List available voices |
 | `POST /v1/audio/text_to_speech` | text-to-speech | Generate speech audio |
 | `GET /v1/audio/voices` | text-to-speech | List TTS-compatible voices |
 | `POST /v2/video_translate` | video-translate | Start video translation |

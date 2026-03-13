@@ -1,7 +1,7 @@
 ---
 name: heygen
 description: |
-  HeyGen AI video creation API. Use when: (1) Using Video Agent for one-shot prompt-to-video generation, (2) Generating AI avatar videos with /v2/video/generate, (3) Working with HeyGen avatars, voices, backgrounds, or captions, (4) Creating transparent WebM videos for compositing, (5) Polling video status or handling webhooks, (6) Integrating HeyGen with Remotion for programmatic video, (7) Creating photo avatars from images.
+  [DEPRECATED] Use `create-video` for prompt-based video generation or `avatar-video` for precise avatar/scene control. This legacy skill combines both workflows — the newer focused skills provide clearer guidance.
 homepage: https://docs.heygen.com/reference/generate-video-agent
 allowed-tools: mcp__heygen__*
 metadata:
@@ -12,7 +12,15 @@ metadata:
     primaryEnv: HEYGEN_API_KEY
 ---
 
-# HeyGen API
+# HeyGen API (Deprecated)
+
+> **This skill is deprecated.** Use the focused skills instead:
+> - **`create-video`** — Generate videos from a text prompt (Video Agent API)
+> - **`avatar-video`** — Build videos with specific avatars, voices, scripts, and scenes (v2 API)
+
+This skill remains for backward compatibility but will be removed in a future release.
+
+---
 
 AI avatar video creation API for generating talking-head videos, explainers, and presentations.
 

@@ -23,14 +23,32 @@ jobs:
       - name: Login to ClawHub
         run: clawhub login --token "${{ secrets.CLAWHUB_TOKEN }}" --no-browser
 
-      - name: Publish heygen skill
+      - name: Publish create-video skill
+        run: |
+          clawhub publish ./skills/create-video \
+            --slug create-video \
+            --name "Create Video" \
+            --version 2.${{ github.run_number }}.0 \
+            --tags latest,video,heygen,text-to-video,video-generation,ai-video,video-agent,prompt-to-video \
+            --changelog "Auto-publish from commit ${{ github.sha }}"
+
+      - name: Publish avatar-video skill
+        run: |
+          clawhub publish ./skills/avatar-video \
+            --slug avatar-video \
+            --name "Avatar Video" \
+            --version 2.${{ github.run_number }}.0 \
+            --tags latest,video,heygen,ai-avatar,talking-head,avatar,digital-human,multi-scene \
+            --changelog "Auto-publish from commit ${{ github.sha }}"
+
+      - name: Publish heygen skill (deprecated)
         run: |
           clawhub publish ./skills/heygen \
             --slug video-agent \
-            --name "Video Agent" \
+            --name "Video Agent (Deprecated)" \
             --version 2.${{ github.run_number }}.0 \
-            --tags latest,video,heygen,ai-avatar,text-to-video,talking-head,video-generation,avatar,ai-video,digital-human \
-            --changelog "Auto-publish from commit ${{ github.sha }}"
+            --tags latest,video,heygen,deprecated \
+            --changelog "Deprecated — use create-video or avatar-video instead"
 
       - name: Publish text-to-speech skill
         run: |
