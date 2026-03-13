@@ -1,7 +1,7 @@
 {
   "name": "heygen",
   "version": "1.0.0",
-  "description": "Create AI avatar videos, generate speech audio, and translate videos with the HeyGen API.",
+  "description": "Create AI avatar videos, generate speech audio, translate videos, and build portable visual design systems with the HeyGen API.",
   "author": {
     "name": "HeyGen",
     "url": "https://heygen.com"
@@ -17,6 +17,8 @@
     "tts",
     "video-translation",
     "text-to-video",
-    "talking-head"
+    "talking-head",
+    "visual-style",
+    "design-system"
   ]
 }

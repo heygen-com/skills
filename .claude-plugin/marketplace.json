@@ -8,7 +8,7 @@
     {
       "name": "heygen",
       "source": "./",
-      "description": "Claude Skills for HeyGen AI video creation, text-to-speech, and video translation",
+      "description": "Claude Skills for HeyGen AI video creation, text-to-speech, video translation, and visual design systems",
       "version": "1.0.0"
     }
   ]

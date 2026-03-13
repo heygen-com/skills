@@ -10,6 +10,7 @@ A collection of skills for working with the HeyGen AI video creation API, design
 | [avatar-video](skills/avatar-video) | Build videos with precise control over avatars, voices, scripts, scenes, and backgrounds (v2 API) |
 | [text-to-speech](skills/text-to-speech) | Generate standalone speech audio from text using HeyGen's Starfish TTS model with voice, speed, pitch, and emotion control |
 | [video-translate](skills/video-translate) | Translate and dub existing videos into 12+ languages with lip-sync, voice cloning, and multi-speaker support |
+| [visual-style](skills/visual-style) | Create, extract, and apply portable visual design systems (`visual-style.md`) across HeyGen, slides, Figma, and more |
 | [heygen](skills/heygen) | *(Deprecated)* Legacy combined skill — use `create-video` or `avatar-video` instead |
 
 ## Installation
@@ -76,6 +77,9 @@ The skills should appear when Claude Code loads. You can verify by asking Claude
 | List TTS voices | `text-to-speech` |
 | Translate/dub an existing video | `video-translate` |
 | Batch translate to multiple languages | `video-translate` |
+| Create a visual design system | `visual-style` |
+| Extract a visual style from a website/video/PDF | `visual-style` |
+| Apply a visual style to HeyGen/slides/Figma | `visual-style` |
 
 ## Example Prompts
 
@@ -91,6 +95,12 @@ The skills should appear when Claude Code loads. You can verify by asking Claude
 "Build a 3-scene video: intro, feature demo, and CTA with different backgrounds"
 
 "Use the prompt optimizer to create a scene-by-scene script"
+
+"Create a visual-style.md for a retro 80s neon aesthetic"
+
+"Extract a visual style from https://stripe.com"
+
+"Apply the Swiss International Style to a HeyGen video about Q4 results"
 ```
 
 ## API Reference

@@ -13,6 +13,9 @@ heygen-skills/
 │   ├── avatar-video/                # Precise avatar/scene video creation (v2 API)
 │   │   ├── SKILL.md                 # Skill manifest + workflow
 │   │   └── references/              # Avatars, voices, video-generation, etc.
+│   ├── visual-style/                # Portable visual design systems
+│   │   ├── SKILL.md                 # Skill manifest + workflow
+│   │   └── references/              # Spec, connectors, extractors, gallery, templates
 │   ├── heygen/                      # [DEPRECATED] Legacy combined skill
 │   │   ├── SKILL.md                 # Deprecation notice + original content
 │   │   └── references/              # Original reference docs
@@ -36,8 +39,9 @@ heygen-skills/
 1. **Each skill is self-contained.** No cross-skill dependencies. Skills must not reference files in sibling skill directories.
 2. **Split by distinct user intent and output type.** A new skill is warranted when it has a different output type (audio vs video), different API surface, and can stand alone.
 3. **Video creation is split by intent.** `create-video` covers prompt-based generation (Video Agent API). `avatar-video` covers precise avatar/scene control (v2 API). The legacy `heygen` skill is deprecated.
-4. **Smaller skills inline everything.** `text-to-speech` and `video-translate` have no `references/` directory — all content is in SKILL.md. Only split into references when SKILL.md would exceed ~500 lines.
-5. **Auth is inlined per skill.** Each skill includes a brief authentication section rather than referencing a shared auth file.
+4. **`visual-style` is a design system skill.** It creates, extracts, and applies portable `visual-style.md` files. It does not require a HeyGen API key — it's a format/workflow skill with connectors for HeyGen, HTML slides, Figma, and paper.design.
+5. **Smaller skills inline everything.** `text-to-speech` and `video-translate` have no `references/` directory — all content is in SKILL.md. Only split into references when SKILL.md would exceed ~500 lines.
+6. **Auth is inlined per skill.** Each skill includes a brief authentication section rather than referencing a shared auth file.
 
 ### Naming Conventions
 
