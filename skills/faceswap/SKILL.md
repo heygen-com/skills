@@ -1,7 +1,7 @@
 ---
 name: faceswap
 description: |
-  Swap faces in a video using AI via the HeyGen API. Use when: (1) Replacing a face in a video with another face, (2) Face swapping from a source image onto a target video, (3) Creating personalized videos by swapping in a person's face, (4) Working with HeyGen's /v1/nodes/executions endpoint for face swap processing.
+  Swap faces in a video using AI via the HeyGen API. Use when: (1) Replacing a face in a video with another face, (2) Face swapping from a source image onto a target video, (3) Creating personalized videos by swapping in a person's face, (4) Working with HeyGen's /v1/workflows/executions endpoint for face swap processing.
 allowed-tools: mcp__heygen__*
 metadata:
   openclaw:
@@ -20,41 +20,41 @@ Swap a face from a source image into a target video using GPU-accelerated AI pro
 All requests require the `X-Api-Key` header. Set the `HEYGEN_API_KEY` environment variable.
 
 ```bash
-curl -X POST "https://api.heygen.com/v1/nodes/executions" \
+curl -X POST "https://api.heygen.com/v1/workflows/executions" \
   -H "X-Api-Key: $HEYGEN_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"node_type": "FaceswapNode", "input": {"source_image_url": "https://example.com/face.jpg", "target_video_url": "https://example.com/video.mp4"}}'
+  -d '{"workflow_type": "FaceswapNode", "input": {"source_image_url": "https://example.com/face.jpg", "target_video_url": "https://example.com/video.mp4"}}'
 ```
 
 ## Default Workflow
 
-1. Call `POST /v1/nodes/executions` with `node_type: "FaceswapNode"`, a source face image, and a target video
+1. Call `POST /v1/workflows/executions` with `workflow_type: "FaceswapNode"`, a source face image, and a target video
 2. Receive a `execution_id` in the response
-3. Poll `GET /v1/nodes/executions/{id}` every 10 seconds until status is `completed`
+3. Poll `GET /v1/workflows/executions/{id}` every 10 seconds until status is `completed`
 4. Use the returned `video_url` from the output
 
 ## Execute Face Swap
 
 ### Endpoint
 
-`POST https://api.heygen.com/v1/nodes/executions`
+`POST https://api.heygen.com/v1/workflows/executions`
 
 ### Request Fields
 
 | Field | Type | Req | Description |
 |-------|------|:---:|-------------|
-| `node_type` | string | Y | Must be `"FaceswapNode"` |
+| `workflow_type` | string | Y | Must be `"FaceswapNode"` |
 | `input.source_image_url` | string | Y | URL of the face image to swap in |
 | `input.target_video_url` | string | Y | URL of the video to apply the face swap to |
 
 ### curl
 
 ```bash
-curl -X POST "https://api.heygen.com/v1/nodes/executions" \
+curl -X POST "https://api.heygen.com/v1/workflows/executions" \
   -H "X-Api-Key: $HEYGEN_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "node_type": "FaceswapNode",
+    "workflow_type": "FaceswapNode",
     "input": {
       "source_image_url": "https://example.com/face-photo.jpg",
       "target_video_url": "https://example.com/original-video.mp4"
@@ -78,14 +78,14 @@ interface ExecuteResponse {
 }
 
 async function faceswap(input: FaceswapInput): Promise<string> {
-  const response = await fetch("https://api.heygen.com/v1/nodes/executions", {
+  const response = await fetch("https://api.heygen.com/v1/workflows/executions", {
     method: "POST",
     headers: {
       "X-Api-Key": process.env.HEYGEN_API_KEY!,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      node_type: "FaceswapNode",
+      workflow_type: "FaceswapNode",
       input,
     }),
   });
@@ -103,7 +103,7 @@ import os
 
 def faceswap(source_image_url: str, target_video_url: str) -> str:
     payload = {
-        "node_type": "FaceswapNode",
+        "workflow_type": "FaceswapNode",
         "input": {
             "source_image_url": source_image_url,
             "target_video_url": target_video_url,
@@ -111,7 +111,7 @@ def faceswap(source_image_url: str, target_video_url: str) -> str:
     }
 
     response = requests.post(
-        "https://api.heygen.com/v1/nodes/executions",
+        "https://api.heygen.com/v1/workflows/executions",
         headers={
             "X-Api-Key": os.environ["HEYGEN_API_KEY"],
             "Content-Type": "application/json",
@@ -138,12 +138,12 @@ def faceswap(source_image_url: str, target_video_url: str) -> str:
 
 ### Endpoint
 
-`GET https://api.heygen.com/v1/nodes/executions/{execution_id}`
+`GET https://api.heygen.com/v1/workflows/executions/{execution_id}`
 
 ### curl
 
 ```bash
-curl -X GET "https://api.heygen.com/v1/nodes/executions/node-gw-f1s2w3p4" \
+curl -X GET "https://api.heygen.com/v1/workflows/executions/node-gw-f1s2w3p4" \
   -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
 
@@ -175,7 +175,7 @@ async function faceswapAndWait(
   const startTime = Date.now();
   while (Date.now() - startTime < maxWaitMs) {
     const response = await fetch(
-      `https://api.heygen.com/v1/nodes/executions/${executionId}`,
+      `https://api.heygen.com/v1/workflows/executions/${executionId}`,
       { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
     );
     const { data } = await response.json();
@@ -201,11 +201,11 @@ async function faceswapAndWait(
 ### Basic Face Swap
 
 ```bash
-curl -X POST "https://api.heygen.com/v1/nodes/executions" \
+curl -X POST "https://api.heygen.com/v1/workflows/executions" \
   -H "X-Api-Key: $HEYGEN_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "node_type": "FaceswapNode",
+    "workflow_type": "FaceswapNode",
     "input": {
       "source_image_url": "https://example.com/headshot.jpg",
       "target_video_url": "https://example.com/presentation.mp4"
@@ -222,10 +222,10 @@ import time
 
 # Step 1: Generate avatar video
 avatar_execution_id = requests.post(
-    "https://api.heygen.com/v1/nodes/executions",
+    "https://api.heygen.com/v1/workflows/executions",
     headers={"X-Api-Key": os.environ["HEYGEN_API_KEY"], "Content-Type": "application/json"},
     json={
-        "node_type": "AvatarInferenceNode",
+        "workflow_type": "AvatarInferenceNode",
         "input": {
             "avatar": {"avatar_id": "Angela-inblackskirt-20220820"},
             "audio_list": [{"audio_url": "https://example.com/speech.mp3"}],
@@ -236,7 +236,7 @@ avatar_execution_id = requests.post(
 # Step 2: Wait for avatar video to complete
 while True:
     status = requests.get(
-        f"https://api.heygen.com/v1/nodes/executions/{avatar_execution_id}",
+        f"https://api.heygen.com/v1/workflows/executions/{avatar_execution_id}",
         headers={"X-Api-Key": os.environ["HEYGEN_API_KEY"]},
     ).json()["data"]
     if status["status"] == "completed":
@@ -258,4 +258,4 @@ faceswap_execution_id = faceswap(
 3. **Source image quality matters** — higher resolution face photos produce better results
 4. **One face per source image** — the source should contain exactly one face to swap in
 5. **Works with any video** — the target video can be an avatar video, a recording, or any video with visible faces
-6. **Chain with other nodes** — generate an avatar video first, then swap in a custom face for personalization
+6. **Chain with other workflows** — generate an avatar video first, then swap in a custom face for personalization
