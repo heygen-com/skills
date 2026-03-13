@@ -274,4 +274,4 @@ const translationConfig = {
 };
 ```
 
-See [video-translation.md](video-translation.md) for more details.
+See the **video-translate** skill for more details on video translation.

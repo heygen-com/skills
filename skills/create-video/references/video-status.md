@@ -491,7 +491,7 @@ async function main() {
 
 ## Alternative: Using Webhooks
 
-Instead of polling, you can use webhooks to receive notifications when videos complete. See [webhooks.md](webhooks.md) for details. Webhooks are ideal for production systems where you don't want to maintain polling connections.
+Instead of polling, you can use webhooks to receive notifications when videos complete. Webhooks are ideal for production systems where you don't want to maintain polling connections.
 
 ## Best Practices
 
