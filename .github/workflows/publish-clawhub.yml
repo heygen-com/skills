@@ -49,3 +49,21 @@ jobs:
             --version 2.${{ github.run_number }}.0 \
             --tags latest,translation,dubbing,heygen,video-translate,localization,lip-sync \
             --changelog "Auto-publish from commit ${{ github.sha }}"
+
+      - name: Publish ai-video-gen skill
+        run: |
+          clawhub publish ./skills/ai-video-gen \
+            --slug ai-video-gen-heygen \
+            --name "AI Video Gen" \
+            --version 2.${{ github.run_number }}.0 \
+            --tags latest,video,heygen,ai,generation,text-to-video,veo,kling,sora,runway,workflow-gateway \
+            --changelog "Auto-publish from commit ${{ github.sha }}"
+
+      - name: Publish faceswap skill
+        run: |
+          clawhub publish ./skills/faceswap \
+            --slug faceswap-heygen \
+            --name "Face Swap" \
+            --version 2.${{ github.run_number }}.0 \
+            --tags latest,faceswap,heygen,face,swap,video,gpu,workflow-gateway \
+            --changelog "Auto-publish from commit ${{ github.sha }}"
