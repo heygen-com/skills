@@ -41,18 +41,37 @@ typography:
     family: "Font Family Name"
     weight: "bold"
     style: "uppercase, tight tracking"
+    size: "48px"
+    line_height: "1.1"
+    letter_spacing: "-0.02em"
   body:
     family: "Font Family Name"
     weight: "regular"
     style: "sentence case, comfortable line height"
+    size: "16px"
+    line_height: "1.6"
+    letter_spacing: "normal"
   caption:
     family: "Font Family Name"
     weight: "medium"
     style: "small, uppercase for labels"
+    size: "12px"
+    line_height: "1.4"
+    letter_spacing: "0.05em"
   rules:
+    - "Type scale: 48px → 32px → 24px → 16px → 12px"
     - "Typography rule or constraint"
-    - "Another typography guideline"
     - "Font usage restriction"
+
+imagery:
+  style: "photographic | illustrated | 3d-rendered | sketch | abstract-geometric | collage | icon-driven"
+  treatment: "how images are cropped, filtered, masked, or framed"
+  subjects:
+    - "common subject matter"
+    - "another subject type"
+  notes:
+    - "observation about visual content"
+    - "what imagery is deliberately absent"
 
 layout:
   grid: "Grid system description (e.g., 12 columns, 8px base unit)"

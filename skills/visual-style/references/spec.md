@@ -71,6 +71,43 @@ display:
   family: "Font Family Name"
   weight: "bold"
   style: "uppercase, tight tracking"
+  size: "48px"
+  line_height: "1.1"
+  letter_spacing: "-0.02em"
+```
+
+| Sub-field | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `family` | string | yes | Font family name with fallbacks (e.g., `"Inter, system-ui, sans-serif"`) |
+| `weight` | string | yes | Font weight — numeric (`"600"`) or named (`"bold"`) |
+| `style` | string | yes | Descriptive style notes (case, tracking description, etc.) |
+| `size` | string | no | Reference font size with unit (e.g., `"48px"`, `"3rem"`) |
+| `line_height` | string | no | Line height as unitless ratio or with unit (e.g., `"1.2"`, `"56px"`) |
+| `letter_spacing` | string | no | Letter spacing / tracking (e.g., `"-0.02em"`, `"0.05em"`, `"normal"`) |
+
+**Note:** `size`, `line_height`, and `letter_spacing` capture the actual computed CSS values. These are critical for faithful style reproduction. Extract them from the site's CSS or computed styles, not approximations.
+
+### Imagery
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `imagery.style` | string | Visual style classification (e.g., `"photographic"`, `"illustrated"`, `"3d-rendered"`, `"sketch"`, `"abstract-geometric"`, `"collage"`, `"pixel-art"`) |
+| `imagery.treatment` | string | How images are treated (e.g., `"full-bleed hero photos"`, `"duotone filter"`, `"rounded corners with shadow"`, `"masked into shapes"`) |
+| `imagery.subjects` | array | Common subject matter (e.g., `"product screenshots"`, `"lifestyle photography"`, `"abstract patterns"`) |
+| `imagery.notes` | array | Additional observations about visual content |
+
+**Imagery example:**
+```yaml
+imagery:
+  style: "photographic with illustrated overlays"
+  treatment: "desaturated photos with gradient overlays, rounded 16px corners"
+  subjects:
+    - "product UI screenshots"
+    - "lifestyle team photography"
+    - "abstract gradient backgrounds"
+  notes:
+    - "No stock photos — all custom photography"
+    - "Illustrations use brand accent colors only"
 ```
 
 ### Layout
@@ -217,18 +254,38 @@ typography:
     family: "Helvetica"
     weight: "bold"
     style: "uppercase or sentence case, tight tracking"
+    size: "72px"
+    line_height: "1.05"
+    letter_spacing: "-0.02em"
   body:
     family: "Helvetica"
     weight: "regular"
     style: "flush left, ragged right, generous leading"
+    size: "16px"
+    line_height: "1.6"
+    letter_spacing: "normal"
   caption:
     family: "Helvetica"
     weight: "light"
     style: "small, uppercase, wide tracking"
+    size: "11px"
+    line_height: "1.4"
+    letter_spacing: "0.1em"
   rules:
     - "Helvetica ONLY — no other typeface"
     - "Type sizes follow a mathematical scale"
     - "Always flush left — never centered"
+
+imagery:
+  style: "abstract-geometric"
+  treatment: "flat geometric shapes, no photography"
+  subjects:
+    - "data visualizations"
+    - "geometric compositions"
+    - "typographic posters"
+  notes:
+    - "Imagery IS the data — charts, grids, counters"
+    - "No photographs or illustrations of people"
 
 layout:
   grid: "Strict modular grid — 12 columns"

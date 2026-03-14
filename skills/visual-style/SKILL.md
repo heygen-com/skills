@@ -39,9 +39,10 @@ Questions to batch:
 
 1. **Receive source** — URL, image, video, or PDF
 2. **Load extractor** — Read the appropriate extractor reference file
-3. **Analyze** — Identify colors, typography, layout, motion, mood
-4. **Generate** — Output complete `visual-style.md` with `source_url` set
-5. **Validate** — Ensure all required fields are present
+3. **Extract raw values** — Pull exact CSS hex codes, font-family names, font-size/line-height/letter-spacing values, and CSS custom properties from the source
+4. **Analyze deeply** — Map extracted values to colors (background, text, accent, neutral), typography (with precise size/line_height/letter_spacing), imagery style classification, layout, motion, and mood
+5. **Generate** — Output complete `visual-style.md` with `source_url` set, exact values, and imagery section
+6. **Validate** — Ensure all required fields are present, colors are exact hex from source, and typography includes measured values
 
 ### Apply
 
