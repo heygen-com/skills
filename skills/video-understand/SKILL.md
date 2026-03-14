@@ -10,15 +10,12 @@ description: |
 
 Understand video content locally using ffmpeg for frame extraction and Whisper for transcription. Fully offline, no API keys required.
 
-## Quick Start
+## Prerequisites
 
-Before first use, verify dependencies are installed:
+- `ffmpeg` + `ffprobe` (required): `brew install ffmpeg`
+- `openai-whisper` (optional, for transcription): `pip install openai-whisper`
 
-```bash
-python3 skills/video-understand/scripts/setup.py
-```
-
-### Basic usage
+## Commands
 
 ```bash
 # Scene detection + transcribe (default)
@@ -92,14 +89,6 @@ The script outputs JSON to stdout (or file with `-o`). See `references/output-fo
 
 Use the Read tool on frame image paths to visually inspect extracted frames.
 
-## Dependencies
-
-- FFmpeg + FFprobe (required, system)
-- openai-whisper (optional, pip -- needed for transcription)
-
-Run `python3 skills/video-understand/scripts/setup.py` to verify and install dependencies.
-
 ## References
 
-- `references/setup-guide.md` -- Installation and Whisper model details
 - `references/output-format.md` -- Full JSON output schema documentation
