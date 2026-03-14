@@ -67,3 +67,12 @@ jobs:
             --version 2.${{ github.run_number }}.0 \
             --tags latest,translation,dubbing,heygen,video-translate,localization,lip-sync \
             --changelog "Auto-publish from commit ${{ github.sha }}"
+
+      - name: Publish auto-edit skill
+        run: |
+          clawhub publish ./skills/auto-edit \
+            --slug auto-edit \
+            --name "Auto Edit" \
+            --version 2.${{ github.run_number }}.0 \
+            --tags latest,video,auto-editor,ffmpeg,whisper,silence-removal,filler-words,local \
+            --changelog "Auto-publish from commit ${{ github.sha }}"

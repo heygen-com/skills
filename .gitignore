@@ -28,6 +28,9 @@ build/
 # Test
 coverage/
 
+# Python
+__pycache__/
+
 # Temporary
 tmp/
 temp/
