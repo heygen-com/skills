@@ -11,6 +11,7 @@ A collection of skills for working with the HeyGen AI video creation API, design
 | [text-to-speech](skills/text-to-speech) | Generate standalone speech audio from text using HeyGen's Starfish TTS model with voice, speed, pitch, and emotion control |
 | [video-translate](skills/video-translate) | Translate and dub existing videos into 12+ languages with lip-sync, voice cloning, and multi-speaker support |
 | [visual-style](skills/visual-style) | Create, extract, and apply portable visual design systems (`visual-style.md`) across HeyGen, slides, Figma, and more |
+| [video-download](skills/video-download) | Download video and audio from YouTube and 1000+ sites using yt-dlp |
 | [heygen](skills/heygen) | *(Deprecated)* Legacy combined skill — use `create-video` or `avatar-video` instead |
 
 ## Installation
@@ -80,6 +81,8 @@ The skills should appear when Claude Code loads. You can verify by asking Claude
 | Create a visual design system | `visual-style` |
 | Extract a visual style from a website/video/PDF | `visual-style` |
 | Apply a visual style to HeyGen/slides/Figma | `visual-style` |
+| Download a video from YouTube or other sites | `video-download` |
+| Extract audio from a video URL | `video-download` |
 
 ## Example Prompts
 

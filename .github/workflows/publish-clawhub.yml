@@ -67,3 +67,12 @@ jobs:
             --version 2.${{ github.run_number }}.0 \
             --tags latest,translation,dubbing,heygen,video-translate,localization,lip-sync \
             --changelog "Auto-publish from commit ${{ github.sha }}"
+
+      - name: Publish video-download skill
+        run: |
+          clawhub publish ./skills/video-download \
+            --slug video-download \
+            --name "Video Download" \
+            --version 2.${{ github.run_number }}.0 \
+            --tags latest,video,yt-dlp,download,youtube,audio,local \
+            --changelog "Auto-publish from commit ${{ github.sha }}"
