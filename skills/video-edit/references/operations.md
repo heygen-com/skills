@@ -1,6 +1,31 @@
 # Operations Reference
 
-Complete reference for every operation supported by `edit_video.py`.
+Detailed ffmpeg recipes for every operation. Each section shows the command, explains key flags, and lists common variations.
+
+---
+
+## info
+
+Get full metadata about a video file using ffprobe.
+
+```bash
+ffprobe -v quiet -print_format json -show_format -show_streams video.mp4
+```
+
+**Key flags:**
+- `-v quiet` — suppress banner/log noise, output only the requested data.
+- `-print_format json` — output as JSON (easy to parse). Also accepts `csv`, `flat`, `ini`.
+- `-show_format` — container-level info: duration, bitrate, format name, size.
+- `-show_streams` — per-stream info: codec, resolution, frame rate, sample rate, channels.
+
+**Variations:**
+```bash
+# Duration only (seconds, as plain text)
+ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 video.mp4
+
+# Resolution only
+ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 video.mp4
+```
 
 ---
 
@@ -8,18 +33,25 @@ Complete reference for every operation supported by `edit_video.py`.
 
 Cut a segment from a video using stream copy (no re-encoding, very fast).
 
-```
-edit_video.py trim <input> --start <time> [--end <time> | --duration <seconds>] [-o <output>]
+```bash
+ffmpeg -y -ss 00:00:30 -to 00:01:45 -i video.mp4 -c copy trimmed.mp4
 ```
 
-| Flag | Description | Example |
-|------|-------------|---------|
-| `--start` | Start timestamp (required) | `00:01:30`, `90`, `1:30` |
-| `--end` | End timestamp | `00:02:00`, `120` |
-| `--duration` | Duration in seconds (alternative to `--end`) | `30`, `45.5` |
-| `-o` | Output path (optional, auto-generated if omitted) | `clip.mp4` |
+**Key flags:**
+- `-ss <time>` — seek to start position. Placed before `-i` for fast input seeking.
+- `-to <time>` — stop at this timestamp (absolute). Alternative: `-t <duration>` for relative duration.
+- `-c copy` — copy streams without re-encoding. Fast but cuts only on keyframes (may be off by a few frames).
 
-Timestamps accept: `HH:MM:SS`, `MM:SS`, or raw seconds (integer or float).
+**Timestamps** accept `HH:MM:SS`, `HH:MM:SS.mmm`, `MM:SS`, or raw seconds (`90`, `90.5`).
+
+**Variations:**
+```bash
+# By duration instead of end time
+ffmpeg -y -ss 00:00:30 -t 75 -i video.mp4 -c copy trimmed.mp4
+
+# Frame-accurate trim (re-encodes, slower but exact)
+ffmpeg -y -ss 00:00:30 -to 00:01:45 -i video.mp4 -c:v libx264 -c:a aac trimmed.mp4
+```
 
 ---
 
@@ -27,33 +59,57 @@ Timestamps accept: `HH:MM:SS`, `MM:SS`, or raw seconds (integer or float).
 
 Join multiple video files into a single file.
 
-```
-edit_video.py concat <input1> <input2> [<input3> ...] [-o <output>]
+```bash
+# Step 1: Create a concat list file
+printf "file '%s'\n" clip1.mp4 clip2.mp4 clip3.mp4 > list.txt
+
+# Step 2: Concat with stream copy
+ffmpeg -y -f concat -safe 0 -i list.txt -c copy joined.mp4
 ```
 
-All inputs should share the same codec, resolution, and frame rate for best results. Uses the ffmpeg concat demuxer with stream copy.
+**Key flags:**
+- `-f concat` — use the concat demuxer.
+- `-safe 0` — allow absolute paths in the file list.
+- `-c copy` — copy streams without re-encoding. Requires all inputs to share the same codec, resolution, and frame rate.
+
+**Variations:**
+```bash
+# Re-encode to normalize mismatched clips (slower)
+ffmpeg -y -f concat -safe 0 -i list.txt -c:v libx264 -c:a aac joined.mp4
+
+# Inline concat without a file (only for same-format files)
+ffmpeg -y -i "concat:part1.ts|part2.ts" -c copy joined.ts
+```
 
 ---
 
 ## resize
 
-Resize a video to specific dimensions or a social-media platform preset.
+Resize a video to specific dimensions with aspect-ratio-preserving padding.
 
+```bash
+ffmpeg -y -i video.mp4 \
+  -vf "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black" \
+  -c:a copy resized.mp4
 ```
-edit_video.py resize <input> (--target <preset> | --width <w> --height <h>) [-o <output>]
+
+**Key flags:**
+- `-vf` — video filter chain.
+- `scale=W:H:force_original_aspect_ratio=decrease` — scale down to fit within WxH, preserving aspect ratio.
+- `pad=W:H:(ow-iw)/2:(oh-ih)/2:black` — pad to exact WxH with centered black bars.
+- `-c:a copy` — copy audio without re-encoding.
+
+**Variations:**
+```bash
+# Scale to width, auto-calculate height (maintains aspect ratio)
+ffmpeg -y -i video.mp4 -vf "scale=1280:-2" -c:a copy resized.mp4
+
+# Scale to height, auto-calculate width
+ffmpeg -y -i video.mp4 -vf "scale=-2:720" -c:a copy resized.mp4
+
+# Custom dimensions without padding (stretches)
+ffmpeg -y -i video.mp4 -vf "scale=1280:720" -c:a copy resized.mp4
 ```
-
-### Platform presets
-
-| Preset | Resolution | Aspect Ratio |
-|--------|-----------|--------------|
-| `tiktok` | 1080 x 1920 | 9:16 |
-| `youtube` | 1920 x 1080 | 16:9 |
-| `square` | 1080 x 1080 | 1:1 |
-| `instagram` | 1080 x 1350 | 4:5 |
-| `twitter` | 1920 x 1080 | 16:9 |
-
-Videos are scaled to fit within the target dimensions and padded with black bars to preserve aspect ratio (no stretching).
 
 ---
 
@@ -61,13 +117,26 @@ Videos are scaled to fit within the target dimensions and padded with black bars
 
 Change playback speed of both video and audio.
 
-```
-edit_video.py speed <input> --factor <float> [-o <output>]
+```bash
+# 2x faster
+ffmpeg -y -i video.mp4 -filter:v "setpts=0.5*PTS" -filter:a "atempo=2.0" fast.mp4
+
+# Half speed (slow motion)
+ffmpeg -y -i video.mp4 -filter:v "setpts=2.0*PTS" -filter:a "atempo=0.5" slow.mp4
 ```
 
-- `--factor 2.0` = 2x faster (half duration)
-- `--factor 0.5` = half speed (double duration)
-- Audio pitch is preserved via the `atempo` filter. Factors outside 0.5-2.0 are handled by chaining multiple `atempo` stages.
+**Key flags:**
+- `-filter:v "setpts=N*PTS"` — multiply presentation timestamps. `0.5` = 2x faster, `2.0` = half speed. Formula: `N = 1 / speed_factor`.
+- `-filter:a "atempo=F"` — adjust audio speed. Preserves pitch. Only supports values between 0.5 and 2.0.
+
+**For factors outside 0.5-2.0**, chain multiple atempo filters:
+```bash
+# 4x faster
+ffmpeg -y -i video.mp4 -filter:v "setpts=0.25*PTS" -filter:a "atempo=2.0,atempo=2.0" fast4x.mp4
+
+# 0.25x (very slow)
+ffmpeg -y -i video.mp4 -filter:v "setpts=4.0*PTS" -filter:a "atempo=0.5,atempo=0.5" slow025x.mp4
+```
 
 ---
 
@@ -75,11 +144,34 @@ edit_video.py speed <input> --factor <float> [-o <output>]
 
 Extract the audio track from a video file.
 
-```
-edit_video.py extract-audio <input> [--format mp3|wav|aac|flac] [-o <output>]
+```bash
+ffmpeg -y -i video.mp4 -vn -acodec libmp3lame audio.mp3
 ```
 
-Default format is `mp3`.
+**Key flags:**
+- `-vn` — disable video (audio only output).
+- `-acodec <codec>` — audio codec to use.
+
+**Audio codec map:**
+
+| Format | Codec flag       |
+|--------|------------------|
+| mp3    | `libmp3lame`     |
+| wav    | `pcm_s16le`      |
+| aac    | `aac`            |
+| flac   | `flac`           |
+
+**Variations:**
+```bash
+# Extract as WAV (lossless)
+ffmpeg -y -i video.mp4 -vn -acodec pcm_s16le audio.wav
+
+# Extract as AAC
+ffmpeg -y -i video.mp4 -vn -acodec aac audio.aac
+
+# Copy audio codec as-is (fastest, keeps original format)
+ffmpeg -y -i video.mp4 -vn -acodec copy audio.aac
+```
 
 ---
 
@@ -87,11 +179,27 @@ Default format is `mp3`.
 
 Replace a video's audio track with a different audio file.
 
-```
-edit_video.py replace-audio <video> <audio> [-o <output>]
+```bash
+ffmpeg -y -i video.mp4 -i audio.mp3 -c:v copy -map 0:v:0 -map 1:a:0 -shortest output.mp4
 ```
 
-The video stream is copied without re-encoding. `--shortest` is used so the output matches the shorter of the two inputs.
+**Key flags:**
+- `-i video.mp4 -i audio.mp3` — two inputs: video (index 0) and audio (index 1).
+- `-c:v copy` — copy video stream without re-encoding.
+- `-map 0:v:0` — take video from the first input.
+- `-map 1:a:0` — take audio from the second input.
+- `-shortest` — stop when the shorter input ends.
+
+**Variations:**
+```bash
+# Remove audio entirely (silent video)
+ffmpeg -y -i video.mp4 -c:v copy -an silent.mp4
+
+# Mix original audio with new audio (overlay, not replace)
+ffmpeg -y -i video.mp4 -i music.mp3 \
+  -filter_complex "[0:a][1:a]amix=inputs=2:duration=first[a]" \
+  -map 0:v -map "[a]" -c:v copy mixed.mp4
+```
 
 ---
 
@@ -99,59 +207,114 @@ The video stream is copied without re-encoding. `--shortest` is used so the outp
 
 Add an image overlay (watermark, logo) on top of a video.
 
+```bash
+# Bottom-right corner (10px padding)
+ffmpeg -y -i video.mp4 -i logo.png \
+  -filter_complex "overlay=W-w-10:H-h-10" -c:a copy watermarked.mp4
 ```
-edit_video.py overlay <video> <image> [--position <pos>] [--opacity <0.0-1.0>] [-o <output>]
+
+**Key flags:**
+- `-filter_complex "overlay=X:Y"` — position the overlay image at coordinates X,Y.
+- `-c:a copy` — copy audio without re-encoding.
+
+**Position expressions:**
+
+| Position     | Expression              |
+|--------------|-------------------------|
+| Top-left     | `overlay=10:10`         |
+| Top-right    | `overlay=W-w-10:10`     |
+| Bottom-left  | `overlay=10:H-h-10`    |
+| Bottom-right | `overlay=W-w-10:H-h-10` |
+| Center       | `overlay=(W-w)/2:(H-h)/2` |
+
+`W`/`H` = video dimensions, `w`/`h` = overlay image dimensions.
+
+**Variations:**
+```bash
+# With opacity (semi-transparent watermark)
+ffmpeg -y -i video.mp4 -i logo.png \
+  -filter_complex "[1:v]format=rgba,colorchannelmixer=aa=0.5[ovr];[0:v][ovr]overlay=W-w-10:10" \
+  -c:a copy watermarked.mp4
+
+# Overlay only during a time range (show from 5s to 15s)
+ffmpeg -y -i video.mp4 -i logo.png \
+  -filter_complex "overlay=10:10:enable='between(t,5,15)'" -c:a copy watermarked.mp4
 ```
-
-### Positions
-
-| Name | Location |
-|------|----------|
-| `top-left` | 10px from top-left corner |
-| `top-right` | 10px from top-right corner |
-| `bottom-left` | 10px from bottom-left corner |
-| `bottom-right` | 10px from bottom-right corner (default) |
-| `center` | Centered in frame |
-
-Opacity defaults to 1.0 (fully opaque).
 
 ---
 
 ## compress
 
-Reduce video file size via bitrate targeting or CRF.
+Reduce video file size.
 
+### CRF-based (simple, recommended)
+
+```bash
+ffmpeg -y -i video.mp4 -crf 23 -preset medium -c:a copy compressed.mp4
 ```
-edit_video.py compress <input> (--target-size <size> | --crf <int>) [-o <output>]
+
+**Key flags:**
+- `-crf <int>` — Constant Rate Factor. Lower = better quality, larger file. 0 = lossless, 18 = visually lossless, 23 = default, 28 = smaller/lower quality.
+- `-preset <speed>` — encoding speed/compression tradeoff: `ultrafast`, `superfast`, `veryfast`, `faster`, `fast`, `medium`, `slow`, `slower`, `veryslow`. Slower = smaller file at same quality.
+- `-c:a copy` — copy audio as-is.
+
+### Target file size
+
+To hit a specific file size, calculate the required video bitrate:
+
+```bash
+# Formula: video_bitrate = (target_MB * 8 * 1024) / duration_seconds - audio_bitrate
+# Example: 25MB target, 120s video, 128kbps audio
+# video_bitrate = (25 * 8 * 1024) / 120 - 128 = 1578 kbps
+
+ffmpeg -y -i video.mp4 \
+  -b:v 1578k -maxrate 1578k -bufsize 3156k \
+  -c:a aac -b:a 128k \
+  compressed.mp4
 ```
 
-- `--target-size` accepts values like `25MB`, `10mb`, `500KB`.
-- `--crf` accepts an integer (lower = better quality, larger file). Default: 23. Typical range: 18-28.
+**Variations:**
+```bash
+# Aggressive compression (smaller, lower quality)
+ffmpeg -y -i video.mp4 -crf 28 -preset slow -c:a copy small.mp4
 
-When using `--target-size`, the tool calculates the required bitrate from the video duration and allocates 128 kbps for audio.
+# High quality (larger file)
+ffmpeg -y -i video.mp4 -crf 18 -preset slow -c:a copy hq.mp4
+```
 
 ---
 
 ## convert
 
-Convert a video to a different container or format.
+Convert a video to a different container format.
 
-```
-edit_video.py convert <input> --format <fmt> [-o <output>]
-```
-
-Supported formats: `mp4`, `mov`, `avi`, `mkv`, `webm`, `gif`.
-
-GIF conversion uses a two-pass palette approach for high quality output, scaled to 480px wide at 15 fps.
-
----
-
-## info
-
-Display detailed metadata about a video file.
-
-```
-edit_video.py info <input>
+```bash
+ffmpeg -y -i video.mov output.mp4
 ```
 
-Returns JSON with: duration, resolution, video codec, audio codec, bitrate, frame rate, and file size.
+ffmpeg infers the output format from the file extension. For most conversions, this is all you need.
+
+**Supported formats:** mp4, mov, avi, mkv, webm, gif.
+
+### GIF conversion (high quality, two-pass palette)
+
+```bash
+# Step 1: Generate optimized palette
+ffmpeg -y -i video.mp4 -vf "fps=15,scale=480:-1:flags=lanczos,palettegen" palette.png
+
+# Step 2: Use palette for high-quality GIF
+ffmpeg -y -i video.mp4 -i palette.png \
+  -filter_complex "fps=15,scale=480:-1:flags=lanczos[x];[x][1:v]paletteuse" output.gif
+
+# Clean up
+rm palette.png
+```
+
+**Variations:**
+```bash
+# Quick GIF (lower quality, single pass)
+ffmpeg -y -i video.mp4 -vf "fps=10,scale=320:-1" output.gif
+
+# Convert to WebM (VP9)
+ffmpeg -y -i video.mp4 -c:v libvpx-vp9 -crf 30 -b:v 0 -c:a libopus output.webm
+```
