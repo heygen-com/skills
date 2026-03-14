@@ -67,3 +67,12 @@ jobs:
             --version 2.${{ github.run_number }}.0 \
             --tags latest,translation,dubbing,heygen,video-translate,localization,lip-sync \
             --changelog "Auto-publish from commit ${{ github.sha }}"
+
+      - name: Publish video-understand skill
+        run: |
+          clawhub publish ./skills/video-understand \
+            --slug video-understand \
+            --name "Video Understand" \
+            --version 2.${{ github.run_number }}.0 \
+            --tags latest,video,ffmpeg,whisper,transcription,frame-extraction,local,offline \
+            --changelog "Auto-publish from commit ${{ github.sha }}"
