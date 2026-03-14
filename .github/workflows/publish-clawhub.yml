@@ -67,3 +67,12 @@ jobs:
             --version 2.${{ github.run_number }}.0 \
             --tags latest,translation,dubbing,heygen,video-translate,localization,lip-sync \
             --changelog "Auto-publish from commit ${{ github.sha }}"
+
+      - name: Publish video-edit skill
+        run: |
+          clawhub publish ./skills/video-edit \
+            --slug video-edit \
+            --name "Video Edit" \
+            --version 2.${{ github.run_number }}.0 \
+            --tags latest,video,ffmpeg,editing,trim,resize,compress,convert,local \
+            --changelog "Auto-publish from commit ${{ github.sha }}"
