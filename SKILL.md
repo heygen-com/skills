@@ -235,55 +235,44 @@ Proceed to Phase 3.5.
 
 ## Phase 3.5 — Prompt Review (Quality Gate)
 
-Before sending the prompt to the API, validate it. This is the last chance to catch structural problems that produce mediocre videos.
+Before sending the prompt to the API, get a **second opinion from an independent reviewer**. This is not self-review. This is a separate agent with fresh eyes evaluating the prompt objectively.
 
-### Step 1: Run the Validator
+### Step 1: Spawn a Review Sub-Agent
 
-Save the constructed prompt to a temp file and run:
+Use `sessions_spawn` to run a reviewer sub-agent. The reviewer MUST be a flagship model (never an inferior model). Read the reviewer instructions from `{baseDir}/references/reviewer-prompt.md` and include them as the task, followed by the constructed prompt.
+
+```
+Task for reviewer:
+[contents of references/reviewer-prompt.md]
+
+---
+PROMPT TO REVIEW:
+[the full constructed prompt]
+```
+
+The reviewer will return a verdict: APPROVE, REVISE, or REJECT with a score out of 10, specific strengths, issues, and (if REVISE) a revised prompt ready to use.
+
+### Step 2: Handle the Review
+
+**APPROVE (score 8+):** The prompt is ready. Proceed to Phase 4.
+
+**REVISE (score 5-7):** The reviewer found issues and provided a revised prompt. Use the reviewer's revised version directly. Do not second-guess the reviewer.
+
+**REJECT (score <5):** Fundamental problems. Go back to Phase 3, address the reviewer's specific issues, reconstruct the prompt, and re-submit for review. Do not generate with a rejected prompt.
+
+### Step 3: If sessions_spawn is not available
+
+If you cannot spawn a sub-agent (e.g., tool not available), fall back to the structural validator script:
 
 ```bash
 echo "$PROMPT" | scripts/heygen-validate-prompt.sh
 ```
 
-The script returns JSON:
-```json
-{
-  "pass": true,
-  "score": 7,
-  "max_score": 7,
-  "issues": []
-}
-```
-
-### Step 2: Handle Results
-
-**If any FAIL issues exist:** Fix them before proceeding. Common fixes:
-- `scene_structure` FAIL → Restructure the prompt into Scene 1/Scene 2 format with Visual + VO + Duration per scene. Never send a flat paragraph.
-
-**If WARN issues exist:** Fix them to improve quality. Common fixes:
-- `style_block` missing → Add the visual style block (colors, style descriptor, font preferences). Default to minimalistic blue/black/white if user didn't specify.
-- `media_types` missing → Add media type per scene using the decision matrix from Phase 3. Label each scene's visual as Motion Graphics, Stock Media, or AI Generated.
-- `scene_duration` missing → Add `Duration: Xs` to every scene.
-- `word_count` over budget → Cut words. Ruthlessly. Remove filler, combine sentences, trim adjectives. 150 words/min is the ceiling.
-- `negative_constraints` found → Remove "No text-on-screen overlays" and "No stock footage transitions" unless the user explicitly asked for a minimal/clean look.
-
-**If INFO issues exist:** Consider fixing for polish.
-- `opening_hook` → Shorten Scene 1 to under 10 seconds. Front-load the most compelling statement.
-
-After fixing, re-run the validator to confirm. Loop until no FAILs remain.
-
-### Step 3: Self-Review Checklist
-
-After the validator passes, do a quick producer-eye review:
-
-1. **Is the opening hook compelling?** The first scene should grab attention, not set context. "Stop scrolling" beats "In today's digital landscape." If it reads like an essay intro, rewrite it.
-2. **Does each scene use the right media type?** Cross-check against the decision matrix in Phase 3. Data/stats → Motion Graphics. Real environments → Stock. Abstract concepts → AI Generated. Don't default everything to one type.
-3. **Is the tone consistent throughout?** Read the VO lines back-to-back. Does it sound like one narrator or three different writers? Smooth transitions between scenes.
-4. **Would a real video producer approve this prompt?** If you handed this to a human producer, would they say "ship it" or "needs work"? Be honest. If it's mid, fix it.
+This is the minimum quality gate. It checks 7 structural elements (scene structure, style block, media types, duration, word count, negative constraints, opening hook) and returns pass/fail with issues. Fix any FAILs and WARNs before proceeding.
 
 ### Step 4: Production Review Report
 
-Present a professional review summary to the user. This should feel like a real production team signed off on the work.
+Present the reviewer's assessment to the user. This should feel like a real production team reviewed and signed off on the work. Include the reviewer's score, strengths, and any revisions made.
 
 ```
 📋 **Production Review**
@@ -305,7 +294,11 @@ Present a professional review summary to the user. This should feel like a real 
 **Revisions:** [specific changes, e.g. "Restructured from flat paragraph → 6 scenes · Added style block (minimalistic, blue/white) · Assigned Motion Graphics to Scene 3 for data visualization · Tightened opening from 12s → 6s"]
 
 [If there's a suggestion the producer would make:]
-**Producer note:** [e.g. "Scene 4 covers a lot of ground in 15s — consider splitting into two scenes for better pacing" or "The CTA could be stronger — try ending with a specific action rather than a general invitation"]
+**Reviewer verdict:** [APPROVE/REVISE] — [score]/10
+**Reviewer notes:** [e.g. "Strong hook, good media type variety. Tightened Scene 4 pacing, switched Scene 5 from AI Generated to Stock for authenticity."]
+
+[If revisions were applied:]
+**Revisions applied:** [specific changes from reviewer]
 
 Ready to generate. Proceeding to render.
 ```
