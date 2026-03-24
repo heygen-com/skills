@@ -338,33 +338,59 @@ On success, **immediately share the Video Agent session URL** so the user can fo
 Video submitted! You can watch the production progress live:
 🔗 https://app.heygen.com/video-agent/<session_id>
 
-I'll monitor the render and let you know when it's done.
+I'll notify you automatically when it's ready.
 ```
 
-The session URL is available instantly, before the video finishes. The user can see scene planning, asset selection, and rendering in real-time.
+The session URL is available instantly. The user can watch scene planning, asset selection, and rendering in real-time while they do other things.
 
-Move to polling.
+### Delivery: Fire-and-Forget + Scheduled Check
 
-### Status Polling
+Do NOT block the session with a polling loop. Instead, schedule asynchronous checks using cron:
 
-Run `scripts/heygen-poll.sh`:
+**Step 1: Schedule the first check**
+
+Use the `cron` tool to schedule a one-shot check ~2 minutes after generation:
+
+```
+cron add:
+  name: "heygen-video-check-<video_id>"
+  schedule: { kind: "at", at: "<ISO timestamp ~2 min from now>" }
+  payload: {
+    kind: "agentTurn",
+    message: "Check HeyGen video status for video_id=<video_id>. Session URL: https://app.heygen.com/video-agent/<session_id>. Video page: https://app.heygen.com/videos/<video_id>. Run: curl -s -H 'X-Api-Key: $HEYGEN_API_KEY' 'https://api.heygen.com/v1/video_status.get?video_id=<video_id>' — if status is 'completed', send the user the video page URL and congratulate them. If still processing, schedule ONE more check in 60 seconds using cron (same pattern). If failed, tell the user and suggest re-generating. Max 3 total checks. After 3 checks if still not done, send the session URL and tell user to check manually."
+  }
+  delivery: { mode: "announce", channel: "telegram" }
+  sessionTarget: "isolated"
+```
+
+**Step 2: Cleanup rule (CRITICAL)**
+
+Every scheduled check MUST include these safeguards:
+- **Max 3 checks total.** Include a counter in the cron message (e.g., "This is check 2/3"). After check 3, stop scheduling and send the session URL as fallback.
+- **30-minute hard deadline.** When scheduling any check, calculate if it would fire more than 30 minutes after the original generation. If yes, don't schedule it. Send the fallback instead.
+- **Remove the cron job after it fires.** One-shot `at` jobs auto-remove, but verify no orphans remain.
+
+**Step 3: Tell the user the session is free**
+
+After scheduling the check, the agent session is unblocked. The user can keep chatting, ask for another video, or do anything else. The delivery happens asynchronously when the cron fires.
+
+```
+Your video is generating! I've set up automatic delivery.
+
+🔗 Watch live: https://app.heygen.com/video-agent/<session_id>
+
+I'll send you the finished video when it's ready (usually 1-3 minutes). You're free to keep chatting in the meantime.
+```
+
+### Fallback: Inline Polling (if cron unavailable)
+
+If the `cron` tool is not available, fall back to the polling script:
 
 ```bash
-scripts/heygen-poll.sh <video_id>
+scripts/heygen-poll.sh <video_id> --timeout 300 --interval 30
 ```
 
-The script polls every 30s and outputs status updates. It handles:
-- Automatic retry on transient errors
-- Timeout after 10 minutes
-- Returns video URL on completion
-
-**While polling:** Send a brief update every ~90 seconds. "Still rendering... about halfway there." Don't spam.
-
-**On timeout:** Give the user the video_id and suggest checking manually later.
-
-**On completion:** Move to Phase 5.
-
-**On failure:** Read the error. Suggest a fix. Offer to retry with an adjusted prompt.
+This blocks the session but guarantees delivery. Use only as fallback.
 
 ---
 
