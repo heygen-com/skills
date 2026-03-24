@@ -89,7 +89,7 @@ Write a narrator script using these rules:
 - Short sentences. Nothing over 20 words.
 - Active voice. "You can" not "It is possible to."
 - Conversational. Contractions are good. "You'll" not "You will."
-- Mark pauses with `[BEAT]` at emotional or transition points.
+- Use scene breaks for natural pacing. Each scene transition creates a pause. No need for explicit pause markers.
 
 ### Asset Cues
 If user provided assets, mark them: `[SHOW: dashboard.png]` at the moment they should appear.
@@ -102,7 +102,7 @@ Here's the script (147 words, ~59 seconds):
 
 [SHOW: dashboard-overview.png]
 "Your analytics dashboard just got a lot smarter."
-[BEAT]
+
 "Instead of digging through reports, you get insights the moment you log in."
 [SHOW: ai-insights-panel.png]
 "See that predictions tab? It learns your patterns..."
@@ -423,7 +423,7 @@ If user wants changes:
 
 **Iteration intelligence:**
 - "Make it punchier" → Add energy words to opening, shorten first sentence, front-load the hook harder
-- "Slow it down" → Reduce word count by 15-20%, add more [BEAT] markers
+- "Slow it down" → Reduce word count by 15-20%, add shorter scenes with more breathing room
 - "Different approach" → Restructure the script, try a different tone, change the opening
 - "The assets aren't showing" → Strengthen asset anchoring language, be more explicit about timing
 - Never retry with the exact same prompt. Always change something.
@@ -438,7 +438,7 @@ These are things a good producer knows. They're baked into the phases above, but
 2. **One idea per video.** Video Agent handles single-topic dramatically better than multi-topic.
 3. **Write for the ear.** If you wouldn't say it out loud to a friend, rewrite it.
 4. **150 words/min ceiling.** Faster sounds rushed. Slower sounds boring.
-5. **Strategic silence.** [BEAT] markers at emotional or transition points make narrators sound human.
+5. **Strategic pacing.** Scene breaks and short sentences create natural rhythm. Let the scene structure breathe.
 6. **Asset anchoring > asset dumping.** Tell the agent WHEN to show each asset, tied to specific script moments.
 7. **Narrator framing > generic framing.** "A confident narrator explains..." always outperforms "Create a video about..."
 8. **Tone specificity matters.** "Casual-confident, like a tech YouTuber" >> "professional."
