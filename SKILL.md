@@ -260,15 +260,7 @@ The reviewer will return a verdict: APPROVE, REVISE, or REJECT with a score out 
 
 **REJECT (score <5):** Fundamental problems. Go back to Phase 3, address the reviewer's specific issues, reconstruct the prompt, and re-submit for review. Do not generate with a rejected prompt.
 
-### Step 3: If sessions_spawn is not available
 
-If you cannot spawn a sub-agent (e.g., tool not available), fall back to the structural validator script:
-
-```bash
-echo "$PROMPT" | scripts/heygen-validate-prompt.sh
-```
-
-This is the minimum quality gate. It checks 7 structural elements (scene structure, style block, media types, duration, word count, negative constraints, opening hook) and returns pass/fail with issues. Fix any FAILs and WARNs before proceeding.
 
 ### Step 4: Production Review Report
 
@@ -469,9 +461,8 @@ These are things a good producer knows. They're baked into the phases above, but
 ### Scripts
 | Script | Purpose |
 |--------|---------|
-| `scripts/heygen-validate-prompt.sh` | Validate prompt structure before generation |
 | `scripts/heygen-generate.sh` | Submit prompt to Video Agent |
-| `scripts/heygen-poll.sh` | Poll for video completion |
+| `scripts/heygen-poll.sh` | Poll for video completion (fallback) |
 | `scripts/heygen-download.sh` | Download completed video |
 
 ### Advanced Prompt Optimization
