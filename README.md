@@ -49,9 +49,48 @@ Or configure via OpenClaw skills config:
 
 Just ask your agent to make a video:
 
-- "Make me a 60-second product demo about our new API"
-- "I need a video explaining MCP to developers"
-- "Create a quick announcement about our new pricing"
+### Basic
+```
+"Make me a video about our new feature"
+
+"I need a video explaining MCP to developers"
+
+"Create a quick 30-second announcement about our new pricing"
+```
+
+### Specific
+```
+"Make a 60-second product demo about HeyGen's Video Agent API, aimed at developers, casual-confident tone"
+
+"Create a 2-minute explainer about why AI agents need video capabilities, for a technical audience"
+
+"Produce a sales pitch video for our enterprise clients, professional tone, 90 seconds"
+```
+
+### With assets
+```
+"Make a product demo using these screenshots of our dashboard" [attach files]
+
+"Create an explainer video based on this PDF documentation" [attach PDF]
+
+"I have a blog post at [URL] — turn it into a 60-second video summary"
+```
+
+### Quick generation
+```
+"Just generate this: A confident narrator explains the three key benefits of our API in 30 seconds"
+
+"Quick video, don't ask questions: 60-second overview of HeyGen for developers"
+```
+
+### With avatar (requires heygen-avatar-designer)
+```
+"Make a 30-second intro video using my agent's avatar"
+
+"Create a product demo with Adam as the presenter"
+
+"First design my avatar, then use it to make a video introducing our team"
+```
 
 The skill handles everything: interviewing you for details, writing a narrator script, engineering the optimal prompt, reviewing it for quality, and generating the video.
 
