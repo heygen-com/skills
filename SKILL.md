@@ -340,66 +340,7 @@ Use a professional male avatar with a calm, confident delivery and an American a
 
 This prompt demonstrates all required elements: scene-by-scene structure with Visual + VO per scene, duration per scene (padded 1.4x), narrator framing, media type per scene, visual style block at the bottom, and avatar direction.
 
-Proceed to Phase 3.5.
-
----
-
-## Phase 3.5 — Prompt Review (Quality Gate)
-
-**Exception: Quick Shot mode.** If the user explicitly said "just generate" or "don't ask questions" (Mode 3), skip the review entirely. Quick Shot respects the user's desire for speed. Go directly from Phase 3 to Phase 4.
-
-Before sending the prompt to the API, get a **second opinion from an independent reviewer**. This is not self-review. This is a separate agent with fresh eyes evaluating the prompt objectively.
-
-### Step 1: Spawn a Review Sub-Agent (and yield)
-
-Use `sessions_spawn` to run a reviewer sub-agent. The reviewer MUST be a flagship model (never an inferior model). Read the reviewer instructions from `{baseDir}/references/reviewer-prompt.md` and include them as the task, followed by the constructed prompt.
-
-```
-Task for reviewer:
-[contents of references/reviewer-prompt.md]
-
----
-PROMPT TO REVIEW:
-[the full constructed prompt]
-```
-
-After spawning the reviewer sub-agent, call `sessions_yield` to suspend your turn. The reviewer's result will arrive as your next message. Parse the verdict from that message and proceed accordingly. This makes the block mechanical, not instructional.
-
-If the reviewer sub-agent doesn't respond within 2 minutes, proceed to generation without review. Note in delivery: "Quality review was skipped due to timeout."
-
-### Step 2: Handle the Review
-
-**APPROVE (score 8+):** The prompt is ready. Proceed to Phase 4.
-
-**REVISE (score 5-7):** The reviewer found issues and provided a revised prompt. Use the reviewer's revised version directly. Do not second-guess the reviewer.
-
-**REJECT (score <5):** Fundamental problems. Go back to Phase 3, address the reviewer's specific issues, reconstruct the prompt, and re-submit for review. Do not generate with a rejected prompt.
-
-
-
-### Step 4: Production Review Report
-
-Present the reviewer's assessment to the user. Keep it concise. This should feel like a real production team reviewed and signed off on the work.
-
-```
-📋 **Production Review**
-
-**Structure** — [X] scenes | [breakdown, e.g. "2× A-roll, 2× B-roll (Motion Graphics), 1× Stock, 1× End Card"]
-**Pacing** — [XXX words / ~XXs] | [target: XXs] | [status: ✓ within budget / ⚠️ X words over]
-**Estimated cost** — ~[X] credits ([duration/60] minutes × 2 credits/min)
-
-**Reviewer verdict:** [APPROVE/REVISE] — [score]/10
-
-[If revisions were applied:]
-**Revisions applied:** [specific changes from reviewer]
-
-[If concerns exist:]
-**Concerns:** [list any remaining concerns]
-
-Ready to generate. Proceeding to render.
-```
-
-This report serves two purposes: it shows the user that quality control happened, and it gives them a last chance to intervene before the API call. If the user says nothing or approves, proceed to Phase 4.
+Proceed to Phase 4.
 
 ---
 
@@ -539,8 +480,8 @@ STATUS: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 
 **Statuses:**
 
-- **DONE** — Video completed, reviewer approved, duration within 15% of target. All good.
-- **DONE_WITH_CONCERNS** — Video completed but with issues the user should know about. List each concern with a recommended fix. Examples: duration was >20% off target, reviewer had to REVISE the prompt, assets weren't used as directed.
+- **DONE** — Video completed, duration within 15% of target. All good.
+- **DONE_WITH_CONCERNS** — Video completed but with issues the user should know about. List each concern with a recommended fix. Examples: duration was >20% off target, assets weren't used as directed.
 - **BLOCKED** — Cannot proceed. State what's blocking (API error, insufficient credits, prompt rejected twice). State what was tried and recommend what user should do.
 - **NEEDS_CONTEXT** — Missing information. State exactly what's needed.
 
@@ -565,7 +506,7 @@ Recommendation: Check your HeyGen account credits at app.heygen.com/settings.
 
 ### Escalation Rule
 
-**If the reviewer REJECTs the prompt twice (score <5 both times), STOP.** Do not loop. Do not try a third time. Bad work is worse than no work.
+
 
 Report to the user:
 ```
@@ -581,7 +522,7 @@ This means the brief may need fundamental rework. Let's step back and revisit wh
 After EVERY video generation (successful or not), write a JSON line to `heygen-video-producer-log.jsonl` in the workspace root:
 
 ```bash
-echo '{"timestamp":"<ISO-8601>","video_id":"<video_id>","session_id":"<session_id>","prompt_type":"full_producer|enhanced|quick_shot","target_duration":<user_target_seconds>,"actual_duration":<actual_or_null>,"duration_ratio":<actual/target_or_null>,"reviewer_score":"<X/10>","reviewer_verdict":"APPROVE|REVISE|REJECT","word_count":<script_words>,"scene_count":<num_scenes>,"status":"DONE|DONE_WITH_CONCERNS|BLOCKED","concerns":["<list>"],"what_worked":"<brief>","what_to_improve":"<brief>","topic":"<topic>"}' >> /Users/heyeve/.openclaw/workspace/heygen-video-producer-log.jsonl
+echo '{"timestamp":"<ISO-8601>","video_id":"<video_id>","session_id":"<session_id>","prompt_type":"full_producer|enhanced|quick_shot","target_duration":<user_target_seconds>,"actual_duration":<actual_or_null>,"duration_ratio":<actual/target_or_null>,"word_count":<script_words>,"scene_count":<num_scenes>,"status":"DONE|DONE_WITH_CONCERNS|BLOCKED","concerns":["<list>"],"what_worked":"<brief>","what_to_improve":"<brief>","topic":"<topic>"}' >> /Users/heyeve/.openclaw/workspace/heygen-video-producer-log.jsonl
 ```
 
 **Always log.** Even blocked or failed attempts. The log is how we learn. If `actual_duration` isn't known yet (video still rendering), log what you know and note `"actual_duration": null`.

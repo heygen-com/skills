@@ -86,9 +86,8 @@ Requires a [HeyGen API key](https://app.heygen.com/settings/api):
 1. **Discovery** — Conversational interview (adapts, doesn't interrogate)
 2. **Script** — Narrator-optimized, 150 wpm pacing, 1.4x duration padding
 3. **Prompt Engineering** — Scene-by-scene structure, visual style, media types
-4. **Quality Review** — Independent sub-agent reviewer (skipped in Quick Shot)
-5. **Generate** — Video Agent API with asset attachments
-6. **Deliver** — Session URL immediately, video URL on completion, status tracking
+4. **Generate** — Video Agent API with asset attachments
+5. **Deliver** — Session URL immediately, video URL on completion, status tracking
 
 ## What Makes It Different
 
@@ -98,7 +97,7 @@ This isn't an API wrapper. It's encoded video production expertise:
 - **Scene-by-scene prompting** — not flat paragraphs. Structured scenes with Visual + VO + media type per scene.
 - **Visual style enforcement** — style blocks with colors, fonts, and presets (minimalistic, cinematic, bold, etc.)
 - **Media type matrix** — automatically picks motion graphics for data, stock for real environments, AI-generated for concepts.
-- **Independent quality gate** — a separate model reviews the prompt and scores it 1-10 before generation. REVISE verdicts include a fixed prompt.
+- **One-shot optimization** — all best practices applied before generation. No wasted credits on bad prompts.
 - **Asset handling** — uploads all attachments to HeyGen, describes how each should be used in the video.
 - **Learning loop** — logs every generation to `heygen-video-producer-log.jsonl`. Reads past results to improve future videos.
 - **Completion status** — DONE / DONE_WITH_CONCERNS / BLOCKED / NEEDS_CONTEXT after every generation.
