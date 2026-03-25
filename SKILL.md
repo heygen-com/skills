@@ -576,3 +576,13 @@ For production-quality scene-by-scene prompts, see `references/prompt-craft.md`.
 - Motion vocabulary and transition types
 - Avatar description guide (thematic wardrobe)
 - 20 named visual styles with full specs
+
+---
+
+## Evaluation
+
+Run evals to test prompt quality without spending credits:
+
+1. Read `evals/run-eval.md` and follow instructions — produces prompts for 8 test cases and scores them
+2. Compare results with `evals/compare.md` — diffs two eval runs to catch regressions
+3. Baselines from batch test (Mar 24, 2026) in `evals/test-prompts.json`

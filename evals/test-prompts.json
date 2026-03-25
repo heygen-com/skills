@@ -1,0 +1,122 @@
+[
+  {
+    "id": "basic-feature",
+    "prompt": "Make me a video about our new feature",
+    "context": "HeyGen Video Agent feature, general business users",
+    "target_duration": 60,
+    "expected_mode": "full_producer",
+    "expected_min_scenes": 4,
+    "expected_style": "minimalistic",
+    "baseline": {
+      "video_id": "f92d2456834d44e0b6f1b6f11be7189d",
+      "actual_duration": 36,
+      "reviewer_score": 8,
+      "duration_ratio": 0.60
+    }
+  },
+  {
+    "id": "mcp-explainer",
+    "prompt": "I need a video explaining MCP to developers",
+    "context": "MCP, developer audience, 60s",
+    "target_duration": 60,
+    "expected_mode": "full_producer",
+    "expected_min_scenes": 5,
+    "expected_style": "minimalistic",
+    "baseline": {
+      "video_id": "bf097ed9cc6a4975b8181b43bc3a6830",
+      "actual_duration": 47,
+      "reviewer_score": 8,
+      "duration_ratio": 0.78
+    }
+  },
+  {
+    "id": "pricing-announcement",
+    "prompt": "Create a quick 30-second announcement about our new pricing",
+    "context": "Credit-based pricing, existing customers, energetic",
+    "target_duration": 30,
+    "expected_mode": "full_producer",
+    "expected_min_scenes": 3,
+    "expected_style": "minimalistic",
+    "baseline": {
+      "video_id": "0b153280d05e477ba971e254cc843804",
+      "actual_duration": 20,
+      "reviewer_score": 8,
+      "duration_ratio": 0.67
+    }
+  },
+  {
+    "id": "product-demo",
+    "prompt": "Make a 60-second product demo about HeyGen's Video Agent API, aimed at developers, casual-confident tone",
+    "context": "Product demo, developers, casual-confident",
+    "target_duration": 60,
+    "expected_mode": "full_producer",
+    "expected_min_scenes": 5,
+    "expected_style": "minimalistic",
+    "baseline": {
+      "video_id": "5569c8434b964ea39f92735820fce4c5",
+      "actual_duration": 42,
+      "reviewer_score": 8,
+      "duration_ratio": 0.70
+    }
+  },
+  {
+    "id": "long-explainer",
+    "prompt": "Create a 2-minute explainer about why AI agents need video capabilities, for a technical audience",
+    "context": "Technical, 2 minutes, professional",
+    "target_duration": 120,
+    "expected_mode": "full_producer",
+    "expected_min_scenes": 8,
+    "expected_style": "minimalistic",
+    "baseline": {
+      "video_id": "86ef62c23e55408fa458c019cb8f747a",
+      "actual_duration": 84,
+      "reviewer_score": 8,
+      "duration_ratio": 0.70
+    }
+  },
+  {
+    "id": "sales-pitch",
+    "prompt": "Produce a sales pitch video for our enterprise clients, professional tone, 90 seconds",
+    "context": "Enterprise, professional, 90s",
+    "target_duration": 90,
+    "expected_mode": "full_producer",
+    "expected_min_scenes": 5,
+    "expected_style": "minimalistic",
+    "baseline": {
+      "video_id": "866f4b17a29548aebd4b7e1fa5cfb72a",
+      "actual_duration": 65,
+      "reviewer_score": 7,
+      "duration_ratio": 0.72
+    }
+  },
+  {
+    "id": "quick-benefits",
+    "prompt": "Just generate this: A confident narrator explains the three key benefits of our API in 30 seconds",
+    "context": "Quick shot mode",
+    "target_duration": 30,
+    "expected_mode": "quick_shot",
+    "expected_min_scenes": 3,
+    "expected_style": "minimalistic",
+    "baseline": {
+      "video_id": "78cb1963a60241139710bda77eb17040",
+      "actual_duration": 20,
+      "reviewer_score": 6,
+      "duration_ratio": 0.65
+    }
+  },
+  {
+    "id": "quick-overview",
+    "prompt": "Quick video, don't ask questions: 60-second overview of HeyGen for developers",
+    "context": "Quick shot mode",
+    "target_duration": 60,
+    "expected_mode": "quick_shot",
+    "expected_min_scenes": 4,
+    "expected_style": "minimalistic",
+    "baseline": {
+      "video_id": "6714c93bd4f849bba5beb004cac04ece",
+      "actual_duration": 39,
+      "reviewer_score": 8,
+      "duration_ratio": 0.65
+    }
+  }
+]
