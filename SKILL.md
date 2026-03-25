@@ -69,6 +69,7 @@ Interview the user. Be conversational, not robotic. Adapt based on what they've 
 7. **Key message** — What's the ONE thing the viewer should remember?
 8. **Visual style** — Any brand colors or style preferences? (default: clean minimal with blue/black/white)
 9. **Avatar preference** — Visible avatar, or voice-over only? (default: auto-select avatar)
+10. **Language** — What language should the narration be in? (default: English). For non-English, specify in the prompt: "Deliver the narration in [language]."
 
 ### Asset Handling
 
@@ -90,8 +91,6 @@ Save the returned `asset_id` for each file.
 
 **Step 3: For URLs, extract content first**
 - Fetch the URL content for script writing
-- Screenshot the page if relevant visuals exist
-- Upload the screenshot as an additional asset
 
 **Step 4: Describe asset usage in the prompt**
 Be SPECIFIC about how each asset should be used:
@@ -254,14 +253,21 @@ Scene types to use: Intro, Hook, Problem Statement, Solution, Feature Showcase, 
 
 The single biggest upgrade: paste the FULL script directly into the prompt. Video Agent follows it scene-by-scene while improving flow, timing, and visuals automatically. When in Full Producer mode, ALWAYS construct a scene-labeled script with visual directions and VO text, then send the entire thing as the prompt.
 
-### Voice-Over Only Option
+### Avatar and Voice Selection
 
-If the user doesn't want a visible avatar, explicitly state "No avatar needed, only voice-over" in the prompt. This must be said explicitly or Video Agent will default to showing an avatar.
+Video Agent auto-selects an appropriate avatar and voice based on the prompt content. To influence the selection, describe the presenter in the prompt:
+- **Avatar:** "Use a professional female avatar with a warm, confident delivery"
+- **Voice:** "The narrator should have a calm, authoritative male voice with an American accent"
+- **No avatar:** "No avatar needed, only voice-over narration" (must be explicit or Video Agent defaults to showing an avatar)
+
+Video Agent does not accept `avatar_id` or `voice_id` parameters. All selection is prompt-driven.
 
 ### Orientation Mapping
 - YouTube / web / LinkedIn → `landscape`
 - TikTok / Reels / Shorts → `portrait`
 - Default if unspecified → `landscape`
+
+Note: Aspect ratio is controlled through the prompt description ("landscape video" or "portrait/vertical video"). The API does not have a separate `aspect_ratio` parameter.
 
 ### Prompt Structure (IMPORTANT: Stack style at the end)
 
@@ -280,11 +286,59 @@ Put content/script FIRST, then style directives at the bottom. This keeps creati
 [Intro/outro/chapter break instructions]
 ```
 
+### Advanced Visual Techniques (Conditional Load)
+
+For videos over 90 seconds OR when the user requests "cinematic" or "production quality", read `references/prompt-craft.md` for advanced visual techniques.
+
 ### One-Shot Mindset (CRITICAL)
 
 The API call is one-shot. There is no back-and-forth with Video Agent. Every generation is a fresh call. This means the prompt MUST be as complete and precise as possible on the first attempt. The skill's entire job is to maximize the chance of success on that single generation. Don't rely on iteration with the API. Do ALL the work upfront: scene structure, visual style, media types, asset anchoring, pacing. The better the prompt, the fewer re-generations needed.
 
+Note: The Video Agent web UI supports conversational iteration within a session. The API (`/v1/video_agent/generate`) is one-shot — every call is a fresh generation. This skill uses the API.
+
 **NEVER send a flat paragraph as the prompt.** Always structure it as scenes with Visual + VO + Duration. Always include the visual style block. Always specify media types per scene. A flat script with no visual direction produces generic, forgettable videos. A scene-structured prompt with style and media directions produces professional results.
+
+### Complete Prompt Example
+
+Brief: "60-second product demo about HeyGen's Video Agent API for developers, casual-confident tone"
+
+This is the FULL assembled prompt exactly as it would be sent to the API (using 1.4x padding → 85-second budget):
+
+```
+A casual-confident narrator walks developers through HeyGen's Video Agent API, showing how one API call produces a complete video. This is an 85-second video covering ONE topic: the Video Agent API.
+
+Scene 1: Intro (Motion Graphics) — 8s
+  Visual: (Motion Graphics) HeyGen logo animates in on dark blue background. Title text "Video Agent API" types on below.
+  VO: "What if you could generate a full production video with a single API call? No timeline. No editing. Just one prompt."
+
+Scene 2: The Problem (A-roll) — 12s
+  Visual: (A-roll) Narrator speaking to camera in a modern workspace.
+  VO: "Building video into your app used to mean stitching together templates, managing assets, and wrestling with rendering pipelines. That's a lot of engineering for a feature your users expect to just work."
+
+Scene 3: The Solution (B-roll — Motion Graphics) — 15s
+  Visual: (Motion Graphics) Animated code snippet showing a simple curl request to /v1/video_agent/generate. The JSON payload highlights the "prompt" field. A response animation shows video_id appearing.
+  VO: "Video Agent changes that. Send a prompt describing what you want. The API handles scene planning, avatar selection, B-roll, transitions, and rendering. You get back a video ID."
+
+Scene 4: How It Works (A-roll + overlay) — 15s
+  Visual: (A-roll + overlay) Narrator on left 35%. Right 65% shows an animated pipeline: Prompt → Scene Planning → Asset Selection → Rendering → Delivered.
+  VO: "Under the hood, Video Agent breaks your prompt into scenes, picks the right visuals for each one, selects an avatar and voice that match your tone, and renders the whole thing. Typical turnaround: two to three minutes."
+
+Scene 5: Use Cases (B-roll — Motion Graphics) — 15s
+  Visual: (Motion Graphics) Three cards cascade in showing use cases: "Personalized Sales Videos", "Auto-Generated Tutorials", "Product Update Announcements". Each card has an icon and brief subtitle.
+  VO: "Teams are using it for personalized sales outreach, auto-generated product tutorials, and weekly update videos that used to take a full production day."
+
+Scene 6: CTA / End Card (Motion Graphics) — 10s
+  Visual: (Motion Graphics) Dark background with "docs.heygen.com/video-agent" in large white text. HeyGen logo below. Subtle particle animation in background.
+  VO: "One API call. Full production video. Check out the docs and start building."
+
+---
+Visual style: Minimalistic, clean visuals. #1E40AF as primary blue, #F8FAFC as background white, #1a1a1a for dark sections. Inter for UI text, JetBrains Mono for code snippets.
+Media types: Motion Graphics for data, code, and diagrams. A-roll for narrator presence. No AI-generated footage needed.
+Include an intro sequence with logo animation, chapter breaks between major sections using Motion Graphics, and a branded end card.
+Use a professional male avatar with a calm, confident delivery and an American accent.
+```
+
+This prompt demonstrates all required elements: scene-by-scene structure with Visual + VO per scene, duration per scene (padded 1.4x), narrator framing, media type per scene, visual style block at the bottom, and avatar direction.
 
 Proceed to Phase 3.5.
 
@@ -292,15 +346,13 @@ Proceed to Phase 3.5.
 
 ## Phase 3.5 — Prompt Review (Quality Gate)
 
-**⚠️ BLOCKING STEP. Do NOT proceed to Phase 4 until the reviewer returns a verdict. Do NOT generate the video while the review is in progress. The review MUST complete before any API call. This is a sequential gate, not a parallel process.**
+**Exception: Quick Shot mode.** If the user explicitly said "just generate" or "don't ask questions" (Mode 3), skip the review entirely. Quick Shot respects the user's desire for speed. Go directly from Phase 3 to Phase 4.
 
 Before sending the prompt to the API, get a **second opinion from an independent reviewer**. This is not self-review. This is a separate agent with fresh eyes evaluating the prompt objectively.
 
-### Step 1: Spawn a Review Sub-Agent (AND WAIT)
+### Step 1: Spawn a Review Sub-Agent (and yield)
 
 Use `sessions_spawn` to run a reviewer sub-agent. The reviewer MUST be a flagship model (never an inferior model). Read the reviewer instructions from `{baseDir}/references/reviewer-prompt.md` and include them as the task, followed by the constructed prompt.
-
-**WAIT for the reviewer to respond before doing anything else. Do not fire the API. Do not offer the user options. Do not proceed. Wait.**
 
 ```
 Task for reviewer:
@@ -311,7 +363,9 @@ PROMPT TO REVIEW:
 [the full constructed prompt]
 ```
 
-The reviewer will return a verdict: APPROVE, REVISE, or REJECT with a score out of 10, specific strengths, issues, and (if REVISE) a revised prompt ready to use.
+After spawning the reviewer sub-agent, call `sessions_yield` to suspend your turn. The reviewer's result will arrive as your next message. Parse the verdict from that message and proceed accordingly. This makes the block mechanical, not instructional.
+
+If the reviewer sub-agent doesn't respond within 2 minutes, proceed to generation without review. Note in delivery: "Quality review was skipped due to timeout."
 
 ### Step 2: Handle the Review
 
@@ -325,33 +379,22 @@ The reviewer will return a verdict: APPROVE, REVISE, or REJECT with a score out 
 
 ### Step 4: Production Review Report
 
-Present the reviewer's assessment to the user. This should feel like a real production team reviewed and signed off on the work. Include the reviewer's score, strengths, and any revisions made.
+Present the reviewer's assessment to the user. Keep it concise. This should feel like a real production team reviewed and signed off on the work.
 
 ```
 📋 **Production Review**
 
 **Structure** — [X] scenes | [breakdown, e.g. "2× A-roll, 2× B-roll (Motion Graphics), 1× Stock, 1× End Card"]
-**Visual style** — [Style descriptor] | [Color palette, e.g. "#1E40AF blue + #F8FAFC white"] | [Font if specified]
-**Media mix** — [e.g. "Motion Graphics: 3 scenes (data viz, intro, outro) · Stock: 1 scene (office establishing shot) · AI Generated: 1 scene (concept illustration)"]
 **Pacing** — [XXX words / ~XXs] | [target: XXs] | [status: ✓ within budget / ⚠️ X words over]
-**Opening hook** — "[First line of VO]" | [Xs] | [assessment: e.g. "Strong — leads with a question" or "Could be punchier — consider opening with the key benefit"]
-**Scene breakdown:**
-  1. Intro (Motion Graphics) — Xs
-  2. Hook (A-roll + overlay) — Xs
-  3. [Problem/Feature/etc] (B-roll type) — Xs
-  ...
+**Estimated cost** — ~[X] credits ([duration/60] minutes × 2 credits/min)
 
-**Technical checks** — [X/7 passed]
-
-[If fixes were applied:]
-**Revisions:** [specific changes, e.g. "Restructured from flat paragraph → 6 scenes · Added style block (minimalistic, blue/white) · Assigned Motion Graphics to Scene 3 for data visualization · Tightened opening from 12s → 6s"]
-
-[If there's a suggestion the producer would make:]
 **Reviewer verdict:** [APPROVE/REVISE] — [score]/10
-**Reviewer notes:** [e.g. "Strong hook, good media type variety. Tightened Scene 4 pacing, switched Scene 5 from AI Generated to Stock for authenticity."]
 
 [If revisions were applied:]
 **Revisions applied:** [specific changes from reviewer]
+
+[If concerns exist:]
+**Concerns:** [list any remaining concerns]
 
 Ready to generate. Proceeding to render.
 ```
@@ -406,6 +449,9 @@ Extract both `video_id` and `session_id` from the response.
 | 429 Rate Limited | Wait 60s, retry once. |
 | 500+ Server Error | Retry once after 30s. If still failing, tell user HeyGen is having issues. |
 | Network error | Retry once. |
+| 200 but no video_id | Retry once. If still no video_id, tell the user: "The API accepted the request but didn't return a video ID. This is unusual. Try again or check the HeyGen dashboard." |
+
+**Asset upload failure:** If an asset upload returns an error, log which asset failed and proceed without it. Tell the user: "Note: [filename] couldn't be uploaded. The video was generated without this asset."
 
 On success, **immediately share the Video Agent session URL** so the user can follow along:
 
@@ -420,13 +466,19 @@ The session URL is available instantly. The user can watch scene planning, asset
 
 ### Delivery: Check Status and Deliver When Done
 
-After submitting the video, you are responsible for checking when it's done and delivering the result. Use whatever tools you have available (cron, polling, scheduled checks) to monitor the video status. The goal:
+After submitting the video, you are responsible for checking when it's done and delivering the result.
 
-1. **Don't make the user ask.** You should proactively check and deliver the video when it's ready.
-2. **Check the status** using: `curl -s -H "X-Api-Key: $HEYGEN_API_KEY" "https://api.heygen.com/v1/video_status.get?video_id=<video_id>"` — look for `status: "completed"` in the response.
-3. **When completed**, deliver the finished video URL: `https://app.heygen.com/videos/<video_id>`
-4. **Don't check forever.** If the video isn't done after 30 minutes, send the user the session URL and tell them to check manually.
-5. **Videos typically take 1-3 minutes.** First check at ~2 minutes is a good starting point.
+**Check the status** using: `curl -s -H "X-Api-Key: $HEYGEN_API_KEY" "https://api.heygen.com/v1/video_status.get?video_id=<video_id>"` — look for `status: "completed"` in the response.
+
+**Polling cadence:**
+1. First check at **2 minutes** after submission.
+2. Then every **30 seconds** for the next 3 minutes.
+3. Then every **60 seconds** up to 30 minutes.
+4. After **30 minutes**, stop polling and send the user the session URL as fallback.
+
+**When completed**, deliver the finished video URL: `https://app.heygen.com/videos/<video_id>`
+
+**Video rendering failure:** If status returns `failed` or `error`, tell the user what went wrong. Offer to retry with the same prompt or adjust. Common causes: content policy violation, avatar rendering issue, system overload.
 
 ```
 Your video is generating! I've set up automatic delivery.
@@ -448,6 +500,13 @@ When the video is ready:
    - **Video Agent session** (already shared in Phase 4): `https://app.heygen.com/video-agent/<session_id>` — shows the full production process
    - **Finished video page**: `https://app.heygen.com/videos/<video_id>` — direct link to the completed video (available once rendering is done)
 2. **NEVER share the raw mp4 URL** from the API response (video_url field). Those are temporary S3 links with expiring TTL. They will break.
+
+### Error Notes in Delivery
+
+If any issues occurred during the pipeline, note them clearly:
+- If quality review was skipped due to timeout: "Quality review was skipped due to timeout."
+- If assets failed to upload: "Note: [filename] couldn't be uploaded. The video was generated without this asset."
+- If the video was re-generated due to a failure: "Note: First render failed ([reason]). This is the result of the second attempt."
 
 ### Present the Review
 
@@ -569,13 +628,8 @@ These are things a good producer knows. They're baked into the phases above, but
 - Auth header: `X-Api-Key: $HEYGEN_API_KEY`
 - Cost: 2 credits/minute of generated video
 
-### Advanced Prompt Optimization
-For production-quality scene-by-scene prompts, see `references/prompt-craft.md`. Covers:
-- Visual layer system (5-layer B-roll composition)
-- Scene type rotation (A-roll, B-roll, overlay)
-- Motion vocabulary and transition types
-- Avatar description guide (thematic wardrobe)
-- 20 named visual styles with full specs
+### Advanced Prompt Optimization (Experimental)
+For production-quality scene-by-scene prompts, see `references/prompt-craft.md`. Auto-loaded for videos over 90s or "cinematic"/"production quality" requests. Covers visual layer system, motion vocabulary, and named visual styles. Note: these advanced techniques are experimental and not fully validated.
 
 ---
 

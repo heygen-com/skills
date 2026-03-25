@@ -1,5 +1,7 @@
 # Advanced Prompt Craft
 
+> ⚠️ **EXPERIMENTAL:** These advanced techniques (5-layer B-roll, motion vocabulary) have not been validated against Video Agent output. Use with caution. The main SKILL.md techniques are tested and proven.
+
 Production-quality prompts for scene-by-scene control. Load this when the user wants cinematic or highly polished output beyond standard narrator videos.
 
 ## When to Use This
