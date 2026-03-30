@@ -27,7 +27,12 @@ For each scenario, record:
 - **Score:** [1-10]
 - **Finding:** [P1/P2/P3] [one-line description]
 - **Fix Recommendation:** [specific change to SKILL.md]
+- **🧑 Human Review:** _(pending Ken's review)_
+- **Ken's Notes:** _—_
 ```
+
+> **Note on duration:** Duration accuracy is P2 at most. Video Agent controls final timing
+> internally. Don't flag duration variance as P1 or P3.
 
 ## Scoring Rubric
 
@@ -77,9 +82,25 @@ Write a Notion doc under the provided parent page with this structure:
 - Avg duration accuracy: X%
 - Aspect correction triggered: X/10 scenarios
 - Correction success rate: X/Y (did injected prompts fix the issue?)
-- Videos with black bars despite correction: X/10
-- Videos with missing backgrounds despite correction: X/10
+- Videos with black bars despite correction: X/10 (pending Ken's visual review)
+- Videos with missing backgrounds despite correction: X/10 (pending Ken's visual review)
 - Avg score: X/10
+
+## 🧑 Human Evaluation Tracker
+Ken reviews every video. Fill in after watching each.
+
+| Scenario | Video ID | 🎬 Watch | Quality (1-10) | Visual Issues | Script Quality | Avatar/Voice Fit | Ken's Verdict | Notes |
+|----------|----------|-------|----------------|---------------|----------------|-----------------|---------------|-------|
+| S1 | [id]... | [Watch](url) | _ | _ | _ | _ | _ | _ |
+[...one row per scenario...]
+
+**Columns guide:**
+- **Quality (1-10):** Overall video quality
+- **Visual Issues:** Black bars, cropping, background problems, framing
+- **Script Quality:** Was the content good? Tone right? Pacing?
+- **Avatar/Voice Fit:** Did the avatar look/sound right for the content?
+- **Ken's Verdict:** ✅ Ship / 🛠️ Fix needed / ❌ Redo
+- **Notes:** Anything else — what was wrong, what was surprisingly good
 
 ## Raw Notes
 [anything else worth noting — API errors, timing, unexpected behavior]
