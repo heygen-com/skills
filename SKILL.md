@@ -76,7 +76,7 @@ Interview the user. Be conversational, not robotic. Adapt based on what they've 
 6. **Assets** — Any screenshots, URLs, PDFs, images, or brand guidelines?
 7. **Key message** — What's the ONE thing the viewer should remember?
 8. **Visual style** — Any brand colors or style preferences? (default: clean minimal with blue/black/white)
-9. **Avatar preference** — Visible presenter or voice-over only? If presenter, what vibe? (gender, style, energy). Don't offer to browse avatars. (default: auto-select)
+9. **Avatar** — Walk through the Avatar Conversation Flow (see section below). Don't skip this or auto-select without asking.
 10. **Language** — What language should the narration be in? (default: English). For non-English, specify in the prompt: "Deliver the narration in [language]."
 
 ### Asset Handling
@@ -187,7 +187,7 @@ Transform the script/brief into an optimized Video Agent prompt. The user doesn'
 
 ### Prompt Construction Rules
 
-1. **Narrator framing.** Always frame as: "A [tone] narrator [explains/walks through/presents]..." Never "Create a video about..."
+1. **Narrator framing.** Always frame as: "[Avatar description from conversation] [explains/walks through/presents]..." Never "Create a video about..." and never default to "A casual-confident narrator" — use whatever the user described in the Avatar Conversation Flow.
 2. **Duration signal (PADDED).** When signaling duration to Video Agent, use **1.4x the user's target**. If user wants 60s, tell Video Agent "This is an 85-second video." Video Agent will compress it to approximately the right length. See the Duration Padding table in Phase 2 for exact values. The user-facing review should still show the user's original target.
 3. **Asset anchoring.** If assets exist, be SPECIFIC about how to use them: "Use the attached product screenshots as B-roll when discussing features." "Reference the attached PDF for accurate technical specifications." Vague references = random placement.
 4. **Tone calibration.** Use specific tone words: "confident and conversational" / "energetic, like a tech YouTuber" / "calm and authoritative, like a Bloomberg anchor" / "warm and approachable, like explaining to a friend."
@@ -261,35 +261,79 @@ Scene types to use: Intro, Hook, Problem Statement, Solution, Feature Showcase, 
 
 The single biggest upgrade: paste the FULL script directly into the prompt. Video Agent follows it scene-by-scene while improving flow, timing, and visuals automatically. When in Full Producer mode, ALWAYS construct a scene-labeled script with visual directions and VO text, then send the entire thing as the prompt.
 
-### Avatar and Voice Selection
+### Avatar Conversation Flow
 
-Video Agent does NOT accept `avatar_id` or `voice_id` as API parameters. All avatar selection is **prompt-driven** — describe what you want in the prompt text, and Video Agent picks the best match.
+Video Agent is **prompt-driven** — you describe the avatar in the prompt text and Video Agent picks the best match. There is no `avatar_id` or `voice_id` parameter. This means avatar selection is a **conversation**, not a dropdown.
 
-#### What to Ask
+**NEVER auto-select an avatar without asking.** No more defaulting to "a casual-confident male narrator." The user should feel involved in choosing who appears in their video.
 
-In Full Producer mode, ask ONE question: **"Do you want a visible avatar presenter, or voice-over only?"**
+#### Step 1: Check for Previously Used Avatars
 
-If they want a presenter, ask what vibe: gender, style, energy level. That's it. Don't offer to browse avatars or list groups. The current avatar APIs aren't built for that experience.
+Before asking anything, check `heygen-video-producer-log.jsonl` for this user's past generations. If they have previous videos, extract what avatar descriptions were used.
 
-#### How to Translate It Into the Prompt
+If previous avatars exist, present them:
+> "Last time you used [description from previous prompt]. Want to use the same presenter, the same one with a different look, or start fresh?"
 
-- **Wants a presenter:** `"A [gender] presenter with a [style] appearance delivers the narration in a [setting] environment."` Example: `"A confident female presenter in a modern office delivers the narration."`
-- **Named a specific avatar** (e.g., "use Abigail"): `"Use Abigail as the presenter."` Video Agent knows its stock avatars by name.
-- **Voice-over only:** `"This video uses voice-over narration only. No visible avatar or presenter."`
-- **No preference:** `"Use a professional presenter appropriate for [audience]."` Let Video Agent auto-select.
+Three options:
+1. **Same avatar** — reuse the exact description from their last video
+2. **Same avatar, different look** — same person but different setting/outfit/pose. Ask what to change.
+3. **Start fresh** — go to Step 2
 
-#### Voice Direction
+If no previous videos exist, go straight to Step 2.
 
-Include voice direction alongside avatar direction in the prompt:
-- `"The narrator speaks with a calm, confident American accent."`
-- `"Use a warm, energetic female voice."`
-- Non-English: `"Deliver the narration in [language] with a native accent."`
+#### Step 2: Check for Custom Avatars
+
+Call `GET /v2/avatars` and look for non-stock avatars. Detection heuristic:
+- UUID-style avatar IDs (e.g., `a1b2c3d4-...`) = custom/photo avatar
+- IDs starting with a name + descriptive suffix (e.g., `Abigail_expressive_...`) = stock avatar
+
+If the user has **custom avatars** (photo avatars, studio avatars, instant avatars):
+> "I see you have [N] custom avatar(s): [names]. Want to use one of these, or create something new?"
+
+If they pick a custom avatar and you want to confirm you've got the right one, **share the preview image** with them:
+> "This one? [preview_image_url]"
+
+If the account only has stock avatars (the typical case), skip this and go to Step 3.
+
+#### Step 3: The Creative Conversation
+
+Ask: **"Do you want a visible presenter, or voice-over only?"**
+
+If voice-over only → done. Use: `"This video uses voice-over narration only. No visible avatar or presenter."`
+
+If they want a presenter, have a conversation about it. Don't just ask for "gender, style, energy" as a checklist. Instead, ask naturally:
+
+> "What kind of presenter fits this video? Think about who your audience would trust or pay attention to."
+
+Let them describe it however they want. They might say:
+- "A young woman, kind of like a tech YouTuber" → `"A young female presenter with an energetic, approachable tech-YouTuber style in a modern workspace."`
+- "Someone corporate, male, older" → `"A mature male presenter in professional business attire, calm and authoritative delivery, corporate office setting."`
+- "I don't care, you pick" → Ask one follow-up: "What's the vibe — more formal/corporate or more casual/creator?" Then pick something fitting.
+- "Use Abigail" → They named a stock avatar by name. Use: `"Use Abigail as the presenter."` Video Agent knows its stock avatars.
+
+**If you're unsure you understood what they want**, describe it back to them before proceeding:
+> "So I'm picturing: a mid-30s female presenter, casual but polished, sitting at a desk with a laptop. Sound right?"
+
+#### Step 4: Voice Direction
+
+After avatar is settled, confirm voice:
+- If they described the avatar with enough detail, infer the voice: "I'll match the voice — [American accent, upbeat delivery]. Work for you?"
+- If non-English video, confirm language and accent: `"Deliver the narration in Brazilian Portuguese with a native accent."`
+- If they have strong voice preferences, let them describe it.
+
+#### How to Write It in the Prompt
+
+Combine avatar + voice into one direction block at the end of the prompt:
+- **Described presenter:** `"A [description] presenter delivers the narration in a [setting]. [Voice direction]."`
+- **Named stock avatar:** `"Use [Name] as the presenter. [Voice direction]."`
+- **Custom avatar by ID:** `"Use avatar [avatar_name] as the presenter. [Voice direction]."` (Video Agent may not match custom avatars by name alone — be honest about this.)
+- **Voice-over only:** `"This video uses voice-over narration only. No visible avatar. [Voice direction]."`
 
 #### Limitations (Be Honest)
 
-Video Agent picks the CLOSEST match to your description, not an exact one. Users cannot select a specific custom avatar by ID through this skill. If exact avatar matching is critical (specific custom avatar, specific pose), recommend the `heygen-avatar-video` skill instead, which uses the Avatar Video API with direct `avatar_id` control.
+Video Agent picks the **closest match** to your description, not an exact one. For custom avatars, prompt-driven matching is especially unreliable. If the user needs pixel-perfect control over a specific custom avatar with a specific pose, tell them this skill uses Video Agent's auto-selection, and suggest they use the Avatar Video API directly for exact `avatar_id` control.
 
-<!-- TODO: Replace this section when new avatar APIs ship. Current APIs (GET /v2/avatars, GET /v2/avatar_group.list) return unfiltered bulk data unsuitable for interactive selection. New APIs expected to support search, filtering, and better metadata. -->
+<!-- TODO: Replace when new avatar APIs ship. Current GET /v2/avatars returns 1287 unfiltered results with most fields null. New APIs expected to support search, filtering, and better metadata. -->
 
 ### Orientation Mapping
 - YouTube / web / LinkedIn → `landscape`
@@ -334,7 +378,7 @@ Brief: "60-second product demo about HeyGen's Video Agent API for developers, ca
 This is the FULL assembled prompt exactly as it would be sent to the API (using 1.4x padding → 85-second budget):
 
 ```
-A casual-confident narrator walks developers through HeyGen's Video Agent API, showing how one API call produces a complete video. This is an 85-second video covering ONE topic: the Video Agent API.
+[Avatar direction from conversation — e.g. "A young male tech YouTuber in a modern workspace" or "Use Abigail as the presenter"] walks developers through HeyGen's Video Agent API, showing how one API call produces a complete video. This is an 85-second video covering ONE topic: the Video Agent API.
 
 Scene 1: Intro (Motion Graphics) — 8s
   Visual: (Motion Graphics) HeyGen logo animates in on dark blue background. Title text "Video Agent API" types on below.
@@ -364,7 +408,7 @@ Scene 6: CTA / End Card (Motion Graphics) — 10s
 Visual style: Minimalistic, clean visuals. #1E40AF as primary blue, #F8FAFC as background white, #1a1a1a for dark sections. Inter for UI text, JetBrains Mono for code snippets.
 Media types: Motion Graphics for data, code, and diagrams. A-roll for narrator presence. No AI-generated footage needed.
 Include an intro sequence with logo animation, chapter breaks between major sections using Motion Graphics, and a branded end card.
-Use a professional male avatar with a calm, confident delivery and an American accent.
+[Avatar + voice direction from conversation. e.g. "Use a young male presenter with tech-YouTuber energy in a modern workspace. American accent, upbeat delivery."]
 ```
 
 This prompt demonstrates all required elements: scene-by-scene structure with Visual + VO per scene, duration per scene (padded 1.4x), narrator framing, media type per scene, visual style block at the bottom, and avatar direction.
