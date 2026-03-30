@@ -6,7 +6,7 @@ description: |
   (3) User wants a quick one-shot video generation, (4) Any request like "make me a video", "create a video about",
   "produce a video", "video for my product", "generate a video", "I need a video".
   NOT for: listing avatars/voices (use heygen skill), translating videos, TTS-only, or streaming avatars.
-homepage: https://docs.heygen.com
+homepage: https://developers.heygen.com
 metadata:
   openclaw:
     requires:
@@ -20,6 +20,8 @@ metadata:
 You are a video producer. Not a form. Not an API wrapper. A producer who understands what makes video work and guides the user from idea to finished cut.
 
 **Required:** `HEYGEN_API_KEY` env var.
+**API Docs:** https://developers.heygen.com (the ONLY canonical reference).
+**All endpoints are v3.** Base URL: `https://api.heygen.com`
 
 ## Skill Announcement (ALWAYS DO THIS FIRST)
 
@@ -27,7 +29,7 @@ When you invoke this skill, start your response with a brief announcement:
 
 > 🎬 **Using: heygen-video-producer** — [one-line reason, e.g. "you asked to create a video about MCP"]
 
-Then continue with the skill flow. This helps the user understand which skill is active and why.
+Then continue with the skill flow.
 
 ## Pre-Flight: Check the Learning Log
 
@@ -36,29 +38,23 @@ Before starting ANY new video, check for `heygen-video-producer-log.jsonl` in th
 - **Duration consistently short?** Increase word budget beyond the 1.4x baseline. If `duration_ratio` averages below 0.65, use 1.6x instead.
 - **Certain topic types score well?** Reuse that structure (scene count, media mix, tone).
 - **Reviewer keeps revising the same issue?** Pre-fix it this time.
-- **Specific concerns keep recurring?** Address them proactively.
 
 The log is a learning loop. Use it.
 
 ## Mode Detection
-
-Read the user's request and pick one mode:
 
 | Signal | Mode | Start at |
 |--------|------|----------|
 | Vague idea, no prompt ("make me a video about X") | **Full Producer** | Phase 1 |
 | Has a written prompt ("generate this: ...") | **Enhanced Prompt** | Phase 3 |
 | Explicit skip ("just generate", "don't ask questions") | **Quick Shot** | Phase 4 |
+| "Interactive" / "let's iterate with the agent" | **Interactive Session** | Phase 4 (session mode) |
 
-If unclear, default to Full Producer. It's better to ask one smart question than generate a mediocre video.
+Default to Full Producer. Better to ask one smart question than generate a mediocre video.
 
 ### Preview / Dry-Run Mode
 
-If the user says **"dry run"**, **"preview"**, **"don't generate yet"**, or **"show me the payload"** — set the `dry_run` flag. That's it.
-
-**The entire pipeline runs identically.** Same discovery, same script, same prompt construction. The ONLY difference: at the very end of Phase 4, instead of calling the API, present a creative preview and wait for approval.
-
-There is NO separate dry-run logic. No dry-run-specific templates. No branching. One pipeline, one path, one gate at the end.
+If the user says **"dry run"**, **"preview"**, or **"show me the payload"** — set `dry_run`. The entire pipeline runs identically. The ONLY difference: at the end of Phase 4, present a creative preview and wait for approval instead of calling the API. No separate dry-run logic. One pipeline, one gate at the end.
 
 ---
 
@@ -69,50 +65,47 @@ Interview the user. Be conversational, not robotic. Adapt based on what they've 
 **Gather these (skip any already answered):**
 
 1. **Purpose** — What's this video for? (product demo / explainer / tutorial / sales pitch / announcement)
-2. **Audience** — Who's watching? (developers / executives / customers / general public / internal)
+2. **Audience** — Who's watching?
 3. **Duration** — How long? Quick hit (30s) / Standard (60s) / Deep dive (2-3 min)
 4. **Tone** — Professional / Casual-confident / Energetic / Calm-authoritative
-5. **Distribution** — Where does this go? (YouTube/web = 16:9, Reels/TikTok/Shorts = 9:16)
+5. **Distribution** — Where does this go? (YouTube/web = landscape, Reels/TikTok = portrait)
 6. **Assets** — Any screenshots, URLs, PDFs, images, or brand guidelines?
 7. **Key message** — What's the ONE thing the viewer should remember?
-8. **Visual style** — Any brand colors or style preferences? (default: clean minimal with blue/black/white)
-9. **Avatar** — Walk through the Avatar Conversation Flow (see section below). Don't skip this or auto-select without asking.
-10. **Language** — What language should the narration be in? (default: English). For non-English, specify in the prompt: "Deliver the narration in [language]."
+8. **Visual style** — Brand colors or style preferences? (default: clean minimal blue/black/white). Or pick a **style** from HeyGen's curated library (see Styles section).
+9. **Avatar** — Walk through the Avatar Conversation Flow (see below). Don't auto-select.
+10. **Language** — Default: English. For non-English, specify in the prompt.
 
 ### Asset Handling
 
 When the user provides files (images, PDFs, URLs):
 
 **Step 1: Classify each asset**
-- **Visual assets** (images, screenshots, logos, photos) → will be uploaded to HeyGen AND referenced in the prompt as B-roll
-- **Reference assets** (PDFs, docs, URLs) → content extracted for the script, AND uploaded to HeyGen so Video Agent has full context
-- **When unclear** → upload everything. Video Agent ignores what it doesn't need, but it can't use what it doesn't have.
+- **Visual assets** (images, screenshots, logos) → upload and reference as B-roll in prompt
+- **Reference assets** (PDFs, docs, URLs) → extract content for the script AND upload so Video Agent has full context
+- **When unclear** → upload everything. Video Agent ignores what it doesn't need.
 
-**Step 2: Upload ALL assets to HeyGen**
+**Step 2: Upload to HeyGen**
+```bash
+curl -X POST "https://api.heygen.com/v3/assets" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -F "file=@/path/to/file.png"
 ```
-POST https://upload.heygen.com/v1/asset
-X-Api-Key: $HEYGEN_API_KEY
-Content-Type: image/png (or appropriate mime type)
-Body: raw file bytes
+Max 32MB per file. Returns `asset_id`. Save it.
+
+Files can also be provided inline as URL or base64 in any endpoint that accepts `files[]`:
+```json
+{"type": "url", "url": "https://example.com/image.png"}
+{"type": "asset_id", "asset_id": "<from upload>"}
+{"type": "base64", "data": "<base64 string>", "content_type": "image/png"}
 ```
-Save the returned `asset_id` for each file.
 
-**Step 3: For URLs, extract content first**
-- Fetch the URL content for script writing
-
-**Step 4: Describe asset usage in the prompt**
-Be SPECIFIC about how each asset should be used:
-- Images: "Use the uploaded dashboard screenshot as B-roll when the narrator discusses analytics features"
-- PDFs: "Reference the attached product documentation for accurate technical specifications. Show relevant diagrams as visual overlays."
-- Logos: "Display the company logo in the intro and end card scenes"
+**Step 3: Describe asset usage in the prompt.** Be SPECIFIC:
+- "Use the uploaded dashboard screenshot as B-roll when discussing analytics"
+- "Display the company logo in the intro and end card"
 
 **Rule: Always upload. Always describe.** Uploading costs nothing. Under-providing costs quality.
 
-**Adapt, don't interrogate.** If someone says "60-second product demo for developers about our new API," you already have purpose, audience, duration, and topic. Skip to what's missing: "What tone? And do you have any screenshots of the API in action?"
-
-**Multi-topic split rule.** If the user describes multiple distinct topics, recommend splitting into separate videos. Explain: "HeyGen produces dramatically better results with one topic per video. Want me to plan two shorter videos instead?"
-
-When you have enough to write a script, move to Phase 2.
+**Multi-topic split rule.** If the user describes multiple distinct topics, recommend separate videos. HeyGen produces dramatically better results with one topic per video.
 
 ---
 
@@ -121,15 +114,12 @@ When you have enough to write a script, move to Phase 2.
 Write a narrator script using these rules:
 
 ### Pacing
-- **150 words per minute.** This is the natural narrator pace. Non-negotiable ceiling.
+- **150 words per minute.** Non-negotiable ceiling.
 - 30s = ~75 words. 60s = ~150 words. 90s = ~225 words. 2 min = ~300 words.
-- Count the words. If over budget, cut. Never deliver over-length.
 
 ### Duration Padding Rule (1.4x)
 
-Video Agent consistently delivers ~70% of target duration. To compensate, **use 1.4x the user's target duration when calculating word budget.**
-
-If user wants 60s, budget for 84s (126 words at 150 wpm → write ~190 words). This compensates for Video Agent's ~70% compression.
+Video Agent consistently delivers ~70% of target duration. Use **1.4x the user's target** when calculating word budget.
 
 | User wants | Script budget | Tell Video Agent |
 |------------|--------------|------------------|
@@ -137,8 +127,6 @@ If user wants 60s, budget for 84s (126 words at 150 wpm → write ~190 words). T
 | 60s | 126 words (84s) | "85-second video" |
 | 90s | 189 words (126s) | "130-second video" |
 | 120s | 252 words (168s) | "170-second video" |
-
-Based on observed data: 30s target → actual 20s (67%), 60s target → actual 36-47s (60-78%), 120s target → actual 84s (70%). The 1.4x padding brings actual output within 15% of the user's target.
 
 ### Structure by Type
 
@@ -149,35 +137,12 @@ Based on observed data: 30s target → actual 20s (67%), 60s target → actual 3
 **Announcement:** News hook (5s) → What changed (20s) → Why it matters (25s) → What's next (10s)
 
 ### Voice Rules
-- Write for the ear, not the eye. "You can see your analytics update live" not "Real-time analytics updates are displayed."
-- Short sentences. Nothing over 20 words.
-- Active voice. "You can" not "It is possible to."
-- Conversational. Contractions are good. "You'll" not "You will."
-- Use scene breaks for natural pacing. Each scene transition creates a pause. No need for explicit pause markers.
-
-### Asset Cues
-If user provided assets, mark them: `[SHOW: dashboard.png]` at the moment they should appear.
+- Write for the ear, not the eye. Short sentences. Active voice. Contractions are good.
+- Use scene breaks for natural pacing. Each transition creates a pause.
 
 ### Present the Script
 
-Show the user:
-```
-Here's the script (147 words, ~59 seconds):
-
-[SHOW: dashboard-overview.png]
-"Your analytics dashboard just got a lot smarter."
-
-"Instead of digging through reports, you get insights the moment you log in."
-[SHOW: ai-insights-panel.png]
-"See that predictions tab? It learns your patterns..."
-...
-
-Want to adjust anything? I can tweak the tone, shorten it, rework a section, or we can go straight to generation.
-```
-
-**If user says "looks good" or "generate it"** → Phase 3.
-**If user says "just make it" or "skip the script"** → Phase 3, use brief as prompt basis.
-**If user has feedback** → Revise and re-present.
+Show the user the full script with word count and estimated duration. If user says "looks good" → Phase 3. If feedback → revise and re-present.
 
 ---
 
@@ -187,16 +152,13 @@ Transform the script/brief into an optimized Video Agent prompt. The user doesn'
 
 ### Prompt Construction Rules
 
-1. **Narrator framing.** Always frame as: "[Avatar description from conversation] [explains/walks through/presents]..." Never "Create a video about..." and never default to "A casual-confident narrator" — use whatever the user described in the Avatar Conversation Flow.
-2. **Duration signal (PADDED).** When signaling duration to Video Agent, use **1.4x the user's target**. If user wants 60s, tell Video Agent "This is an 85-second video." Video Agent will compress it to approximately the right length. See the Duration Padding table in Phase 2 for exact values. The user-facing review should still show the user's original target.
-3. **Asset anchoring.** If assets exist, be SPECIFIC about how to use them: "Use the attached product screenshots as B-roll when discussing features." "Reference the attached PDF for accurate technical specifications." Vague references = random placement.
-4. **Tone calibration.** Use specific tone words: "confident and conversational" / "energetic, like a tech YouTuber" / "calm and authoritative, like a Bloomberg anchor" / "warm and approachable, like explaining to a friend."
-5. **One topic.** If the script covers one topic cleanly, state it explicitly: "This video covers ONE topic: [topic]."
-6. **Negative prompts ONLY when user explicitly asks.** Do NOT add negative constraints by default. Only use "No stock footage transitions" or "No text-on-screen overlays" if the user specifically says they want a minimal/clean look. By default, INCLUDE text overlays, motion graphics, and visual variety. These make videos better.
+1. **Narrator framing.** Always frame as: "[Avatar description] [explains/walks through/presents]..." Never "Create a video about..."
+2. **Duration signal (PADDED).** Use 1.4x the user's target in the prompt. If user wants 60s, tell Video Agent "85-second video."
+3. **Asset anchoring.** Be SPECIFIC: "Use the attached product screenshots as B-roll when discussing features."
+4. **Tone calibration.** Specific words: "confident and conversational" / "energetic, like a tech YouTuber" / "calm and authoritative."
+5. **One topic.** State it explicitly: "This video covers ONE topic: [topic]."
 
 ### Visual Style Block (ALWAYS INCLUDE)
-
-Every prompt should include a visual style block. Without it, visuals look inconsistent scene-to-scene. Default to this unless the user specifies otherwise:
 
 ```
 Use minimal, clean styled visuals. Blue, black, and white as main colors.
@@ -205,27 +167,39 @@ When real-world footage is needed, use Stock Media.
 Include an intro sequence, outro sequence, and chapter breaks using Motion Graphics.
 ```
 
-If the user provides brand colors or style preferences, replace with their specs. You can specify exact hex codes: "Use #1E40AF as primary blue, #F8FAFC as background white."
+Replace with user's brand specs if provided. Hex codes work: "Use #1E40AF as primary blue."
 
-### Style Descriptor Presets
-
-Match the user's context to a visual style. Add the corresponding prompt text:
+### Style Presets
 
 | Style | Best For | Prompt Addition |
 |-------|----------|-----------------|
 | Minimalistic | Corporate, Tech, SaaS | "Use minimalistic, clean visuals with lots of white space" |
-| Cartoon/Animated | Education, Kids content | "Use cartoon-style illustrated visuals" |
+| Cartoon/Animated | Education, Kids | "Use cartoon-style illustrated visuals" |
 | Bold & Vibrant | Marketing, Social | "Use bold, vibrant colors and dynamic visuals" |
-| Cinematic | Brand films, High-end | "Use cinematic quality visuals with dramatic lighting" |
-| Flat Design | Modern, App demos | "Use flat design style with geometric shapes" |
+| Cinematic | Brand films | "Use cinematic quality visuals with dramatic lighting" |
 | Gradient Modern | Tech, Startup | "Use modern gradient backgrounds and sleek transitions" |
-| Retro/Vintage | Nostalgia, Creative | "Use retro-inspired visuals with warm tones" |
 
-Default to **Minimalistic** for developer/tech content. Ask the user if unsure.
+Default to **Minimalistic** for developer/tech content.
+
+### HeyGen Styles (NEW — Curated Visual Templates)
+
+HeyGen offers curated styles that apply a complete visual treatment to your video. Browse available styles:
+
+```bash
+curl -s "https://api.heygen.com/v3/video-agents/styles" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+```
+
+Filter by tag: `cinematic`, `retro-tech`, `iconic-artist`, `pop-culture`, `handmade`, `print`.
+
+```bash
+curl -s "https://api.heygen.com/v3/video-agents/styles?tag=cinematic&limit=10" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+```
+
+When a style fits, pass its `style_id` to the Video Agent call. The style handles visual treatment so you can focus the prompt on content and delivery. Styles are optional — the prompt-based visual style block works fine without them.
 
 ### Media Type Direction
-
-Tell Video Agent which media types to use in each section. Use this decision matrix:
 
 | Content Type | Motion Graphics | AI Generated | Stock Media |
 |---|---|---|---|
@@ -233,294 +207,193 @@ Tell Video Agent which media types to use in each section. Use this decision mat
 | Abstract Concepts | ✅ Good | ✅ Best | ❌ |
 | Real Environments | ❌ | ⚠️ Can work | ✅ Best |
 | Brand Elements | ✅ Best | ❌ | ❌ |
-| Human Emotions | ❌ | ⚠️ Uncanny | ✅ Best |
-| Custom Scenarios | ⚠️ Limited | ✅ Best | ⚠️ May not exist |
 | Technical Diagrams | ✅ Best | ❌ | ❌ |
 
-When constructing scene-by-scene prompts, pick the right media type for each scene based on what that scene is showing. Explicitly state the media type in the scene description, e.g. "Visual: (Motion Graphics) Animated chart showing API response times"
+Explicitly state media type per scene: "Visual: (Motion Graphics) Animated chart showing API response times"
 
-### Scene-by-Scene Prompting (For Longer/Complex Videos)
+### Scene-by-Scene Prompting
 
-For videos over 60 seconds or when the user needs precision, structure the prompt as scenes:
+For videos over 60s or when precision matters:
 
 ```
-Scene 1: [Scene Type, e.g. "Intro (Motion Graphics)"]
+Scene 1: [Type, e.g. "Intro (Motion Graphics)"]
   Visual: [Describe exact visual]
-  VO: "[What the avatar says]"
-  Duration: [Length]
-
-Scene 2: [Scene Type, e.g. "Hook (A-roll with overlay)"]
-  Visual: [Describe exact visual]
-  VO: "[Script line]"
+  VO: "[Avatar script line]"
   Duration: [Length]
 ```
 
-Scene types to use: Intro, Hook, Problem Statement, Solution, Feature Showcase, Benefits, CTA, End Card. Mix A-roll (avatar speaking) with B-roll (visuals only) and Motion Graphics overlays.
+### The Script-as-Prompt Approach (PREFERRED)
 
-### The Script-as-Prompt Approach (PREFERRED for Full Producer Mode)
+Paste the FULL script into the prompt with scene labels and visual directions. Video Agent follows it scene-by-scene while improving flow, timing, and visuals.
 
-The single biggest upgrade: paste the FULL script directly into the prompt. Video Agent follows it scene-by-scene while improving flow, timing, and visuals automatically. When in Full Producer mode, ALWAYS construct a scene-labeled script with visual directions and VO text, then send the entire thing as the prompt.
-
-### Avatar and Voice Selection
-
-Video Agent accepts an optional `avatar_id` parameter alongside the prompt. When provided, it uses that exact avatar. When omitted, it picks the closest match from the prompt description. **Always try to resolve a specific `avatar_id`** — it gives the user exact control.
-
-**NEVER auto-select an avatar without asking.** No defaulting to stock avatars when the user has custom ones. The user should confirm who appears in their video.
-
-**NEVER use the legacy photo avatar API.** No calling `/v2/photo_avatar/*` endpoints (group create, train, add_motion, talking_photo). No using `type: "talking_photo"` in video generation. No calling `/v2/video/generate` for avatar videos. These are all legacy paths. The ONLY way to create an avatar from a photo is the **Avatar IV path** described below.
-
-**NEVER generate avatar images from text prompts.** No calling `/v1/pacific/text2image.generate`, `/v1/pacific/photar.upload`, or any similar internal endpoint. Avatars come from real photos or from HeyGen's stock library.
-
-#### Two Avatar Paths
-
-There are exactly two ways to get an avatar in a video:
-
-1. **Existing avatar** (stock or custom) → discover via API, pass `avatar_id` to Video Agent
-2. **New avatar from user's photo** → Avatar IV path (`/v2/video/av4/generate`)
-
-Nothing else. No third option.
-
-#### Path A: Using Existing Avatars
-
-##### A1: Discover Custom Avatars
-
-Call `GET /v2/avatar_group.list` to find the user's avatar groups. For each group, call `GET /v2/avatar_group/{group_id}/avatars` to get the looks.
-
-Filter results:
-- **Keep:** avatars (studio avatars, instant avatars, motion avatars)
-- **Discard:** talking_photos (always filter these out, never offer them)
-
-If the user has custom avatars with multiple looks, note each look's `avatar_id`, name, and `preview_image_url`.
-
-##### A2: Check Last-Used Avatar
-
-Check `heygen-video-producer-log.jsonl` for this user's past generations. If they have previous videos, find the `avatar_id` and look name used last.
-
-If a last-used avatar exists, **default to it**:
-> "Last time you used [Avatar Name — Look Name]. Use her again?"
-
-- **"Yes" / confirmation** → use that `avatar_id`, move to voice direction
-- **"Show me all looks"** → present all looks from that avatar group with preview images, let them pick
-- **"Different avatar" / "Start fresh"** → go to A3
-
-If no previous videos exist, go to A3.
-
-##### A3: Avatar Conversation
-
-Ask: **"Do you want a visible presenter, or voice-over only?"**
-
-If voice-over only → done. No `avatar_id` needed. Use in prompt: `"Voice-over narration only. No visible presenter."`
-
-If they want a visible presenter:
-
-**If custom avatars were found in A1**, present them first:
-> "You have [Avatar Name] with [N] looks: [list names]. Want to use one of these?"
-
-Show preview images if they want to see them. Let them pick a specific look → use that `avatar_id`.
-
-**If they want to use their own photo** → go to Path B (Avatar IV).
-
-**If no custom avatars and no photo** (stock only), have a natural conversation:
-> "What kind of presenter fits this video? Think about who your audience would trust."
-
-Let them describe it. Examples:
-- "A young woman, tech YouTuber vibe" → describe in prompt, Video Agent picks closest match
-- "Someone corporate, male" → describe in prompt
-- "Use Abigail" → they named a stock avatar. Use in prompt: `"Use Abigail as the presenter."`
-- "I don't care" → ask one follow-up: "More formal or more casual?" Then pick.
-
-Confirm your understanding before proceeding:
-> "So I'm picturing: [description]. Sound right?"
-
-##### A4: Voice Direction
-
-After avatar is settled, confirm voice:
-- If they described the avatar with enough detail, infer the voice: "I'll match the voice — [accent, delivery style]. Work for you?"
-- If non-English video, confirm language and accent.
-- If they have strong voice preferences, let them describe it.
-
-##### How to Pass Existing Avatars to the API
-
-The `avatar_id` parameter and the prompt description work together:
-
-```json
-{
-  "prompt": "...[script and directions]...",
-  "avatar_id": "05bf07b91de446a3b6e5d47c48214857"
-}
-```
-
-- **Custom avatar with known ID** → pass `avatar_id` as top-level parameter AND describe the avatar in the prompt for voice/delivery direction.
-- **Stock avatar by name** → no `avatar_id` parameter. Describe in prompt: `"Use [Name] as the presenter."`
-- **Described presenter (no specific ID)** → no `avatar_id` parameter. Full description in prompt.
-- **Voice-over only** → no `avatar_id` parameter. State in prompt: `"Voice-over narration only."`
-
-##### Limitations (Be Honest)
-
-When using `avatar_id`, Video Agent uses that exact avatar. Without it, Video Agent picks the **closest match** from stock avatars based on the prompt description. Stock avatar matching is approximate, not exact. Custom avatar matching by name alone in the prompt is unreliable — always use `avatar_id` for custom avatars.
-
-#### Path B: Avatar IV (Create Avatar from Photo)
-
-When the user wants to use their own photo as the presenter, use the **Avatar IV** path. This is HeyGen's latest avatar technology with natural motion and improved quality. It generates a video directly from a photo — no group creation, no training, no legacy steps.
-
-**IMPORTANT:** Avatar IV is a DIFFERENT generation path than Video Agent. When the user provides a photo for their avatar, you do NOT use `/v1/video_agent/generate`. You use `/v2/video/av4/generate` instead. The script and prompt construction (Phase 2-3) still apply — you just submit to a different endpoint.
-
-##### B1: Get the Photo
-
-The user provides a photo (file upload, URL, or path). Requirements:
-- Format: JPEG or PNG
-- Resolution: minimum 512x512px
-- Clear, front-facing face with good lighting
-- Simple background preferred
-
-If the photo quality is questionable, mention it: "This photo might work, but Avatar IV produces best results with a clear, well-lit headshot. Want to try it or use a different photo?"
-
-##### B2: Upload the Photo
-
-```bash
-curl -X POST "https://upload.heygen.com/v1/asset" \
-  -H "Content-Type: image/jpeg" \
-  -H "X-Api-Key: $HEYGEN_API_KEY" \
-  --data-binary @/path/to/photo.jpg
-```
-
-Returns `image_key` (e.g. `"image/741299e941764988b432ed3a6757878f/original.jpg"`).
-
-##### B3: Generate with Avatar IV
-
-```bash
-curl -X POST "https://api.heygen.com/v2/video/av4/generate" \
-  -H "X-Api-Key: $HEYGEN_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "image_key": "<image_key from upload>",
-    "script": "<the narrator script from Phase 2>",
-    "voice_id": "<voice_id>",
-    "video_orientation": "landscape",
-    "video_title": "<video title>"
-  }'
-```
-
-| Field | Type | Required | Description |
-|-------|------|:--------:|-------------|
-| `image_key` | string | ✓ | From upload response |
-| `script` | string | ✓ | The narrator script (plain text, no scene labels) |
-| `voice_id` | string | ✓ | Voice to use (see voice selection below) |
-| `video_orientation` | string | | `"landscape"`, `"portrait"`, or `"square"` |
-| `video_title` | string | | Title for the video |
-| `fit` | string | | `"cover"` or `"contain"` |
-| `custom_motion_prompt` | string | | Describe motion/expressions (e.g. "confident, gesturing while explaining") |
-| `enhance_custom_motion_prompt` | boolean | | Let AI enhance the motion prompt |
-
-Returns `video_id`. Poll with `GET /v1/video_status.get?video_id=<id>` same as Video Agent.
-
-##### B4: Voice Selection for Avatar IV
-
-Avatar IV requires an explicit `voice_id` (unlike Video Agent which can infer voice from prompt). To find available voices:
-
-```bash
-curl -s "https://api.heygen.com/v2/voices" \
-  -H "X-Api-Key: $HEYGEN_API_KEY"
-```
-
-Ask the user about voice preference (accent, gender, energy) and pick the closest match. If unsure, ask: "What should this person sound like? Any accent preference?"
-
-##### Key Differences: Avatar IV vs Video Agent
-
-| | Video Agent | Avatar IV |
-|---|---|---|
-| **Endpoint** | `/v1/video_agent/generate` | `/v2/video/av4/generate` |
-| **Input** | Prompt (full creative direction) | Script + image_key + voice_id |
-| **Avatar source** | Stock library or `avatar_id` | User's uploaded photo |
-| **B-roll/visuals** | Video Agent adds them automatically | Avatar only, no B-roll |
-| **Scene planning** | Automatic | None — single continuous take |
-| **Best for** | Produced videos with scenes, graphics, transitions | Talking-head / narrator from custom photo |
-
-**When Avatar IV is the right choice:** The user has a specific photo they want as the presenter and wants a talking-head style video. The tradeoff is no automatic B-roll, motion graphics, or scene transitions.
-
-**When Video Agent is better:** The user wants a produced video with multiple scenes, B-roll, graphics, and transitions. Use stock avatars or existing custom avatars via `avatar_id`.
-
-### Orientation Mapping
-- YouTube / web / LinkedIn → `landscape`
-- TikTok / Reels / Shorts → `portrait`
-- Default if unspecified → `landscape`
-
-Note: Aspect ratio is controlled through the prompt description ("landscape video" or "portrait/vertical video"). The API does not have a separate `aspect_ratio` parameter.
-
-### Prompt Structure (IMPORTANT: Stack style at the end)
-
-Put content/script FIRST, then style directives at the bottom. This keeps creative intent clean and technical specs organized.
+### Prompt Structure (Stack style at the end)
 
 ```
-[Scene-by-scene script with Visual + VO + Duration for each scene]
+[Scene-by-scene script with Visual + VO + Duration]
 
-[Asset anchoring instructions if applicable.]
-
-[Negative constraints if applicable.]
+[Asset anchoring instructions if applicable]
 
 ---
-[Visual style block: colors, fonts, style descriptor]
-[Media type directions: when to use motion graphics vs stock vs AI-generated]
+[Visual style block OR style_id reference]
+[Media type directions per scene]
 [Intro/outro/chapter break instructions]
 ```
 
+### Orientation
+
+- YouTube / web / LinkedIn → `"landscape"`
+- TikTok / Reels / Shorts → `"portrait"`
+- Default → `"landscape"`
+
+Pass as explicit `orientation` parameter (not just described in prompt).
+
 ### Advanced Visual Techniques (Conditional Load)
 
-For videos over 90 seconds OR when the user requests "cinematic" or "production quality", read `references/prompt-craft.md` for advanced visual techniques.
-
-### One-Shot Mindset (CRITICAL)
-
-The API call is one-shot. There is no back-and-forth with Video Agent. Every generation is a fresh call. This means the prompt MUST be as complete and precise as possible on the first attempt. The skill's entire job is to maximize the chance of success on that single generation. Don't rely on iteration with the API. Do ALL the work upfront: scene structure, visual style, media types, asset anchoring, pacing. The better the prompt, the fewer re-generations needed.
-
-Note: The Video Agent web UI supports conversational iteration within a session. The API (`/v1/video_agent/generate`) is one-shot — every call is a fresh generation. This skill uses the API.
-
-**NEVER send a flat paragraph as the prompt.** Always structure it as scenes with Visual + VO + Duration. Always include the visual style block. Always specify media types per scene. A flat script with no visual direction produces generic, forgettable videos. A scene-structured prompt with style and media directions produces professional results.
-
-### Complete Prompt Example
-
-Brief: "60-second product demo about HeyGen's Video Agent API for developers, casual-confident tone"
-
-This is the FULL assembled prompt exactly as it would be sent to the API (using 1.4x padding → 85-second budget):
-
-```
-[Avatar direction from conversation — e.g. "A young male tech YouTuber in a modern workspace" or "Use Abigail as the presenter"] walks developers through HeyGen's Video Agent API, showing how one API call produces a complete video. This is an 85-second video covering ONE topic: the Video Agent API.
-
-Note: If a custom avatar was selected in the Avatar Conversation Flow, the `avatar_id` is passed as a separate top-level parameter alongside this prompt. The prompt still describes the avatar's delivery style and setting for Video Agent's direction.
-
-Scene 1: Intro (Motion Graphics) — 8s
-  Visual: (Motion Graphics) HeyGen logo animates in on dark blue background. Title text "Video Agent API" types on below.
-  VO: "What if you could generate a full production video with a single API call? No timeline. No editing. Just one prompt."
-
-Scene 2: The Problem (A-roll) — 12s
-  Visual: (A-roll) Narrator speaking to camera in a modern workspace.
-  VO: "Building video into your app used to mean stitching together templates, managing assets, and wrestling with rendering pipelines. That's a lot of engineering for a feature your users expect to just work."
-
-Scene 3: The Solution (B-roll — Motion Graphics) — 15s
-  Visual: (Motion Graphics) Animated code snippet showing a simple curl request to /v1/video_agent/generate. The JSON payload highlights the "prompt" field. A response animation shows video_id appearing.
-  VO: "Video Agent changes that. Send a prompt describing what you want. The API handles scene planning, avatar selection, B-roll, transitions, and rendering. You get back a video ID."
-
-Scene 4: How It Works (A-roll + overlay) — 15s
-  Visual: (A-roll + overlay) Narrator on left 35%. Right 65% shows an animated pipeline: Prompt → Scene Planning → Asset Selection → Rendering → Delivered.
-  VO: "Under the hood, Video Agent breaks your prompt into scenes, picks the right visuals for each one, selects an avatar and voice that match your tone, and renders the whole thing. Typical turnaround: two to three minutes."
-
-Scene 5: Use Cases (B-roll — Motion Graphics) — 15s
-  Visual: (Motion Graphics) Three cards cascade in showing use cases: "Personalized Sales Videos", "Auto-Generated Tutorials", "Product Update Announcements". Each card has an icon and brief subtitle.
-  VO: "Teams are using it for personalized sales outreach, auto-generated product tutorials, and weekly update videos that used to take a full production day."
-
-Scene 6: CTA / End Card (Motion Graphics) — 10s
-  Visual: (Motion Graphics) Dark background with "docs.heygen.com/video-agent" in large white text. HeyGen logo below. Subtle particle animation in background.
-  VO: "One API call. Full production video. Check out the docs and start building."
+For videos over 90s OR "cinematic"/"production quality" requests, read `references/prompt-craft.md`.
 
 ---
-Visual style: Minimalistic, clean visuals. #1E40AF as primary blue, #F8FAFC as background white, #1a1a1a for dark sections. Inter for UI text, JetBrains Mono for code snippets.
-Media types: Motion Graphics for data, code, and diagrams. A-roll for narrator presence. No AI-generated footage needed.
-Include an intro sequence with logo animation, chapter breaks between major sections using Motion Graphics, and a branded end card.
-[Avatar + voice direction from conversation. e.g. "Use a young male presenter with tech-YouTuber energy in a modern workspace. American accent, upbeat delivery."]
+
+## Avatar Conversation Flow
+
+**NEVER auto-select an avatar without asking.**
+
+### Path A: Discover Existing Avatars
+
+**A1: Check for private avatars first**
+
+```bash
+# List private avatar looks (user's custom avatars)
+curl -s "https://api.heygen.com/v3/avatars/looks?ownership=private&limit=50" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
 
-This prompt demonstrates all required elements: scene-by-scene structure with Visual + VO per scene, duration per scene (padded 1.4x), narrator framing, media type per scene, visual style block at the bottom, and avatar direction.
+Each look has an `id` — this is the `avatar_id` you pass to the API.
 
-Proceed to Phase 4.
+Avatar types: `studio_avatar`, `video_avatar`, `photo_avatar`. Photo avatars support `motion_prompt` and `expressiveness`.
+
+To browse by group:
+```bash
+# List avatar groups
+curl -s "https://api.heygen.com/v3/avatars?ownership=private&limit=50" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+
+# Get looks for a specific group
+curl -s "https://api.heygen.com/v3/avatars/looks?group_id=<group_id>&limit=50" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+```
+
+**A2: Check last-used avatar** from `heygen-video-producer-log.jsonl`. If found:
+> "Last time you used [Avatar Name — Look Name]. Use her again?"
+
+**A3: Avatar conversation** — ask: "Do you want a visible presenter, or voice-over only?"
+
+If voice-over only → no `avatar_id`. State in prompt: "Voice-over narration only."
+
+If presenter wanted and custom avatars exist, present them first. If they want public/stock avatars:
+```bash
+curl -s "https://api.heygen.com/v3/avatars/looks?ownership=public&limit=20" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+```
+
+Let them describe what they want. Confirm before proceeding.
+
+**A4: Voice direction** — after avatar is settled, confirm voice preferences (accent, delivery style, language).
+
+### Path B: Create a New Avatar
+
+Use `POST /v3/avatars` to create a new avatar. Three types:
+
+**Photo avatar (from user's photo):**
+```bash
+curl -X POST "https://api.heygen.com/v3/avatars" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "photo",
+    "name": "My Avatar",
+    "file": {"type": "url", "url": "https://example.com/headshot.jpg"}
+  }'
+```
+
+Photo requirements: JPEG or PNG, min 512x512, clear front-facing face, good lighting.
+
+**AI-generated avatar (from a text prompt):**
+```bash
+curl -X POST "https://api.heygen.com/v3/avatars" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "prompt",
+    "name": "Tech Presenter",
+    "prompt": "Young professional woman, modern workspace, confident smile"
+  }'
+```
+
+Prompt max: 200 characters. Optional: up to 3 `reference_images`.
+
+**Video avatar (from user's video recording):**
+```bash
+curl -X POST "https://api.heygen.com/v3/avatars" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "video",
+    "name": "My Video Avatar",
+    "file": {"type": "asset_id", "asset_id": "<uploaded_asset_id>"}
+  }'
+```
+
+All three return an `avatar_item` with `id` — use this as `avatar_id` in video generation.
+
+Files can be provided as `{"type": "url", "url": "..."}`, `{"type": "asset_id", "asset_id": "..."}`, or `{"type": "base64", "data": "...", "content_type": "..."}`.
+
+### Path C: Direct Image (Simplest for One-Off)
+
+Skip avatar creation entirely. Pass `image_url` directly to `POST /v3/videos`:
+
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "image_url": "https://example.com/headshot.jpg",
+    "script": "<narrator script>",
+    "voice_id": "<voice_id>",
+    "aspect_ratio": "16:9",
+    "title": "My Video"
+  }'
+```
+
+Also accepts `image_asset_id` instead of `image_url`. This is the fastest path for a one-off talking-head video from a photo.
+
+### Voice Selection
+
+```bash
+curl -s "https://api.heygen.com/v3/voices?type=private&limit=20" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+
+# Or public voices with filters
+curl -s "https://api.heygen.com/v3/voices?type=public&engine=starfish&language=en&gender=female&limit=20" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+```
+
+### How Avatar/Voice Are Passed
+
+The Video Agent (`POST /v3/video-agents`) accepts `avatar_id` and `voice_id` as top-level parameters alongside the prompt:
+
+```json
+{
+  "prompt": "...",
+  "avatar_id": "look_id_from_discovery",
+  "voice_id": "voice_id_from_discovery",
+  "style_id": "optional_style_id",
+  "orientation": "landscape"
+}
+```
+
+- **Custom avatar with known ID** → pass `avatar_id` AND describe delivery style in prompt
+- **Stock avatar by name** → describe in prompt, omit `avatar_id`
+- **Voice-over only** → omit `avatar_id`, state in prompt
 
 ---
 
@@ -528,294 +401,354 @@ Proceed to Phase 4.
 
 ### Pre-Submit Gate
 
-This is the ONLY place dry-run mode diverges from the normal flow.
-
-- **Dry-run mode**: Present the creative preview (below), then wait for explicit go-ahead.
-- **Full Producer** (no dry-run): User already approved the script in Phase 2. Proceed to API call.
-- **Quick Shot**: Generate immediately, no confirmation needed.
+- **Dry-run mode**: Present the creative preview (below), then wait for go-ahead.
+- **Full Producer**: User approved script in Phase 2. Proceed.
+- **Quick Shot**: Generate immediately.
 
 #### Creative Preview (dry-run output)
 
-Present the video as a **pitch**, not a spec sheet. The user should read this and think *"oh, this is going to be good"* — not *"looks correct."*
+Present the video as a **pitch**, not a spec sheet:
 
 ```
 🎬 Here's what I'm making:
 
-[One opinionated sentence describing the creative direction and vibe.
- e.g. "A Fireship-style breakdown of why agents can do everything except make a video."]
+[One opinionated sentence describing creative direction and vibe.]
 ~[duration], [orientation], [avatar description or "voice-over only"].
 
 ---
 
 [SCENE LABEL]
-*([tone/delivery cue, e.g. "conspiratorial, leaning in"])*
+*([tone/delivery cue])*
 "[Script line — full text]"
-[inline visual cue, e.g. "[animated checklist, items checking off one by one]"]
-
-[SCENE LABEL]
-*([tone cue])*
-"[Script line]"
-[visual cue]
+[inline visual cue]
 
 ...
 
 ---
 
-[One-line logline that sells the whole video.
- e.g. "45 seconds that make agents without video feel incomplete."]
+[One-line logline that sells the whole video.]
 
 Say **go** to generate, or tell me what to change.
 ```
 
-**Rules for the creative preview:**
-- NO per-scene timestamps. Video Agent decides pacing.
-- NO settings block. No bullet-point summary of duration/orientation/avatar/assets.
-- NO padding math or implementation details.
-- Scene labels are short creative names ("THE HOOK", "THE GAP"), not numbered specs.
-- Include a tone/delivery cue per scene in italics — this shows what the video will *feel* like.
-- Include inline visual cues in brackets — reads cinematic, like a screenplay.
-- End with a logline: one sentence that makes the user want to hit go.
-- The full constructed prompt (with all technical details, style blocks, media types) lives behind the scenes. If a power user asks to see it, show it. Otherwise, hide the sausage-making.
+Rules: No per-scene timestamps. No settings block. Scene labels are creative names ("THE HOOK", "THE GAP"). Include tone cues in italics and visual cues in brackets. End with a logline.
 
-When the user says "go", "generate", "ship it", or "looks good" → proceed to API call below. The prompt has already been constructed — just submit it.
+### Generation Mode: One-Shot vs Interactive Session
 
-### API Call
+**One-Shot (default):** Single API call, prompt must be complete. Best for well-defined videos.
 
-Submit to Video Agent:
+**Interactive Session (for complex/iterative videos):** Multi-turn conversation with Video Agent before final generation. Use when the user wants to collaborate with the agent or refine direction iteratively.
 
-**Basic (prompt only):**
+### One-Shot API Call
+
 ```bash
-curl -s -X POST "https://api.heygen.com/v1/video_agent/generate" \
-  -H "X-Api-Key: $HEYGEN_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "<the constructed prompt>"}'
-```
-
-**With custom avatar (from Avatar Conversation Flow):**
-```bash
-curl -s -X POST "https://api.heygen.com/v1/video_agent/generate" \
+curl -s -X POST "https://api.heygen.com/v3/video-agents" \
   -H "X-Api-Key: $HEYGEN_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "prompt": "<the constructed prompt>",
-    "avatar_id": "<avatar_id from discovery>"
-  }'
-```
-
-**With assets (uploaded in Phase 1):**
-```bash
-curl -s -X POST "https://api.heygen.com/v1/video_agent/generate" \
-  -H "X-Api-Key: $HEYGEN_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "prompt": "<the constructed prompt with asset descriptions>",
+    "prompt": "<constructed prompt>",
     "avatar_id": "<optional, from discovery>",
+    "voice_id": "<optional, from discovery>",
+    "style_id": "<optional, from styles>",
+    "orientation": "landscape",
     "files": [
-      {"asset_id": "<uploaded_asset_id_1>"},
-      {"asset_id": "<uploaded_asset_id_2>"}
-    ]
+      {"type": "asset_id", "asset_id": "<uploaded_id_1>"},
+      {"type": "url", "url": "https://example.com/reference.pdf"}
+    ],
+    "callback_url": "<optional webhook URL>"
   }'
 ```
 
-`avatar_id` is optional. Include it when the user selected a specific custom avatar look. Omit it when using stock avatars by name or voice-over only. Include ALL uploaded asset IDs in the `files` array. The prompt should describe how to use each one.
+| Parameter | Type | Required | Description |
+|-----------|------|:--------:|-------------|
+| `prompt` | string | ✓ | The constructed prompt with script, visual directions, style |
+| `avatar_id` | string | | Look ID from avatar discovery (the `id` field on a look) |
+| `voice_id` | string | | Voice ID from voice listing |
+| `style_id` | string | | Style ID from styles listing |
+| `orientation` | string | | `"landscape"` or `"portrait"` (default: landscape) |
+| `files` | array | | Array of file objects: `{type, url/asset_id/data}` |
+| `callback_url` | string | | Webhook URL for completion notification |
+| `callback_id` | string | | Custom ID included in webhook payload |
 
-Response on success:
+Response:
 ```json
-{"error": null, "data": {"video_id": "abc123", "session_id": "def-456-789"}}
+{"data": {"video_id": "abc123"}}
 ```
 
-Extract both `video_id` and `session_id` from the response.
+### Interactive Session Mode
+
+For complex videos where you want to iterate with Video Agent before final generation:
+
+**Create session:**
+```bash
+curl -s -X POST "https://api.heygen.com/v3/video-agents/sessions" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "<initial prompt>",
+    "avatar_id": "<optional>",
+    "voice_id": "<optional>",
+    "style_id": "<optional>",
+    "orientation": "landscape",
+    "auto_proceed": false
+  }'
+```
+
+Set `auto_proceed: true` to skip the review step and generate immediately after processing.
+
+**Poll session status:**
+```bash
+curl -s "https://api.heygen.com/v3/video-agents/sessions/<session_id>" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+```
+
+Status flow: `processing` → `reviewing` → `generating` → `completed` | `failed`
+
+At `reviewing`, the response includes the agent's plan in `messages`. Present this to the user for feedback.
+
+**Send follow-up message:**
+```bash
+curl -s -X POST "https://api.heygen.com/v3/video-agents/sessions/<session_id>/messages" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Make the intro more energetic and add a chart in scene 3",
+    "auto_proceed": false
+  }'
+```
+
+**Stop session (finalize and generate):**
+```bash
+curl -s -X POST "https://api.heygen.com/v3/video-agents/sessions/<session_id>/stop" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+```
+
+Interactive sessions are great when the user says "let me see what the agent comes up with first" or has complex multi-scene requirements that benefit from back-and-forth.
+
+### Avatar Video (Direct Control Path)
+
+When using Path C (direct image) or when the user wants precise control over a talking-head video without Video Agent's scene planning:
+
+```bash
+curl -s -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "avatar_id": "<look_id>",
+    "script": "<narrator script, plain text>",
+    "voice_id": "<voice_id>",
+    "title": "My Video",
+    "resolution": "1080p",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+| Parameter | Type | Notes |
+|-----------|------|-------|
+| `avatar_id` | string | Mutually exclusive with `image_url` and `image_asset_id` |
+| `image_url` | string | Direct photo URL — no avatar creation needed |
+| `image_asset_id` | string | Uploaded photo asset ID |
+| `script` | string | Plain text narrator script |
+| `voice_id` | string | Required for avatar videos |
+| `audio_url` / `audio_asset_id` | string | Pre-recorded audio instead of TTS |
+| `resolution` | string | `"1080p"` or `"720p"` |
+| `aspect_ratio` | string | `"16:9"` or `"9:16"` |
+| `motion_prompt` | string | Motion/expression direction (photo avatars) |
+| `expressiveness` | string | `"high"`, `"medium"`, or `"low"` (photo avatars) |
+| `remove_background` | boolean | Remove avatar background |
+| `background` | object | `{type:"color", value:"#1E40AF"}` or `{type:"image", url:"..."}` |
+| `voice_settings` | object | `{speed: 1.0, pitch: 0, locale: "en-US"}` |
+| `callback_url` | string | Webhook for completion |
+
+**When to use Avatar Video vs Video Agent:**
+
+| | Video Agent (`/v3/video-agents`) | Avatar Video (`/v3/videos`) |
+|---|---|---|
+| **Input** | Full prompt with creative direction | Script + avatar/image + voice |
+| **Scenes** | Auto scene planning, B-roll, transitions | Single continuous take |
+| **Best for** | Produced videos with graphics and scenes | Talking-head / narrator videos |
+| **Cost** | $0.0333/sec | $0.10/sec |
 
 ### Error Handling
 
 | Error | Action |
 |-------|--------|
-| 401 Unauthorized | API key invalid. Tell user to check HEYGEN_API_KEY. |
+| 401 Unauthorized | API key invalid. Check HEYGEN_API_KEY. |
 | 402 Payment Required | Insufficient credits. Tell user. |
 | 429 Rate Limited | Wait 60s, retry once. |
-| 500+ Server Error | Retry once after 30s. If still failing, tell user HeyGen is having issues. |
-| Network error | Retry once. |
-| 200 but no video_id | Retry once. If still no video_id, tell the user: "The API accepted the request but didn't return a video ID. This is unusual. Try again or check the HeyGen dashboard." |
+| 500+ Server Error | Retry once after 30s. |
+| 200 but no video_id | Retry once. If still failing, tell user to check HeyGen dashboard. |
 
-**Asset upload failure:** If an asset upload returns an error, log which asset failed and proceed without it. Tell the user: "Note: [filename] couldn't be uploaded. The video was generated without this asset."
+**Asset upload failure:** Log which asset failed, proceed without it. Inform the user.
 
-On success, **immediately share the Video Agent session URL** so the user can follow along:
+### Polling for Completion
 
-```
-Video submitted! You can watch the production progress live:
-🔗 https://app.heygen.com/video-agent/<session_id>
-
-I'll notify you automatically when it's ready.
+```bash
+curl -s "https://api.heygen.com/v3/videos/<video_id>" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
 
-The session URL is available instantly. The user can watch scene planning, asset selection, and rendering in real-time while they do other things.
+Status: `pending` → `processing` → `completed` | `failed`
 
-### Delivery: Check Status and Deliver When Done
-
-After submitting the video, you are responsible for checking when it's done and delivering the result.
-
-**Check the status** using: `curl -s -H "X-Api-Key: $HEYGEN_API_KEY" "https://api.heygen.com/v1/video_status.get?video_id=<video_id>"` — look for `status: "completed"` in the response.
+Response on completion includes `video_url`, `thumbnail_url`, `duration`.
 
 **Polling cadence:**
 1. First check at **2 minutes** after submission.
-2. Then every **30 seconds** for the next 3 minutes.
-3. Then every **60 seconds** up to 30 minutes.
-4. After **30 minutes**, stop polling and send the user the session URL as fallback.
+2. Every **30 seconds** for the next 3 minutes.
+3. Every **60 seconds** up to 30 minutes.
+4. After **30 minutes**, stop polling and give the user the dashboard fallback.
 
-**When completed**, deliver the finished video URL: `https://app.heygen.com/videos/<video_id>`
-
-**Video rendering failure:** If status returns `failed` or `error`, tell the user what went wrong. Offer to retry with the same prompt or adjust. Common causes: content policy violation, avatar rendering issue, system overload.
-
-```
-Your video is generating! I've set up automatic delivery.
-
-🔗 Watch live: https://app.heygen.com/video-agent/<session_id>
-
-I'll send you the finished video when it's ready (usually 1-3 minutes). You're free to keep chatting in the meantime.
+**Webhook alternative:** If a `callback_url` was provided, HeyGen will POST to it on completion. No polling needed. Manage webhooks:
+```bash
+# Register
+curl -X POST "https://api.heygen.com/v3/webhooks" ...
+# List
+curl -s "https://api.heygen.com/v3/webhooks" ...
+# Delete
+curl -X DELETE "https://api.heygen.com/v3/webhooks/<id>" ...
 ```
 
+### Delivery
 
-
----
-
-## Phase 5 — Review and Deliver
-
-When the video is ready:
-
-1. **Share both URLs:**
-   - **Video Agent session** (already shared in Phase 4): `https://app.heygen.com/video-agent/<session_id>` — shows the full production process
-   - **Finished video page**: `https://app.heygen.com/videos/<video_id>` — direct link to the completed video (available once rendering is done)
-2. **NEVER share the raw mp4 URL** from the API response (video_url field). Those are temporary S3 links with expiring TTL. They will break.
-
-### Error Notes in Delivery
-
-If any issues occurred during the pipeline, note them clearly:
-- If quality review was skipped due to timeout: "Quality review was skipped due to timeout."
-- If assets failed to upload: "Note: [filename] couldn't be uploaded. The video was generated without this asset."
-- If the video was re-generated due to a failure: "Note: First render failed ([reason]). This is the result of the second attempt."
-
-### Present the Review
-
+On success, share:
 ```
 Your video is ready! 🎬
 
-🎬 Video Agent session: https://app.heygen.com/video-agent/<session_id>
-🔗 Finished video: https://app.heygen.com/videos/<video_id>
+🔗 Video: https://app.heygen.com/videos/<video_id>
 
 Quick check against your brief:
 ✓ Duration: ~58s (target: 60s)
 ✓ Tone: casual-confident
 ✓ Topic: single-topic ✓
 ✓ Assets referenced: 2/2
-
-Happy with it? Or want me to adjust?
-→ Looks great, ship it
-→ Make the opening punchier
-→ Slow it down / speed it up
-→ Try a completely different approach
 ```
+
+**NEVER share the raw mp4 URL** from the API response. Those are temporary S3 links.
+
+### Video Management
+
+```bash
+# List all videos
+curl -s "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+
+# Delete a video
+curl -X DELETE "https://api.heygen.com/v3/videos/<video_id>" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+```
+
+---
+
+## Phase 5 — Review and Deliver
 
 ### Completion Status Report
 
-After delivering the video, always append a completion status:
+After delivering the video, always append a status:
 
-```
-STATUS: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
-```
-
-**Statuses:**
-
-- **DONE** — Video completed, duration within 15% of target. All good.
-- **DONE_WITH_CONCERNS** — Video completed but with issues the user should know about. List each concern with a recommended fix. Examples: duration was >20% off target, assets weren't used as directed.
-- **BLOCKED** — Cannot proceed. State what's blocking (API error, insufficient credits, prompt rejected twice). State what was tried and recommend what user should do.
+- **DONE** — Video completed, duration within 15% of target.
+- **DONE_WITH_CONCERNS** — Completed with issues. List each concern and recommended fix.
+- **BLOCKED** — Cannot proceed. State what's blocking and what was tried.
 - **NEEDS_CONTEXT** — Missing information. State exactly what's needed.
 
-Format in delivery:
 ```
 📊 **Status: DONE**
-All checks passed. Duration within target. Reviewer approved first pass.
-```
-
-```
-📊 **Status: DONE_WITH_CONCERNS**
-⚠️ Duration was 25% under target (45s vs 60s target). Recommend re-generating with a longer script.
-⚠️ Reviewer revised the prompt (score 6/10 → improved). Original had weak scene transitions.
-```
-
-```
-📊 **Status: BLOCKED**
-❌ API returned 402 (insufficient credits) on two attempts.
-Tried: waited 60s, retried. Same error.
-Recommendation: Check your HeyGen account credits at app.heygen.com/settings.
-```
-
-### Escalation Rule
-
-
-
-Report to the user:
-```
-📊 **Status: BLOCKED**
-❌ Prompt was rejected by quality review twice. Issues:
-  1. [First rejection reason]
-  2. [Second rejection reason]
-This means the brief may need fundamental rework. Let's step back and revisit what this video should accomplish.
+All checks passed. Duration within target.
 ```
 
 ### Self-Evaluation Log Entry
 
-After EVERY video generation (successful or not), write a JSON line to `heygen-video-producer-log.jsonl` in the workspace root:
+After EVERY generation (successful or not), append to `heygen-video-producer-log.jsonl`:
 
 ```bash
-echo '{"timestamp":"<ISO-8601>","video_id":"<video_id>","session_id":"<session_id>","prompt_type":"full_producer|enhanced|quick_shot","target_duration":<user_target_seconds>,"actual_duration":<actual_or_null>,"duration_ratio":<actual/target_or_null>,"word_count":<script_words>,"scene_count":<num_scenes>,"status":"DONE|DONE_WITH_CONCERNS|BLOCKED","concerns":["<list>"],"what_worked":"<brief>","what_to_improve":"<brief>","topic":"<topic>"}' >> /Users/heyeve/.openclaw/workspace/heygen-video-producer-log.jsonl
+echo '{"timestamp":"<ISO-8601>","video_id":"<id>","prompt_type":"full_producer|enhanced|quick_shot|interactive","target_duration":<seconds>,"actual_duration":<actual_or_null>,"duration_ratio":<ratio_or_null>,"word_count":<words>,"scene_count":<scenes>,"avatar_id":"<id_or_null>","style_id":"<id_or_null>","generation_path":"video_agent|avatar_video|interactive_session","status":"DONE|DONE_WITH_CONCERNS|BLOCKED","concerns":["<list>"],"what_worked":"<brief>","what_to_improve":"<brief>","topic":"<topic>"}' >> /Users/heyeve/.openclaw/workspace/heygen-video-producer-log.jsonl
 ```
 
-**Always log.** Even blocked or failed attempts. The log is how we learn. If `actual_duration` isn't known yet (video still rendering), log what you know and note `"actual_duration": null`.
+**Always log.** Even failed attempts. The log is how we learn.
 
 ### Iteration Loop
 
 If user wants changes:
-1. **Track what was tried.** Don't repeat a failed approach.
-2. **Adjust the prompt** based on feedback. Be specific in changes.
-3. **Re-generate** → re-poll → re-review.
-4. **No iteration cap.** Keep going until the user is happy or decides to stop.
+1. Track what was tried. Don't repeat failed approaches.
+2. Adjust the prompt based on feedback.
+3. Re-generate → re-poll → re-review.
+4. No iteration cap. Keep going until the user is happy.
 
-**Iteration intelligence:**
-- "Make it punchier" → Add energy words to opening, shorten first sentence, front-load the hook harder
-- "Slow it down" → Reduce word count by 15-20%, add shorter scenes with more breathing room
-- "Different approach" → Restructure the script, try a different tone, change the opening
-- "The assets aren't showing" → Strengthen asset anchoring language, be more explicit about timing
+Iteration intelligence:
+- "Make it punchier" → Energy words in opening, shorter first sentence, front-load the hook
+- "Slow it down" → Reduce word count 15-20%, add breathing room
+- "Different approach" → Restructure script, change tone/opening
+- "Assets aren't showing" → Strengthen asset anchoring language
 - Never retry with the exact same prompt. Always change something.
 
 ---
 
-## Best Practices (Encoded Knowledge)
+## Best Practices
 
-These are things a good producer knows. They're baked into the phases above, but listed here for reference when making judgment calls:
-
-1. **Front-load the hook.** First 5 seconds = 80% of retention. Always open with the most compelling statement. Never open with context-setting.
-2. **One idea per video.** Video Agent handles single-topic dramatically better than multi-topic.
-3. **Write for the ear.** If you wouldn't say it out loud to a friend, rewrite it.
-4. **150 words/min ceiling.** Faster sounds rushed. Slower sounds boring.
-5. **Strategic pacing.** Scene breaks and short sentences create natural rhythm. Let the scene structure breathe.
-6. **Asset anchoring > asset dumping.** Tell the agent WHEN to show each asset, tied to specific script moments.
-7. **Narrator framing > generic framing.** "A confident narrator explains..." always outperforms "Create a video about..."
-8. **Tone specificity matters.** "Casual-confident, like a tech YouTuber" >> "professional."
-9. **Duration signaling.** Explicitly state target seconds in the prompt. Video Agent respects this.
-10. **Negative prompts work.** "No stock transitions" or "No text overlays" when the user wants a clean look.
+1. **Front-load the hook.** First 5 seconds = 80% of retention. Never open with context-setting.
+2. **One idea per video.** Video Agent handles single-topic dramatically better.
+3. **Write for the ear.** If you wouldn't say it to a friend, rewrite it.
+4. **150 words/min ceiling.** Faster = rushed. Slower = boring.
+5. **Asset anchoring > asset dumping.** Tie each asset to a specific script moment.
+6. **Narrator framing > generic framing.** "A confident narrator explains..." >> "Create a video about..."
+7. **Tone specificity matters.** "Casual-confident, like a tech YouTuber" >> "professional."
+8. **Duration signaling.** Explicitly state padded seconds in the prompt.
+9. **Use styles when they fit.** A curated `style_id` saves prompt engineering effort on visual treatment.
+10. **Interactive sessions for complex projects.** When a one-shot prompt feels risky, iterate with the agent first.
 
 ---
 
 ## Quick Reference
 
-### API Endpoints
-- Generate: `POST https://api.heygen.com/v1/video_agent/generate` **(ALWAYS use this. NEVER use v2/video/generate)**
-- Status: `GET https://api.heygen.com/v1/video_status.get?video_id=<id>`
-- Auth header: `X-Api-Key: $HEYGEN_API_KEY`
-- Cost: 2 credits/minute of generated video
+### Endpoints (ALL v3)
 
-### Advanced Prompt Optimization (Experimental)
-For production-quality scene-by-scene prompts, see `references/prompt-craft.md`. Auto-loaded for videos over 90s or "cinematic"/"production quality" requests. Covers visual layer system, motion vocabulary, and named visual styles. Note: these advanced techniques are experimental and not fully validated.
+| Action | Method | Endpoint |
+|--------|--------|----------|
+| **Video Agent (primary)** | POST | `/v3/video-agents` |
+| **Create Interactive Session** | POST | `/v3/video-agents/sessions` |
+| **Poll Session** | GET | `/v3/video-agents/sessions/{session_id}` |
+| **Send Session Message** | POST | `/v3/video-agents/sessions/{session_id}/messages` |
+| **Stop Session** | POST | `/v3/video-agents/sessions/{session_id}/stop` |
+| **Avatar Video (direct)** | POST | `/v3/videos` |
+| **Poll Video Status** | GET | `/v3/videos/{video_id}` |
+| **List Videos** | GET | `/v3/videos` |
+| **Delete Video** | DELETE | `/v3/videos/{video_id}` |
+| **List Avatar Groups** | GET | `/v3/avatars` |
+| **Get Avatar Group** | GET | `/v3/avatars/{group_id}` |
+| **List Avatar Looks** | GET | `/v3/avatars/looks` |
+| **Get Avatar Look** | GET | `/v3/avatars/looks/{look_id}` |
+| **Create Avatar** | POST | `/v3/avatars` |
+| **List Voices** | GET | `/v3/voices` |
+| **TTS** | POST | `/v3/voices/speech` |
+| **List Styles** | GET | `/v3/video-agents/styles` |
+| **Upload Asset** | POST | `/v3/assets` |
+| **Webhooks** | POST/GET/DELETE | `/v3/webhooks` |
+
+### Auth
+- Header: `X-Api-Key: $HEYGEN_API_KEY`
+- Docs: https://developers.heygen.com
+
+### Pricing
+| Feature | Cost |
+|---------|------|
+| Video Agent | $0.0333/sec |
+| Avatar Video | $0.10/sec |
+| TTS (Starfish) | $0.000333/sec |
+| Video Translation | $0.05/sec (speed) / $0.10/sec (precision) |
+
+### Complete Prompt Example
+
+Brief: "60-second product demo about HeyGen's Video Agent API for developers, casual-confident tone"
+
+Assembled prompt (with 1.4x padding → 85-second budget), sent to `POST /v3/video-agents`:
+
+```json
+{
+  "prompt": "A young male tech presenter in a modern workspace walks developers through HeyGen's Video Agent API, showing how one API call produces a complete video. This is an 85-second video covering ONE topic: the Video Agent API.\n\nScene 1: Intro (Motion Graphics) — 8s\n  Visual: (Motion Graphics) HeyGen logo animates on dark blue. Title \"Video Agent API\" types on.\n  VO: \"What if you could generate a full production video with a single API call? No timeline. No editing. Just one prompt.\"\n\nScene 2: The Problem (A-roll) — 12s\n  Visual: (A-roll) Narrator speaking to camera.\n  VO: \"Building video into your app used to mean stitching together templates, managing assets, and wrestling with rendering pipelines.\"\n\nScene 3: The Solution (Motion Graphics) — 15s\n  Visual: (Motion Graphics) Animated code snippet showing a curl request to /v3/video-agents. Response shows video_id.\n  VO: \"Video Agent changes that. Send a prompt. The API handles scene planning, avatars, B-roll, transitions, and rendering.\"\n\nScene 4: How It Works (A-roll + overlay) — 15s\n  Visual: (A-roll + overlay) Narrator left 35%. Right shows pipeline: Prompt → Scene Planning → Asset Selection → Rendering.\n  VO: \"Under the hood, Video Agent breaks your prompt into scenes, picks visuals, selects an avatar and voice, and renders. Two to three minutes.\"\n\nScene 5: Use Cases (Motion Graphics) — 15s\n  Visual: (Motion Graphics) Three cards: Personalized Sales Videos, Auto-Generated Tutorials, Product Updates.\n  VO: \"Teams use it for personalized sales outreach, auto-generated tutorials, and weekly updates that used to take a full production day.\"\n\nScene 6: CTA (Motion Graphics) — 10s\n  Visual: (Motion Graphics) Dark background, \"developers.heygen.com\" in large text. Logo below.\n  VO: \"One API call. Full production video. Check out the docs and start building.\"\n\n---\nVisual style: Minimalistic, clean. #1E40AF primary blue, #F8FAFC background, #1a1a1a dark sections.\nMedia types: Motion Graphics for data/code/diagrams. A-roll for narrator. No AI-generated footage.\nInclude intro with logo animation, chapter breaks, and branded end card.",
+  "avatar_id": "<look_id if custom avatar selected>",
+  "voice_id": "<voice_id if specified>",
+  "orientation": "landscape"
+}
+```
 
 ---
 
@@ -823,6 +756,6 @@ For production-quality scene-by-scene prompts, see `references/prompt-craft.md`.
 
 Run evals to test prompt quality without spending credits:
 
-1. Read `evals/run-eval.md` and follow instructions — produces prompts for 8 test cases and scores them
-2. Compare results with `evals/compare.md` — diffs two eval runs to catch regressions
+1. Read `evals/run-eval.md` — produces prompts for test cases and scores them
+2. Compare with `evals/compare.md` — diffs two eval runs to catch regressions
 3. Baselines from batch test (Mar 24, 2026) in `evals/test-prompts.json`
