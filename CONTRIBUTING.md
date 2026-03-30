@@ -76,6 +76,8 @@ git checkout main && git pull
 git branch -d <branch-name>
 ```
 
+**NEVER reuse a merged or closed branch.** New work = new branch off main. Don't push additional commits to a branch whose PR was already merged or closed.
+
 ### Eve's workflow (for autonomous changes)
 
 When Eve updates the skill without Ken online:
