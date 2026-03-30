@@ -27,7 +27,7 @@ For each entry in `test-prompts.json`, act as if a user sent you the `prompt` fi
 - `quick_shot` → Follow the Quick Shot path (skip to Phase 4 prompt construction). Still apply prompt engineering rules (scene structure, visual style block, media types).
 
 **For each test case, produce:**
-1. The full constructed prompt exactly as it would be sent to `POST /v1/video_agent/generate`
+1. The full constructed prompt exactly as it would be sent to `POST /v3/video-agents`
 2. Word count of the VO/script portion
 3. Number of scenes
 4. Estimated duration based on word count at 150 wpm

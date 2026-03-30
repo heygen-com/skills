@@ -1,6 +1,6 @@
 # Dry Run — Full Pipeline Preview
 
-Iterate on the complete video production pipeline WITHOUT burning HeyGen credits. Produces the exact API payload (prompt, avatar_id, asset_ids, orientation) that would be sent to `/v1/video_agent/generate`.
+Iterate on the complete video production pipeline WITHOUT burning HeyGen credits. Produces the exact API payload (prompt, avatar_id, asset_ids, orientation) that would be sent to `POST /v3/video-agents`.
 
 ## Purpose
 
@@ -29,9 +29,9 @@ You have HEYGEN_API_KEY set.
 
 ## DRY RUN RULES
 - Follow the ENTIRE skill pipeline (Discovery → Script → Prompt → Generate)
-- DO NOT call the HeyGen API. No POST to /v1/video_agent/generate.
+- DO NOT call the HeyGen API. No POST to /v3/video-agents.
 - Instead, output the FINAL PAYLOAD section below.
-- For the avatar flow, call the LIST APIs (GET /v2/avatars, GET /v2/avatar_group.list, GET /v2/avatar_group/{id}/avatars) to see real data.
+- For the avatar flow, call the LIST APIs (GET /v3/avatars, GET /v3/avatars/looks) to see real data.
 - For asset uploads, note what WOULD be uploaded but don't actually upload.
 
 ## Simulated User
@@ -226,23 +226,18 @@ User request arrives
       │   e) No preference, you decide
       │
       ├─ (a) Use existing →
-      │     1. GET /v2/avatar_group.list → show user their groups
-      │     2. User picks group → GET /v2/avatar_group/{id}/avatars → show looks
-      │     3. User picks look → save avatar_id, voice_id
-      │     4. Include in prompt: "Use a [description matching the avatar] as the presenter"
-      │     Note: Video Agent uses prompt-driven avatar selection, not avatar_id param.
-      │     The description should match the look the user chose.
+      │     1. GET /v3/avatars → show user their groups
+      │     2. User picks group → GET /v3/avatars/looks?group_id={id} → show looks
+      │     3. User picks look → save avatar_id (look_id), voice_id
+      │     4. Pass avatar_id as top-level parameter to POST /v3/video-agents
       │
       ├─ (b) Different look →
-      │     1. GET /v2/avatar_group.list → show groups
-      │     2. User picks group → show current looks
-      │     3. Explain: "To add a new look, we'd need to create one via the Photo Avatar API.
-      │        For this video, I can describe the desired look in the prompt and let
-      │        Video Agent interpret it, OR we can use one of your existing looks."
-      │     4. If user wants prompt-driven: describe desired appearance in prompt
-      │     5. If user wants exact control: guide through Photo Avatar look creation
-      │        (upload new image → POST /v2/photo_avatar/avatar_group/create with same group)
-      │        Note: This takes a few minutes to process.
+      │     1. GET /v3/avatars → show groups
+      │     2. User picks group → GET /v3/avatars/looks?group_id={id} → show current looks
+      │     3. If desired look exists → pass avatar_id (look_id) to generation
+      │     4. If user wants a new look → create via POST /v3/avatars (type: photo_avatar)
+      │        then add look. This takes a few minutes to process.
+      │     5. For this video, can also describe desired appearance in prompt alongside avatar_id
       │
       ├─ (c) New avatar from scratch →
       │     1. Ask: "Do you have a photo to use, or should I describe what you want?"
@@ -253,10 +248,9 @@ User request arrives
       │        (delays video) or proceed with a stock avatar and create the custom one after.
       │
       ├─ (d) Stock avatar →
-      │     1. GET /v2/avatars → show curated list (filter by gender/style if user specified)
-      │     2. User picks → describe in prompt: "Use [avatar name] as the presenter"
-      │     Note: Stock avatars are referenced by description in Video Agent prompts.
-      │     The avatar_id is NOT passed to the Video Agent API.
+      │     1. GET /v3/avatars?ownership=public → show curated list (filter by gender/style if user specified)
+      │     2. User picks group → GET /v3/avatars/looks?group_id={id} → show looks
+      │     3. User picks look → pass avatar_id (look_id) to POST /v3/video-agents
       │
       └─ (e) No preference →
             Don't ask more questions. Include generic prompt direction:
@@ -265,15 +259,18 @@ User request arrives
 ```
 
 ### Key Technical Constraint
-**Video Agent API (`/v1/video_agent/generate`) does NOT accept `avatar_id` as a parameter.** Avatar selection is prompt-driven only. The skill must translate the user's avatar choice into descriptive text within the prompt.
+**Video Agent API (`POST /v3/video-agents`) accepts `avatar_id` as a top-level parameter alongside the prompt.** When a custom or stock avatar is selected, pass `avatar_id` directly. This achieves ~97% duration accuracy vs ~80% with prompt-only descriptions.
 
-Exception: If you need EXACT avatar control (specific custom avatar, specific pose), you must use `/v2/video/generate` (Avatar Video API) instead. But Ken's directive says NEVER use v2/video/generate. So for this skill, it's always prompt-driven.
+Avatar discovery uses:
+- `GET /v3/avatars` → list avatar groups (custom + stock)
+- `GET /v3/avatars/looks` → list individual looks within a group
+- Each look has a `look_id` which is passed as `avatar_id` in the generation call
 
 This means:
-- "Use my existing avatar" → describe it in the prompt so Video Agent picks something similar
-- Stock avatars → describe by name/appearance
-- Custom avatars → describe appearance, Video Agent may not match exactly
-- **If exact avatar match is critical**, tell the user this is a limitation of Video Agent and suggest the avatar-video skill instead
+- "Use my existing avatar" → discover via API, pass avatar_id directly
+- Stock avatars → browse groups, pick look, pass avatar_id
+- Custom avatars → discover group, pick look, pass avatar_id
+- Voice-only → include "no visible avatar, voice-over only" in prompt
 
 ---
 

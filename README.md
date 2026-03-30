@@ -118,7 +118,7 @@ Baselines from batch test (March 24, 2026) in `evals/test-prompts.json`.
 
 ## API
 
-Uses [HeyGen Video Agent](https://docs.heygen.com) (`POST /v1/video_agent/generate`). Cost: 2 credits per minute of generated video.
+Uses [HeyGen Video Agent](https://developers.heygen.com/docs/quick-start) (`POST /v3/video-agents`). Video Agent: $0.0333/sec, Avatar videos: $0.1/sec.
 
 ## Requirements
 
