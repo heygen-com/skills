@@ -115,6 +115,8 @@ Ken reviews every video. Fill in after watching each.
 - Time each scenario. Note if any take unreasonably long.
 - If the skill says to do something and the API rejects it, that's a P1.
 - Be harsh. The point is to find problems.
-- **ALWAYS capture both `video_id` AND `session_id` from the POST /v3/video-agents response.** Both are needed for the eval doc links:
+- **⚠️ CRITICAL — ALWAYS capture `session_id` from the POST /v3/video-agents response.** The GET /v3/videos endpoint does NOT return session_id. If you don't capture it at creation time, it's GONE FOREVER. Parse it from the response JSON immediately after submission. Both URLs are REQUIRED for every scenario:
+  - Session: `https://app.heygen.com/video-agent/{session_id}` ← **capture this FIRST**
   - Video Page: `https://app.heygen.com/videos/{video_id}`
-  - Session: `https://app.heygen.com/video-agent/{session_id}`
+- If the POST response doesn't include `session_id`, document that as a P1 finding.
+- **Every row in the Human Evaluation Tracker MUST have a Session link.** "n/a" is only acceptable for dry-run scenarios.

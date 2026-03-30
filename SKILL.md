@@ -584,8 +584,14 @@ curl -s -X POST "https://api.heygen.com/v3/video-agents" \
 
 Response:
 ```json
-{"data": {"video_id": "abc123"}}
+{"data": {"video_id": "abc123", "session_id": "sess_xyz789"}}
 ```
+
+**⚠️ CRITICAL: Always capture and report the `session_id` from the response.** The session URL is `https://app.heygen.com/video-agent/{session_id}`. This is the ONLY way to debug Video Agent behavior after the fact. The `GET /v3/videos/{video_id}` endpoint does NOT return session_id. If you don't capture it at creation time, it's gone forever.
+
+Always report both URLs to the user immediately after submission:
+- **Session:** `https://app.heygen.com/video-agent/{session_id}`
+- **Video:** `https://app.heygen.com/videos/{video_id}`
 
 ### Interactive Session Mode
 
