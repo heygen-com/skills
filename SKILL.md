@@ -874,6 +874,59 @@ Assembled prompt (with 1.4x padding → 85-second budget), sent to `POST /v3/vid
 
 ---
 
+## Known Issues & Troubleshooting
+
+### P1: Stock Avatar Auto-Selection Can Stall Video Agent (Open — Under Investigation)
+
+**Discovered:** March 30, 2026 (Round 3 autoresearch testing)
+
+**Symptoms:**
+- Video Agent session stays in "planning" phase indefinitely (30+ minutes)
+- `GET /v3/videos/{video_id}` returns `"status": "pending"` with no progress
+- No rendering ever starts. The agent-level processing never transitions to video generation.
+
+**Affected Scenarios:**
+Both failures share the same pattern: stock avatar auto-selection + landscape orientation.
+
+| Scenario | Avatar Type | Orientation | Session ID | Video ID | Outcome |
+|----------|-------------|-------------|------------|----------|---------|
+| S3 | studio_avatar (stock) | landscape | `7cbcacdd-d376-43dd-8979-06beb0bc2416` | `2a1c4456ebcf4227aa88c7b4cdd2b012` | Stuck in planning >30 min |
+| S5 | video_avatar (stock) | landscape | `e774b8b3-6909-4ca8-99ae-d2ce1a43a843` | `74a7c72796f44295ac94ba37964677e5` | Stuck in planning >30 min |
+
+**Session URLs:**
+- S3: https://app.heygen.com/video-agent/7cbcacdd-d376-43dd-8979-06beb0bc2416
+- S5: https://app.heygen.com/video-agent/e774b8b3-6909-4ca8-99ae-d2ce1a43a843
+
+**What works fine:**
+- Custom avatars with explicit `avatar_id` (8/8 completed in same test round, 89-174% duration accuracy)
+- Dry-run mode (no API call, no stall)
+
+**Root Cause Hypothesis:**
+When no `avatar_id` is provided and the Video Agent must auto-select a stock avatar, it may enter a planning loop (possibly evaluating avatar options against the scene requirements) that doesn't resolve within a reasonable timeframe. This is a Video Agent backend issue, not a prompt or skill issue.
+
+**Status:** Reported to HeyGen engineering team (March 30). Awaiting investigation results.
+
+**Workaround:** Always provide an explicit `avatar_id` when possible. Use the avatar discovery flow (Phase 1) to let users pick an avatar before generation. If using stock avatars, pre-select a specific look_id via `GET /v3/avatars/looks?group_id={group_id}` rather than relying on Video Agent auto-selection.
+
+---
+
+### Duration Variance (Expected Behavior)
+
+Video Agent controls final video timing internally. Duration accuracy ranges from 79-174% of target across testing. This is NOT a bug. The agent interprets scene pacing creatively.
+
+**Mitigation:** Variable padding multipliers are built into Phase 2:
+- ≤30s target: 1.6x padding
+- 31-119s target: 1.4x padding  
+- ≥120s target: 1.3x padding
+
+---
+
+### Phase 3.5 Correction Prompts Require Explicit Trigger
+
+If aspect ratio corrections (generative fill, reframing) aren't being applied, check that the correction prompt includes the exact phrase: **"Use AI Image tool to generative fill"**. Without this trigger phrase, the Video Agent acknowledges the directive but doesn't execute it.
+
+---
+
 ## Evaluation
 
 Run evals to test prompt quality without spending credits:
