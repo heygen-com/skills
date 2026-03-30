@@ -35,7 +35,8 @@ Then continue with the skill flow.
 
 Before starting ANY new video, check for `heygen-video-producer-log.jsonl` in the workspace root (`/Users/heyeve/.openclaw/workspace/heygen-video-producer-log.jsonl`). If it exists, scan the last 10 entries for patterns:
 
-- **Duration consistently short?** Increase word budget beyond the 1.4x baseline. If `duration_ratio` averages below 0.65, use 1.6x instead.
+- **Duration consistently short?** Check `duration_ratio` and `padding_multiplier` together. If ratio averages below 0.80 for a given multiplier, bump up one tier (1.3→1.4→1.6). Short videos (≤30s) tend to compress more.
+- **Avatar_id present vs absent?** Videos with `avatar_id` hit ~97% accuracy. Without it, ~80%. If ratio is low and no avatar_id, that's expected.
 - **Certain topic types score well?** Reuse that structure (scene count, media mix, tone).
 - **Reviewer keeps revising the same issue?** Pre-fix it this time.
 
@@ -71,7 +72,12 @@ Interview the user. Be conversational, not robotic. Adapt based on what they've 
 5. **Distribution** — Where does this go? (YouTube/web = landscape, Reels/TikTok = portrait)
 6. **Assets** — Any screenshots, URLs, PDFs, images, or brand guidelines?
 7. **Key message** — What's the ONE thing the viewer should remember?
-8. **Visual style** — Brand colors or style preferences? (default: clean minimal blue/black/white). Or pick a **style** from HeyGen's curated library (see Styles section).
+8. **Visual style** — Brand colors or style preferences? (default: clean minimal blue/black/white). If the user mentions a visual vibe (cinematic, retro, animated, bold), **proactively browse HeyGen styles:**
+   ```bash
+   curl -s "https://api.heygen.com/v3/video-agents/styles?tag=<detected_tag>&limit=5" \
+     -H "X-Api-Key: $HEYGEN_API_KEY"
+   ```
+   Show style name + thumbnail. If a style fits, note the `style_id` for Phase 4. Tags: `cinematic`, `retro-tech`, `iconic-artist`, `pop-culture`, `handmade`, `print`. If no strong style preference, skip and use the prompt-based visual style block.
 9. **Avatar** — Walk through the Avatar Conversation Flow (see below). Don't auto-select.
 10. **Language** — Default: English. For non-English, specify in the prompt.
 
@@ -81,7 +87,8 @@ When the user provides files (images, PDFs, URLs):
 
 **Step 1: Classify each asset**
 - **Visual assets** (images, screenshots, logos) → upload and reference as B-roll in prompt
-- **Reference assets** (PDFs, docs, URLs) → extract content for the script AND upload so Video Agent has full context
+- **Reference assets** (PDFs, docs) → extract content for the script AND upload so Video Agent has full context
+- **URLs** → extract content via `web_fetch` for the script AND pass the original URL in the `files` array: `{"type": "url", "url": "https://..."}`. This gives Video Agent both your summarized script AND full source context.
 - **When unclear** → upload everything. Video Agent ignores what it doesn't need.
 
 **Step 2: Upload to HeyGen**
@@ -117,16 +124,18 @@ Write a narrator script using these rules:
 - **150 words per minute.** Non-negotiable ceiling.
 - 30s = ~75 words. 60s = ~150 words. 90s = ~225 words. 2 min = ~300 words.
 
-### Duration Padding Rule (1.4x)
+### Duration Padding Rule
 
-Video Agent consistently delivers ~70% of target duration. Use **1.4x the user's target** when calculating word budget.
+Video Agent consistently compresses duration. The compression ratio varies by target length:
 
-| User wants | Script budget | Tell Video Agent |
-|------------|--------------|------------------|
-| 30s | 63 words (42s) | "45-second video" |
-| 60s | 126 words (84s) | "85-second video" |
-| 90s | 189 words (126s) | "130-second video" |
-| 120s | 252 words (168s) | "170-second video" |
+| User wants | Padding | Script budget | Tell Video Agent |
+|------------|---------|--------------|------------------|
+| ≤30s | **1.6x** | 80 words (48s) | "50-second video" |
+| 60s | **1.4x** | 126 words (84s) | "85-second video" |
+| 90s | **1.4x** | 189 words (126s) | "130-second video" |
+| 120s+ | **1.3x** | 234 words (156s) | "155-second video" |
+
+**Why variable padding:** Short videos (≤30s) compress harder (~79% in testing). Long videos (120s+) compress less (~97% with avatar_id). Check `heygen-video-producer-log.jsonl` for your actual `duration_ratio` averages and adjust.
 
 ### Structure by Type
 
@@ -261,9 +270,21 @@ For videos over 90s OR "cinematic"/"production quality" requests, read `referenc
 
 **A1: Check for private avatars first**
 
+**If user specifies an avatar by name** (e.g. "use Eve's Podcast look"), take the fast path — search across all private looks in one call:
 ```bash
-# List private avatar looks (user's custom avatars)
 curl -s "https://api.heygen.com/v3/avatars/looks?ownership=private&limit=50" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+```
+Filter client-side by name match. This avoids the 2-call group→looks pattern when the user already knows what they want.
+
+**If user wants to browse**, use the group-first flow:
+```bash
+# List avatar groups (each group = one person)
+curl -s "https://api.heygen.com/v3/avatars?ownership=private&limit=50" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+
+# Show looks for chosen group
+curl -s "https://api.heygen.com/v3/avatars/looks?group_id=<group_id>&limit=50" \
   -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
 
@@ -273,17 +294,6 @@ Avatar types: `studio_avatar`, `video_avatar`, `photo_avatar`. Photo avatars sup
 
 **ALWAYS show the preview image** when presenting an avatar look to the user. Each look response includes `preview_image_url` — display it inline so the user can see exactly what they're choosing. Never just list names.
 
-To browse by group:
-```bash
-# List avatar groups
-curl -s "https://api.heygen.com/v3/avatars?ownership=private&limit=50" \
-  -H "X-Api-Key: $HEYGEN_API_KEY"
-
-# Get looks for a specific group
-curl -s "https://api.heygen.com/v3/avatars/looks?group_id=<group_id>&limit=50" \
-  -H "X-Api-Key: $HEYGEN_API_KEY"
-```
-
 **A2: Check last-used avatar** from `heygen-video-producer-log.jsonl`. If found, fetch that look's details via `GET /v3/avatars/looks/{look_id}` and show the preview image:
 > [preview image displayed]
 > "Last time you used [Avatar Name — Look Name]. Use her again?"
@@ -292,13 +302,25 @@ curl -s "https://api.heygen.com/v3/avatars/looks?group_id=<group_id>&limit=50" \
 
 If voice-over only → no `avatar_id`. State in prompt: "Voice-over narration only."
 
-If presenter wanted and custom avatars exist, present them first. If they want public/stock avatars:
+If presenter wanted and custom avatars exist, present them first. If they want public/stock avatars, **browse by group first** (not looks):
+
 ```bash
-curl -s "https://api.heygen.com/v3/avatars/looks?ownership=public&limit=20" \
+# Step 1: List avatar groups (each group = one person, multiple looks)
+curl -s "https://api.heygen.com/v3/avatars?ownership=public&limit=20" \
   -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
 
-Let them describe what they want. Confirm before proceeding.
+Show group names + one representative image. Let the user pick a person.
+
+```bash
+# Step 2: Show looks for the chosen group
+curl -s "https://api.heygen.com/v3/avatars/looks?group_id=<group_id>&limit=10" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+```
+
+Show each look's `preview_image_url` so the user picks the exact outfit/setting.
+
+**Why group-first:** The flat `/v3/avatars/looks?ownership=public` endpoint returns 50+ results for only 3 unique people per page. Group-level browsing (2 calls) gives much better discovery UX. Confirm before proceeding.
 
 **A4: Voice direction** — after avatar is settled, confirm voice preferences (accent, delivery style, language).
 
@@ -624,11 +646,14 @@ Your video is ready! 🎬
 🔗 Video: https://app.heygen.com/videos/<video_id>
 
 Quick check against your brief:
-✓ Duration: ~58s (target: 60s)
+✓ Duration: 58s actual vs 60s target (97%)
 ✓ Tone: casual-confident
 ✓ Topic: single-topic ✓
 ✓ Assets referenced: 2/2
+✓ Avatar: [name] (avatar_id: ...)
 ```
+
+**Always report actual vs target duration with percentage.** This data feeds the padding calibration loop.
 
 **NEVER share the raw mp4 URL** from the API response. Those are temporary S3 links.
 
@@ -667,8 +692,14 @@ All checks passed. Duration within target.
 After EVERY generation (successful or not), append to `heygen-video-producer-log.jsonl`:
 
 ```bash
-echo '{"timestamp":"<ISO-8601>","video_id":"<id>","prompt_type":"full_producer|enhanced|quick_shot|interactive","target_duration":<seconds>,"actual_duration":<actual_or_null>,"duration_ratio":<ratio_or_null>,"word_count":<words>,"scene_count":<scenes>,"avatar_id":"<id_or_null>","style_id":"<id_or_null>","generation_path":"video_agent|avatar_video|interactive_session","status":"DONE|DONE_WITH_CONCERNS|BLOCKED","concerns":["<list>"],"what_worked":"<brief>","what_to_improve":"<brief>","topic":"<topic>"}' >> /Users/heyeve/.openclaw/workspace/heygen-video-producer-log.jsonl
+echo '{"timestamp":"<ISO-8601>","video_id":"<id>","session_id":"<session_id_or_null>","prompt_type":"full_producer|enhanced|quick_shot|interactive","target_duration":<seconds>,"padded_duration":<padded_seconds>,"actual_duration":<actual_or_null>,"duration_ratio":<ratio_or_null>,"padding_multiplier":<1.3|1.4|1.6>,"word_count":<words>,"scene_count":<scenes>,"avatar_id":"<id_or_null>","voice_id":"<id_or_null>","style_id":"<id_or_null>","orientation":"landscape|portrait","files_attached":<count>,"generation_path":"video_agent|avatar_video|interactive_session","status":"DONE|DONE_WITH_CONCERNS|BLOCKED","concerns":["<list>"],"what_worked":"<brief>","what_to_improve":"<brief>","topic":"<topic>"}' >> /Users/heyeve/.openclaw/workspace/heygen-video-producer-log.jsonl
 ```
+
+**New fields explained:**
+- `session_id` — v3 returns this alongside `video_id`. Track for debugging and interactive session follow-ups.
+- `padded_duration` — the duration you told Video Agent (after multiplier). Compare with `actual_duration` to calibrate.
+- `padding_multiplier` — which multiplier was used (1.3, 1.4, or 1.6). Helps tune the padding table over time.
+- `voice_id`, `orientation`, `files_attached` — full generation context for pattern analysis.
 
 **Always log.** Even failed attempts. The log is how we learn.
 
