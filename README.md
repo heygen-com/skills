@@ -16,17 +16,11 @@ This skill sits between you and the API like a senior video producer. It intervi
 
 ## Quick Start
 
-### Option 1: Paste this to your agent
+### One-paste install
 
-Open your agent (OpenClaw, Claude Code, Codex, or any SKILL.md-compatible agent) and paste:
+Open [INSTALL.md](./INSTALL.md), copy the prompt below the line, and paste it into your agent (OpenClaw, Claude Code, Codex, or any SKILL.md-compatible agent). The agent will install the skill, walk you through API key setup, validate everything, and ask what video to make. One paste, zero config files.
 
-```
-Install heygen-video-producer: run `clawhub install heygen-video-producer` then say "make me a 60-second video about [your topic]". If you don't have clawhub, run `git clone https://github.com/heygen-com/heygen-video-producer.git ~/.openclaw/skills/heygen-video-producer` instead. The skill will walk you through API key setup on first use.
-```
-
-That's it. The skill handles the rest — including API key setup. On first use it'll ask you to paste your key from [app.heygen.com/settings/api](https://app.heygen.com/settings/api), validate it, and save it to your config. You won't need to do it again.
-
-### Option 2: Manual install
+### Manual install
 
 ```bash
 clawhub install heygen-video-producer
