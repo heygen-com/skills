@@ -49,7 +49,9 @@ The log is a learning loop. Use it.
 | Vague idea, no prompt ("make me a video about X") | **Full Producer** | Phase 1 |
 | Has a written prompt ("generate this: ...") | **Enhanced Prompt** | Phase 3 |
 | Explicit skip ("just generate", "don't ask questions") | **Quick Shot** | Phase 4 |
-| "Interactive" / "let's iterate with the agent" | **Interactive Session** | Phase 4 (session mode) |
+| "Interactive" / "let's iterate with the agent" | **Interactive Session** | Phase 4 (session mode) ⚠️ Experimental |
+
+**Quick Shot avatar rule:** In Quick Shot mode, if no avatar is specified, omit `avatar_id` and let Video Agent auto-select. This is the ONE exception to the "never auto-select" rule. Note: auto-selected avatars yield lower duration accuracy (~80% vs ~97% with explicit ID).
 
 Default to Full Producer. Better to ask one smart question than generate a mediocre video.
 
@@ -119,8 +121,9 @@ For each asset the user provides, ask yourself these questions (in order):
 |-----------|---------------------|----------------|-------|
 | Screenshot / image | N/A | Yes | **B: Attach** + describe in prompt as B-roll |
 | Logo / brand asset | N/A | Yes | **B: Attach** + anchor to intro/outro |
-| Public URL (blog, Wikipedia, docs site) | Yes | Maybe | **B: Pass URL in `files[]`** + summarize key points in prompt |
-| Auth-walled URL (Notion, Google Doc, internal) | No | No | **A: Fetch content yourself** → summarize for script. If long, also convert to PDF and attach. |
+| Public URL to a file (PDF, image, video) | Yes | Maybe | **B: Download → upload via `/v3/assets` → pass `asset_id`** + summarize key points in prompt |
+| Public URL to a web page (HTML blog, docs) | Yes | No | **A: Fetch and contextualize only.** Do NOT pass HTML URLs in `files[]` — Video Agent rejects `text/html`. |
+| Auth-walled URL (Notion, Google Doc, internal) | No | No | **A: Fetch content yourself** → summarize for script. If long, also convert to PDF and attach. **If YOUR tools also can't access it** (404, permission denied, etc.) → **STOP. Tell the user** you couldn't access the content. Ask them to share it directly, grant access, or paste the key points. Do NOT fabricate content from the URL/title. |
 | PDF (short, text-heavy) | N/A | No | **A+B: Extract key points for script** + attach so Video Agent has full context |
 | PDF (long, visual-rich) | N/A | Maybe | **B: Attach** (Video Agent extracts graphics) + summarize top points for script |
 | Raw data / spreadsheet | N/A | Partially | **A: Analyze and describe** key stats in script. Attach if charts/tables should appear on screen. |
@@ -166,7 +169,8 @@ This builds a feedback loop. Over time you learn: "screenshots always get attach
 - **When in doubt, do both (A+B).** Over-providing costs nothing. Under-providing costs quality.
 - **Always describe attached assets in the prompt.** Uploading without description = Video Agent ignores them.
 - **Auth-walled content is YOUR job.** If you have access and Video Agent doesn't, fetch and bridge the gap.
-- **URLs that might be paywalled:** Try `web_fetch` first. If it returns a login page or paywall, switch to Path A (contextualize what you can access).
+- **URLs that fail (paywall, 404, broken, timeout):** Try `web_fetch` first. If it returns a login page, paywall, 404, connection error, or any non-content response: (1) Do NOT pass the URL to Video Agent. (2) **Tell the user** the source couldn't be accessed and what you're falling back to. (3) If enough context is available from the URL path/title, offer to proceed with general knowledge — but be explicit: "I couldn't access this article, so I'm using publicly available information about [topic]. Want me to proceed or would you rather paste the key points?" (4) If no context is available, ask the user to provide content directly. **Never silently fabricate content from an inaccessible source.**
+- **HTML URLs cannot go in `files[]`.** Video Agent rejects `text/html` content type. Web pages (blogs, docs sites, articles) are ALWAYS Path A only. Only direct file URLs (PDFs, images, videos) work in `files[]`, and even then, prefer download→upload→`asset_id` since HeyGen's servers are often blocked by CDN/WAF protections.
 
 **Multi-topic split rule.** If the user describes multiple distinct topics, recommend separate videos. HeyGen produces dramatically better results with one topic per video.
 
@@ -320,7 +324,7 @@ For videos over 90s OR "cinematic"/"production quality" requests, read `referenc
 
 ## Avatar Conversation Flow
 
-**NEVER auto-select an avatar without asking.**
+**NEVER auto-select an avatar without asking.** (One exception: Quick Shot mode — see below.)
 
 ### Path A: Discover Existing Avatars
 
@@ -513,7 +517,7 @@ Use `avatar_type` as the heuristic (the API does not return background metadata)
 
 | `avatar_type` | Background? | Reason |
 |---|---|---|
-| `studio_avatar` | ✅ Yes | Recorded in a real studio with a scene |
+| `studio_avatar` | ⚠️ Maybe | Some are recorded with a scene; many have transparent backgrounds. Check the preview image — if the background is transparent, solid, or empty, treat as "No background" and apply correction C. |
 | `video_avatar` | ✅ Yes | Recorded in a real environment |
 | `photo_avatar` | ❌ No | Created from a static photo, typically no scene background |
 
@@ -524,40 +528,67 @@ Based on Steps 2-3, build zero or more correction blocks. **All corrections are 
 **A) Orientation mismatch — Portrait avatar → Landscape video (most common):**
 ```
 FRAMING NOTE: The selected avatar image is in portrait orientation (9:16) but
-this video is landscape (16:9). Frame the presenter from the chest up, centered
-in the landscape canvas. Use AI Image tool to generative fill to extend the scene
-horizontally with a complementary background environment that matches the video's
-tone (studio, office, or contextually appropriate setting). Do NOT add black bars
-or pillarboxing. The avatar should feel natural in the 16:9 frame.
+this video is landscape (16:9). YOU MUST generate a new variant of the avatar
+image before using it in this video. Use AI Image tool to:
+1. Generate a landscape (16:9) version of the presenter image
+2. Generative fill to extend the scene horizontally — add a professional
+   environment (modern studio, office, or setting matching the video tone)
+3. Frame the presenter from chest up, centered in the landscape canvas
+4. The background MUST be a real-looking environment, NOT a solid color,
+   NOT transparent, NOT a gradient
+Do NOT use the original portrait image uncropped. Do NOT add black bars or
+pillarboxing. Do NOT leave a transparent or missing background.
 ```
 
 **B) Orientation mismatch — Landscape avatar → Portrait video:**
 ```
 FRAMING NOTE: The selected avatar image is in landscape orientation (16:9) but
-this video is portrait (9:16). Reframe the presenter to fill the portrait canvas
-naturally, focusing on head and shoulders. Use AI Image tool to generative fill
-to extend vertically if needed. Do NOT add letterboxing. The avatar should fill
-the portrait frame comfortably.
+this video is portrait (9:16). YOU MUST generate a new variant of the presenter
+image before using it. Use AI Image tool to:
+1. Generate a portrait (9:16) version of the presenter image
+2. Generative fill to extend vertically — add environment above and below
+   the presenter (ceiling, floor, room depth) that looks natural
+3. Focus on head and shoulders, presenter centered in portrait frame
+4. The background MUST be a real-looking environment, NOT a solid color,
+   NOT transparent, NOT a gradient
+Do NOT use the original landscape image uncropped. Do NOT add letterboxing.
+Do NOT leave transparent or missing background areas.
 ```
 
 **C) Missing background — photo_avatar type:**
 ```
-BACKGROUND NOTE: The selected avatar is a photo avatar with no scene background.
-Use AI Image tool to place the presenter in a clean, professional environment
-appropriate to the video's tone. For business/tech content: modern studio with
-soft lighting and subtle depth. For casual content: bright, minimal space with
-natural light. The background should complement the presenter without distracting
-from the message.
+BACKGROUND NOTE: The selected avatar is a photo avatar extracted from a static
+photo — it has NO scene background (just the person, cutout-style). YOU MUST
+generate a complete background environment before using this avatar. Use AI Image
+tool to:
+1. Generate a variant of the presenter image WITH a full background scene
+2. For business/tech content: place in a modern studio, office with monitors,
+   or professional podcast set with soft lighting and depth-of-field blur
+3. For casual content: place in a bright room with natural light, plants,
+   or a café-style setting
+4. The presenter should look NATURAL in the environment — correct lighting
+   direction, realistic scale (waist-up or chest-up framing), shadows present
+5. Do NOT leave ANY transparent, solid-color, or gradient background
+6. Do NOT make the presenter look oversized relative to the environment
+   (the "giant in a room" effect means the scale is wrong — zoom out or
+   reframe until the person looks like they naturally belong in the space)
+The result should look like the presenter was actually filmed in that location.
 ```
 
 **Corrections can stack.** A portrait photo_avatar in a landscape video gets BOTH the framing note (A) AND the background note (C).
 
-| avatar_type | Orientation Match? | Corrections |
-|---|---|---|
-| `studio_avatar` / `video_avatar` | ✅ matched | None |
-| `studio_avatar` / `video_avatar` | ❌ mismatched | Framing note only (A or B) |
-| `photo_avatar` | ✅ matched | Background note only (C) |
-| `photo_avatar` | ❌ mismatched | Framing note (A or B) + Background note (C) |
+| avatar_type | Orientation Match? | Has Background? | Corrections |
+|---|---|---|---|
+| `video_avatar` | ✅ matched | ✅ Yes | None |
+| `video_avatar` | ❌ mismatched | ✅ Yes | Framing note only (A or B) |
+| `studio_avatar` | ✅ matched | ✅ Yes (check preview) | None |
+| `studio_avatar` | ✅ matched | ❌ No (transparent/empty) | Background note (C) |
+| `studio_avatar` | ❌ mismatched | ✅ Yes | Framing note only (A or B) |
+| `studio_avatar` | ❌ mismatched | ❌ No | Framing note (A or B) + Background note (C) |
+| `photo_avatar` | ✅ matched | ❌ No (always) | Background note (C) |
+| `photo_avatar` | ❌ mismatched | ❌ No (always) | Framing note (A or B) + Background note (C) |
+
+**How to check if a studio_avatar has a background:** Fetch the `preview_image_url`. If the preview shows a transparent/checkered background, solid color, or the avatar appears to be a cutout, treat it as "No background" and inject correction C.
 
 ### Step 5: Log the correction
 
@@ -634,7 +665,7 @@ curl -s -X POST "https://api.heygen.com/v3/video-agents" \
     "orientation": "landscape",
     "files": [
       {"type": "asset_id", "asset_id": "<uploaded_id_1>"},
-      {"type": "url", "url": "https://example.com/reference.pdf"}
+      {"type": "asset_id", "asset_id": "<uploaded_id_2>"}
     ],
     "callback_url": "<optional webhook URL>"
   }'
@@ -662,7 +693,9 @@ Always report both URLs to the user immediately after submission:
 - **Session:** `https://app.heygen.com/video-agent/{session_id}`
 - **Video:** `https://app.heygen.com/videos/{video_id}`
 
-### Interactive Session Mode
+### Interactive Session Mode (⚠️ EXPERIMENTAL — Known Issues)
+
+> **Status:** Interactive sessions have known reliability issues. Sessions frequently get stuck at `processing` status, the `reviewing` state may never be reached, follow-up messages fail with timing errors, and the stop command may not trigger video generation. Use one-shot mode for production work. Interactive sessions are documented here for future use once HeyGen stabilizes the API.
 
 For complex videos where you want to iterate with Video Agent before final generation:
 
@@ -783,7 +816,8 @@ Response on completion includes `video_url`, `thumbnail_url`, `duration`.
 1. First check at **2 minutes** after submission.
 2. Every **30 seconds** for the next 3 minutes.
 3. Every **60 seconds** up to 30 minutes.
-4. After **30 minutes**, stop polling and give the user the dashboard fallback.
+4. If stuck at `pending` for **>10 minutes** without transitioning to `processing`, flag to user: "Video appears stuck in pending. Check the HeyGen dashboard or consider retrying."
+5. After **30 minutes**, stop polling and give the user the dashboard fallback.
 
 **Webhook alternative:** If a `callback_url` was provided, HeyGen will POST to it on completion. No polling needed. Manage webhooks:
 ```bash
