@@ -74,12 +74,7 @@ Interview the user. Be conversational, not robotic. Adapt based on what they've 
 5. **Distribution** — Where does this go? (YouTube/web = landscape, Reels/TikTok = portrait)
 6. **Assets** — Any screenshots, URLs, PDFs, images, or brand guidelines?
 7. **Key message** — What's the ONE thing the viewer should remember?
-8. **Visual style** — Brand colors or style preferences? (default: clean minimal blue/black/white). If the user mentions a visual vibe (cinematic, retro, animated, bold), **proactively browse HeyGen styles:**
-   ```bash
-   curl -s "https://api.heygen.com/v3/video-agents/styles?tag=<detected_tag>&limit=5" \
-     -H "X-Api-Key: $HEYGEN_API_KEY"
-   ```
-   Show style name + thumbnail. If a style fits, note the `style_id` for Phase 4. Tags: `cinematic`, `retro-tech`, `iconic-artist`, `pop-culture`, `handmade`, `print`. If no strong style preference, skip and use the prompt-based visual style block.
+8. **Visual style** — This is a two-path decision. See the Style Selection section below.
 9. **Avatar** — Walk through the Avatar Conversation Flow (see below). Don't auto-select.
 10. **Language** — Default: English. For non-English, specify in the prompt.
 
@@ -176,6 +171,69 @@ This builds a feedback loop. Over time you learn: "screenshots always get attach
 
 ---
 
+## Style Selection
+
+Two systems exist. Pick one or skip entirely.
+
+### Path A: HeyGen API Styles (Quick — Curated Templates)
+
+HeyGen offers curated visual templates that control scene layout, pacing, transitions, and overall aesthetic. Pass a `style_id` and the Video Agent handles the rest.
+
+**When to use:** User wants a preset look, doesn't care about specifics, or says something like "make it look cinematic" / "retro style" / "handmade feel."
+
+**Discovery:**
+```bash
+# Browse all styles
+curl -s "https://api.heygen.com/v3/video-agents/styles?limit=20" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+
+# Filter by tag
+curl -s "https://api.heygen.com/v3/video-agents/styles?tag=cinematic&limit=10" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+```
+
+Tags: `cinematic`, `retro-tech`, `iconic-artist`, `pop-culture`, `handmade`, `print`.
+
+Each style returns: `style_id`, `name`, `thumbnail_url`, `preview_video_url`, `tags`, `aspect_ratio`.
+
+**Show the user thumbnails and preview videos** so they can pick visually. If a style fits, save the `style_id` for Phase 4.
+
+**When `style_id` is set:** You can simplify or omit the Visual Style Block in the prompt. The API style handles visual treatment. Focus the prompt on content and delivery instead.
+
+### Path B: Prompt Styles (Custom — Full Creative Control)
+
+For users who want specific colors, typography, motion, and mood injected directly into the prompt text.
+
+**When to use:** User mentions specific colors, wants a particular designer aesthetic, or the API styles don't match the vibe.
+
+**Workflow:**
+1. Ask: *"What should the viewer FEEL?"* Map to a mood category.
+2. Recommend a style from the library. See [references/prompt-styles.md](references/prompt-styles.md) for 20 named styles with copy-paste STYLE blocks.
+3. Copy the style's STYLE block into the prompt (Phase 3).
+4. Customize colors/motion verbs as needed.
+
+**Top 5 performers (from 40+ videos):**
+
+| Style | Best For |
+|-------|----------|
+| Deconstructed (Brody) | Most reliable across all topics |
+| Swiss Pulse (Müller-Brockmann) | Data-heavy content |
+| Digital Grid (Crouwel) | Tech topics |
+| Geometric Bold (Tanaka) | Elegant, versatile |
+| Maximalist Type (Scher) | High energy (use sparingly) |
+
+For B-roll scene construction, the 5-layer visual system and motion verbs are in [references/motion-vocabulary.md](references/motion-vocabulary.md).
+
+### No Style (Skip)
+
+If the user doesn't mention style and the video is straightforward, skip. Omit `style_id`, use the default Visual Style Block. This is fine for most Quick Shot videos.
+
+### API Style + Prompt Style Together
+
+You CAN pass `style_id` AND include a STYLE block in the prompt. The API style sets the base template; the prompt style adds specificity (custom hex codes, motion rules). Use this for power users who want a curated template as a starting point but want to override details.
+
+---
+
 ## Phase 2 — Script
 
 Write a narrator script using these rules:
@@ -205,6 +263,19 @@ Video Agent consistently compresses duration. The compression ratio varies by ta
 **Sales Pitch:** Pain (10s) → Vision (15s) → Product (25s) → CTA (10s)
 **Announcement:** News hook (5s) → What changed (20s) → Why it matters (25s) → What's next (10s)
 
+### Critical On-Screen Text
+
+Before writing the prompt, extract every piece of text that MUST appear literally on screen:
+- Exact numbers ("$141M ARR", "1.85M signups", "+28% MoM")
+- Direct quotes with attribution
+- Social handles (@username, exact)
+- Brand names, product names, URLs
+- CTAs ("Start free trial at example.com")
+
+Add these as a `CRITICAL ON-SCREEN TEXT` block in the prompt (Phase 3). Without this, Video Agent will summarize, round, or rephrase.
+
+**Voiceover number rule:** Spell out numbers in speech ("one-point-eight-five million"), use figures on screen ("1.85M"). This prevents the avatar from reading raw numbers awkwardly.
+
 ### Voice Rules
 - Write for the ear, not the eye. Short sentences. Active voice. Contractions are good.
 - Use scene breaks for natural pacing. Each transition creates a pause.
@@ -230,8 +301,18 @@ Transform the script/brief into an optimized Video Agent prompt. The user doesn'
 4. **Tone calibration.** Specific words: "confident and conversational" / "energetic, like a tech YouTuber" / "calm and authoritative."
 5. **One topic.** State it explicitly: "This video covers ONE topic: [topic]."
 
-### Visual Style Block (ALWAYS INCLUDE)
+### Visual Style Block
 
+If using an **API style** (`style_id`): You can simplify or omit this block. The style handles visual treatment.
+
+If using a **prompt style**: Copy the STYLE block from [references/prompt-styles.md](references/prompt-styles.md) and paste here. Example:
+```
+STYLE — SWISS PULSE (Müller-Brockmann): Black/white + electric blue #0066FF.
+Grid-locked. Helvetica Bold. Animated counters. Diagonal accents.
+Grid wipe transitions.
+```
+
+If using **neither** (no style selected): Use the default block:
 ```
 Use minimal, clean styled visuals. Blue, black, and white as main colors.
 Leverage motion graphics as B-rolls and A-roll overlays. Use AI videos when necessary.
@@ -241,7 +322,7 @@ Include an intro sequence, outro sequence, and chapter breaks using Motion Graph
 
 Replace with user's brand specs if provided. Hex codes work: "Use #1E40AF as primary blue."
 
-### Style Presets
+### Style Presets (Quick Fallbacks)
 
 | Style | Best For | Prompt Addition |
 |-------|----------|-----------------|
@@ -283,31 +364,73 @@ When a style fits, pass its `style_id` to the Video Agent call. The style handle
 
 Explicitly state media type per scene: "Visual: (Motion Graphics) Animated chart showing API response times"
 
-### Scene-by-Scene Prompting
+### Prompt Approach: Natural Flow vs Scene-by-Scene
 
-For videos over 60s or when precision matters:
+Two approaches. Pick based on video length and precision needs.
+
+**Natural Flow (default for ≤60s)**
+Write script + tone description + target duration. No scene labels. No visual prescriptions. Let Video Agent make creative decisions. HeyGen's own experiments (14 tests) show natural flow produces better delivery and more thoughtful visual choices for shorter videos. Timestamps per scene make delivery sound robotic.
+
+```
+[Full script as flowing prose]
+
+Target duration: [padded seconds].
+Tone: [specific delivery direction].
+[Critical on-screen text block if applicable]
+
+---
+[Visual style block or style_id]
+[Asset anchoring instructions]
+```
+
+**Scene-by-Scene (opt-in for >60s or precision work)**
+Full scene breakdowns with visual types, durations, and layered B-roll. Use the 5-layer system and motion verbs from [references/motion-vocabulary.md](references/motion-vocabulary.md). This gives maximum control but can reduce delivery naturalness.
 
 ```
 Scene 1: [Type, e.g. "Intro (Motion Graphics)"]
-  Visual: [Describe exact visual]
+  Visual: [Describe exact visual with motion verbs]
   VO: "[Avatar script line]"
   Duration: [Length]
 ```
 
-### The Script-as-Prompt Approach (PREFERRED)
+**When to use each:**
 
-Paste the FULL script into the prompt with scene labels and visual directions. Video Agent follows it scene-by-scene while improving flow, timing, and visuals.
+| Signal | Approach |
+|--------|----------|
+| Video ≤60s, conversational tone | Natural Flow |
+| Video >60s with specific data/stats | Scene-by-Scene |
+| User says "just make it" | Natural Flow |
+| User says "I want control over each scene" | Scene-by-Scene |
+| Data-heavy content with charts/numbers | Scene-by-Scene with layers |
+| Brand film, storytelling, personal | Natural Flow |
+
+### Critical On-Screen Text Block
+
+If you extracted critical text in Phase 2, insert it in the prompt:
+
+```
+CRITICAL ON-SCREEN TEXT (display literally):
+- "$141M ARR — All-Time High"
+- "1.85M Signups — +28% MoM"
+- Quote: "Ship it. Measure it. Fix it."
+- "@eve_builds"
+```
+
+### The Script-as-Prompt Approach
+
+For Scene-by-Scene mode: paste the FULL script into the prompt with scene labels and visual directions. Video Agent follows it scene-by-scene while improving flow, timing, and visuals.
 
 ### Prompt Structure (Stack style at the end)
 
 ```
-[Scene-by-scene script with Visual + VO + Duration]
+[Script — flowing or scene-by-scene depending on approach]
 
+[Critical on-screen text block if applicable]
 [Asset anchoring instructions if applicable]
 
 ---
 [Visual style block OR style_id reference]
-[Media type directions per scene]
+[Media type directions per scene (scene-by-scene only)]
 [Intro/outro/chapter break instructions]
 ```
 
@@ -322,6 +445,10 @@ Pass as explicit `orientation` parameter (not just described in prompt).
 ### Advanced Visual Techniques (Conditional Load)
 
 For videos over 90s OR "cinematic"/"production quality" requests, read `references/prompt-craft.md`.
+
+For B-roll scene construction with layered motion graphics, read `references/motion-vocabulary.md`.
+
+For choosing or customizing a named visual style, read `references/prompt-styles.md`.
 
 ---
 
