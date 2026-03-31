@@ -290,9 +290,7 @@ curl -s "https://api.heygen.com/v3/avatars/looks?group_id=<group_id>&limit=50" \
 
 Each look has an `id` — this is the `avatar_id` you pass to the API.
 
-Avatar types: `studio_avatar`, `photo_avatar`. Photo avatars support `motion_prompt` and `expressiveness`.
-
-> ⛔ **NEVER use `video_avatar` type with Video Agent.** The Video Agent cannot render video_avatar looks as narrators (they fail with "Talking Photo not found" even with explicit avatar_id). When browsing avatars, **skip any result where `avatar_type === "video_avatar"`** and do not present it to the user. If the user specifically asks for a video_avatar look, explain the limitation and suggest a `studio_avatar` or `photo_avatar` alternative.
+Avatar types: `studio_avatar`, `video_avatar`, `photo_avatar`. Photo avatars support `motion_prompt` and `expressiveness`.
 
 **ALWAYS show the preview image** when presenting an avatar look to the user. Each look response includes `preview_image_url` — display it inline so the user can see exactly what they're choosing. Never just list names.
 
@@ -321,8 +319,6 @@ curl -s "https://api.heygen.com/v3/avatars/looks?group_id=<group_id>&limit=10" \
 ```
 
 Show each look's `preview_image_url` so the user picks the exact outfit/setting.
-
-> ⛔ **Filter out `video_avatar` looks.** When displaying results from any avatar endpoint, skip looks where `avatar_type === "video_avatar"`. These cannot be rendered by Video Agent. Only present `studio_avatar` and `photo_avatar` looks.
 
 **Why group-first:** The flat `/v3/avatars/looks?ownership=public` endpoint returns 50+ results for only 3 unique people per page. Group-level browsing (2 calls) gives much better discovery UX. Confirm before proceeding.
 
@@ -376,8 +372,6 @@ curl -X POST "https://api.heygen.com/v3/avatars" \
   }'
 ```
 
-> ⚠️ **Video avatars created here CAN be used with `POST /v3/videos` (direct avatar video API), but CANNOT be used with `POST /v3/video-agents` (Video Agent).** If the user creates a video avatar and wants to use the Video Agent pipeline, they must use a different avatar type.
-
 All three return an `avatar_item` with `id` — use this as `avatar_id` in video generation.
 
 Files can be provided as `{"type": "url", "url": "..."}`, `{"type": "asset_id", "asset_id": "..."}`, or `{"type": "base64", "data": "...", "content_type": "..."}`.
@@ -427,10 +421,10 @@ The Video Agent (`POST /v3/video-agents`) accepts `avatar_id` and `voice_id` as 
 ```
 
 - **Custom avatar with known ID** → pass `avatar_id` AND describe delivery style in prompt
-- **Stock avatar** → **ALWAYS look up the `avatar_id` first** via the discovery flow above, then pass it explicitly. NEVER omit `avatar_id` and rely on Video Agent auto-selection — it fails.
+- **Stock avatar** → **prefer looking up the `avatar_id`** via the discovery flow above and passing it explicitly. Auto-selection works but is less reliable.
 - **Voice-over only** → omit `avatar_id`, state in prompt: "Voice-over narration only."
 
-> ⛔ **Hard rule: every video with a visible presenter MUST have an explicit `avatar_id`.** Video Agent's internal avatar auto-selection is broken (narrator tags like `{{@narrator_xxx}}` fail to resolve). The only safe path without an `avatar_id` is voice-over-only mode.
+> 💡 **Best practice: always provide an explicit `avatar_id` for presenter videos.** Video Agent can auto-select, but explicit IDs give more predictable results (97.6% duration accuracy vs ~80% without).
 
 ---
 
@@ -446,7 +440,7 @@ curl -s "https://api.heygen.com/v3/avatars/looks/<avatar_id>" \
 ```
 
 From the response, extract:
-- `avatar_type`: `"photo_avatar"` | `"studio_avatar"` (if `"video_avatar"`, **STOP — go back to discovery and pick a different look**)
+- `avatar_type`: `"photo_avatar"` | `"studio_avatar"` | `"video_avatar"`
 - `preview_image_url`: use this to determine orientation (Step 2)
 
 ### Step 2: Determine avatar orientation
@@ -464,9 +458,8 @@ Use `avatar_type` as the heuristic (the API does not return background metadata)
 | `avatar_type` | Background? | Reason |
 |---|---|---|
 | `studio_avatar` | ✅ Yes | Recorded in a real studio with a scene |
+| `video_avatar` | ✅ Yes | Recorded in a real environment |
 | `photo_avatar` | ❌ No | Created from a static photo, typically no scene background |
-
-> ⛔ If `avatar_type === "video_avatar"` reached this point, something went wrong. Go back to avatar discovery and select a `studio_avatar` or `photo_avatar` instead.
 
 ### Step 4: Build correction blocks
 
@@ -505,11 +498,10 @@ from the message.
 
 | avatar_type | Orientation Match? | Corrections |
 |---|---|---|
-| `studio_avatar` | ✅ matched | None |
-| `studio_avatar` | ❌ mismatched | Framing note only (A or B) |
+| `studio_avatar` / `video_avatar` | ✅ matched | None |
+| `studio_avatar` / `video_avatar` | ❌ mismatched | Framing note only (A or B) |
 | `photo_avatar` | ✅ matched | Background note only (C) |
 | `photo_avatar` | ❌ mismatched | Framing note (A or B) + Background note (C) |
-| `video_avatar` | any | ⛔ **BLOCKED — do not proceed. Go back and pick a different avatar.** |
 
 ### Step 5: Log the correction
 
@@ -567,9 +559,8 @@ Before calling `POST /v3/video-agents`, check ALL of these. If any fail, **STOP 
 
 | # | Check | Pass | Fail action |
 |---|-------|------|-------------|
-| 1 | Presenter video? (not voice-over-only) | `avatar_id` is set | ⛔ Go back to avatar discovery. NEVER submit without `avatar_id` for presenter videos. |
-| 2 | Avatar type safe? | `avatar_type` is `studio_avatar` or `photo_avatar` | ⛔ `video_avatar` breaks Video Agent. Pick a different look. |
-| 3 | Session ID capture plan? | You will extract `session_id` from the response | ⛔ Don't proceed until you commit to logging it. |
+| 1 | Presenter video? (not voice-over-only) | `avatar_id` is set (recommended) | ⚠️ Auto-select works but is less reliable. Prefer explicit `avatar_id` from discovery. |
+| 2 | Session ID capture plan? | You will extract `session_id` from the response | ⛔ Don't proceed until you commit to logging it. |
 
 If all three pass, proceed to the API call.
 
@@ -904,44 +895,19 @@ Assembled prompt (with 1.4x padding → 85-second budget), sent to `POST /v3/vid
 
 ## Known Issues & Troubleshooting
 
-### P1: Video Agent "Talking Photo Not Found" Error & Stock Avatar Failures
+### Known Bug: Video Agent "Talking Photo Not Found" (HeyGen fix in progress)
 
-**Discovered:** March 30, 2026 (Round 3 autoresearch testing + Ken's investigation)
+**Discovered:** March 30, 2026 (Round 3 autoresearch testing)
 
-**Error message:** "The Talking Photo for the current narrator could not be found. Ask the user to select a different avatar before generating the video."
+**Error message:** "The Talking Photo for the current narrator could not be found."
 
-**Root Cause (confirmed):**
-The Video Agent internally assigns narrator tags (`{{@narrator_xxx}}`) even when you provide an explicit `avatar_id`. For `video_avatar` types, the agent converts the avatar to an internal image reference (`{{@image_xxx}}`) which then fails to resolve as a renderable "Talking Photo." This causes the session to either:
-1. Stall indefinitely in "processing" (no error surfaced via API)
-2. Show the "Talking Photo not found" error in the session UI
+**Root Cause:** Confirmed as a Video Agent backend bug by HeyGen engineering (Jerry Yan). The issue affects `video_avatar` type narrators and stock avatar auto-selection. HeyGen is deploying a fix.
 
-**What works vs what breaks:**
+**Workaround until fix ships:**
+- Prefer explicit `avatar_id` over auto-selection
+- If `video_avatar` fails, retry with a `studio_avatar` or `photo_avatar`
 
-| Avatar Type | With explicit avatar_id | Without avatar_id |
-|-------------|------------------------|-------------------|
-| `photo_avatar` (custom) | ✅ Works reliably | ❌ Not tested |
-| `studio_avatar` (stock) | ✅ Works (confirmed: Bryce_public_2, Bryce_public_5) | ❌ Stalls in planning |
-| `video_avatar` (stock) | ❌ Fails ("Talking Photo not found") | ❌ Stalls in planning |
-
-**Key finding:** `video_avatar` type is broken in Video Agent even with an explicit `avatar_id`. The agent cannot animate video_avatar looks as narrators.
-
-**Retries with evidence:**
-
-| Attempt | Avatar | Type | avatar_id | Session | Video | Outcome |
-|---------|--------|------|-----------|---------|-------|---------|
-| S3 original | auto | stock | none | [Session](https://app.heygen.com/video-agent/7cbcacdd-d376-43dd-8979-06beb0bc2416) | [Video](https://app.heygen.com/videos/2a1c4456ebcf4227aa88c7b4cdd2b012) | ❌ Stuck >30min |
-| S3 retry | Bryce | studio_avatar | Bryce_public_2 | [Session](https://app.heygen.com/video-agent/172b8684-72cb-4312-88a9-64be3179ffa1) | [Video](https://app.heygen.com/videos/ee3d91f814d54befaf18349dd002ceda) | ✅ 44.7s |
-| S5 original | auto | stock | none | [Session](https://app.heygen.com/video-agent/e774b8b3-6909-4ca8-99ae-d2ce1a43a843) | [Video](https://app.heygen.com/videos/74a7c72796f44295ac94ba37964677e5) | ❌ Stuck >30min |
-| S5 retry 1 | Kevin | video_avatar | c8f428c5... | [Session](https://app.heygen.com/video-agent/83a739a8-792b-494d-9ff2-e96767a4b3da) | [Video](https://app.heygen.com/videos/7e5f180e4d114393a672c7f7a1d24e2f) | ❌ "Talking Photo not found" |
-| S5 retry 2 | Bryce | studio_avatar | Bryce_public_5 | [Session](https://app.heygen.com/video-agent/aa5e7d93-7a6d-4d6a-9225-5930b52de02c) | [Video](https://app.heygen.com/videos/497f42bc60084e8db474caf2013cc654) | ⏳ generating |
-
-**Status:** Confirmed as Video Agent backend bug. Reported to HeyGen engineering.
-
-**Hard rules for the skill:**
-1. **ALWAYS provide an explicit `avatar_id`.** Never let Video Agent auto-select.
-2. **NEVER use `video_avatar` type with Video Agent.** Use `studio_avatar` or `photo_avatar` only.
-3. During avatar discovery, filter results: if `avatar_type === "video_avatar"`, warn the user it may not work with Video Agent and suggest a `studio_avatar` or `photo_avatar` alternative.
-4. If no avatar is specified and user wants stock, default to a known-working `studio_avatar` (e.g., Bryce, Daphne).
+**Status:** Fix in progress at HeyGen. Retest S3/S5 scenarios once the fix is deployed.
 
 ---
 
