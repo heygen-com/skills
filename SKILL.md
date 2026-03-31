@@ -81,17 +81,59 @@ Interview the user. Be conversational, not robotic. Adapt based on what they've 
 9. **Avatar** — Walk through the Avatar Conversation Flow (see below). Don't auto-select.
 10. **Language** — Default: English. For non-English, specify in the prompt.
 
-### Asset Handling
+### Asset Handling — The Classification Engine
 
-When the user provides files (images, PDFs, URLs):
+When the user provides files, URLs, or references, your job is to route each asset to the right path. The user should NEVER have to think about this. They hand you stuff, you figure out the rest.
+
+**Two paths exist for every asset:**
+
+| Path | What happens | When to use |
+|------|-------------|-------------|
+| **A: Contextualize → Prompt** | You read/analyze the asset, extract key info, bake it into the script text. Video Agent never sees the original. | Reference material, auth-walled content, documents where the *information* matters more than the *visual*. |
+| **B: Attach to API** | Upload the raw file to Video Agent via `files[]`. It analyzes, extracts graphics, uses visuals as frames/B-roll. | Screenshots to show on screen, branded assets, PDFs with important visual layouts, images the viewer should literally see. |
+| **A+B: Both** | Contextualize for script quality AND attach for visual use. | Long docs where you need to summarize for script but Video Agent should also have the full source. Ambiguous intent. |
 
 **Step 1: Classify each asset**
-- **Visual assets** (images, screenshots, logos) → upload and reference as B-roll in prompt
-- **Reference assets** (PDFs, docs) → extract content for the script AND upload so Video Agent has full context
-- **URLs** → extract content via `web_fetch` for the script AND pass the original URL in the `files` array: `{"type": "url", "url": "https://..."}`. This gives Video Agent both your summarized script AND full source context.
-- **When unclear** → upload everything. Video Agent ignores what it doesn't need.
 
-**Step 2: Upload to HeyGen**
+For each asset the user provides, ask yourself these questions (in order):
+
+```
+1. Can Video Agent access this directly?
+   - Public URL (no auth, no paywall, no login) → YES
+   - Private/internal URL (Notion, Google Docs, auth-walled) → NO
+   - Local file → NO (must upload first)
+
+2. Should the viewer SEE this asset in the video?
+   - Screenshot, logo, product image, chart → YES → Path B (attach)
+   - Research doc, article, context material → NO → Path A (contextualize)
+   - Ambiguous ("make a video about this PDF") → Path A+B (both)
+
+3. Is the content too long for the prompt?
+   - Short (< 500 words) → fits in prompt as context
+   - Long (> 500 words) → summarize key points for prompt, attach full doc
+```
+
+**Decision matrix:**
+
+| Asset Type | Publicly Accessible? | Show On Screen? | Route |
+|-----------|---------------------|----------------|-------|
+| Screenshot / image | N/A | Yes | **B: Attach** + describe in prompt as B-roll |
+| Logo / brand asset | N/A | Yes | **B: Attach** + anchor to intro/outro |
+| Public URL (blog, Wikipedia, docs site) | Yes | Maybe | **B: Pass URL in `files[]`** + summarize key points in prompt |
+| Auth-walled URL (Notion, Google Doc, internal) | No | No | **A: Fetch content yourself** → summarize for script. If long, also convert to PDF and attach. |
+| PDF (short, text-heavy) | N/A | No | **A+B: Extract key points for script** + attach so Video Agent has full context |
+| PDF (long, visual-rich) | N/A | Maybe | **B: Attach** (Video Agent extracts graphics) + summarize top points for script |
+| Raw data / spreadsheet | N/A | Partially | **A: Analyze and describe** key stats in script. Attach if charts/tables should appear on screen. |
+
+**Step 2: Execute the route**
+
+**For Path A (Contextualize):**
+- URLs: Use `web_fetch` or your access tools (Notion MCP, Google Workspace CLI) to retrieve content
+- Extract the 3-5 most important points relevant to the video's topic
+- Weave them naturally into the script. Don't dump. Integrate.
+
+**For Path B (Attach):**
+Upload to HeyGen:
 ```bash
 curl -X POST "https://api.heygen.com/v3/assets" \
   -H "X-Api-Key: $HEYGEN_API_KEY" \
@@ -99,18 +141,32 @@ curl -X POST "https://api.heygen.com/v3/assets" \
 ```
 Max 32MB per file. Returns `asset_id`. Save it.
 
-Files can also be provided inline as URL or base64 in any endpoint that accepts `files[]`:
+Or pass inline in the API call's `files[]` array:
 ```json
 {"type": "url", "url": "https://example.com/image.png"}
 {"type": "asset_id", "asset_id": "<from upload>"}
 {"type": "base64", "data": "<base64 string>", "content_type": "image/png"}
 ```
 
+**For Path A+B (Both):**
+Do BOTH. Summarize key points into the script AND attach the original. This gives Video Agent maximum context while ensuring the script is well-informed.
+
 **Step 3: Describe asset usage in the prompt.** Be SPECIFIC:
 - "Use the uploaded dashboard screenshot as B-roll when discussing analytics"
 - "Display the company logo in the intro and end card"
+- "Reference the attached PDF for additional context on market data"
 
-**Rule: Always upload. Always describe.** Uploading costs nothing. Under-providing costs quality.
+**Step 4: Log your classification decision.** In the learning log entry, record:
+- `"assets_classified"`: array of `{"type": "image|pdf|url|doc", "route": "contextualize|attach|both", "accessible": true|false, "reason": "brief note"}`
+
+This builds a feedback loop. Over time you learn: "screenshots always get attached, Notion docs always get contextualized."
+
+**Rules:**
+- **Never ask the user which path unless genuinely 50/50.** You're the producer. Make the call.
+- **When in doubt, do both (A+B).** Over-providing costs nothing. Under-providing costs quality.
+- **Always describe attached assets in the prompt.** Uploading without description = Video Agent ignores them.
+- **Auth-walled content is YOUR job.** If you have access and Video Agent doesn't, fetch and bridge the gap.
+- **URLs that might be paywalled:** Try `web_fetch` first. If it returns a login page or paywall, switch to Path A (contextualize what you can access).
 
 **Multi-topic split rule.** If the user describes multiple distinct topics, recommend separate videos. HeyGen produces dramatically better results with one topic per video.
 
@@ -794,7 +850,7 @@ All checks passed. Duration within target.
 After EVERY generation (successful or not), append to `heygen-video-producer-log.jsonl`:
 
 ```bash
-echo '{"timestamp":"<ISO-8601>","video_id":"<id>","session_id":"<session_id_or_null>","prompt_type":"full_producer|enhanced|quick_shot|interactive","target_duration":<seconds>,"padded_duration":<padded_seconds>,"actual_duration":<actual_or_null>,"duration_ratio":<ratio_or_null>,"padding_multiplier":<1.3|1.4|1.6>,"word_count":<words>,"scene_count":<scenes>,"avatar_id":"<id_or_null>","voice_id":"<id_or_null>","style_id":"<id_or_null>","orientation":"landscape|portrait","aspect_correction":"portrait_to_landscape|landscape_to_portrait|background_fill|both|none","avatar_type":"photo_avatar|studio_avatar|video_avatar|null","files_attached":<count>,"generation_path":"video_agent|avatar_video|interactive_session","status":"DONE|DONE_WITH_CONCERNS|BLOCKED","concerns":["<list>"],"what_worked":"<brief>","what_to_improve":"<brief>","topic":"<topic>"}' >> /Users/heyeve/.openclaw/workspace/heygen-video-producer-log.jsonl
+echo '{"timestamp":"<ISO-8601>","video_id":"<id>","session_id":"<session_id_or_null>","prompt_type":"full_producer|enhanced|quick_shot|interactive","target_duration":<seconds>,"padded_duration":<padded_seconds>,"actual_duration":<actual_or_null>,"duration_ratio":<ratio_or_null>,"padding_multiplier":<1.3|1.4|1.6>,"word_count":<words>,"scene_count":<scenes>,"avatar_id":"<id_or_null>","voice_id":"<id_or_null>","style_id":"<id_or_null>","orientation":"landscape|portrait","aspect_correction":"portrait_to_landscape|landscape_to_portrait|background_fill|both|none","avatar_type":"photo_avatar|studio_avatar|video_avatar|null","files_attached":<count>,"assets_classified":[{"type":"image|pdf|url|doc","route":"contextualize|attach|both","accessible":true,"reason":"brief"}],"generation_path":"video_agent|avatar_video|interactive_session","status":"DONE|DONE_WITH_CONCERNS|BLOCKED","concerns":["<list>"],"what_worked":"<brief>","what_to_improve":"<brief>","topic":"<topic>"}' >> /Users/heyeve/.openclaw/workspace/heygen-video-producer-log.jsonl
 ```
 
 **New fields explained:**

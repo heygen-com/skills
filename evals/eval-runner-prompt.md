@@ -24,6 +24,9 @@ For each scenario, record:
 - **Duration:** [actual]s vs [target]s ([ratio]%)
 - **Avatar:** [which avatar used, how selected]
 - **Aspect Correction:** [was Phase 3.5 triggered? what was injected?]
+- **Assets Provided:** [list of assets with types, or "none"]
+- **Classification:** [per-asset: type → route chosen (contextualize/attach/both) + reason]
+- **User Questions Asked:** [0 if none. List any questions the skill asked about asset routing.]
 - **Friction Points:** [anything confusing, missing, or wrong in SKILL.md]
 - **Score:** [1-10]
 - **Finding:** [P1/P2/P3] [one-line description]
@@ -49,7 +52,7 @@ For each scenario, record:
 - **P2 (Important):** Degrades quality. Bad framing, wrong avatar, unnecessary friction.
 - **P3 (Nice-to-have):** Polish. Wording improvements, edge case docs, minor UX.
 
-## After All 10 Scenarios
+## After All Scenarios
 
 Write a Notion doc under the provided parent page with this structure:
 
@@ -109,7 +112,7 @@ Ken reviews every video. Fill in after watching each.
 
 ## Rules
 
-- Do NOT skip scenarios. Run all 10.
+- Do NOT skip scenarios. Run all of them (check the scenario file for the exact count).
 - Do NOT fix issues yourself. Document them.
 - If a scenario requires a specific avatar and you can't find it, document that as a finding.
 - Time each scenario. Note if any take unreasonably long.
