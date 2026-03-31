@@ -117,6 +117,29 @@ This isn't an API wrapper. It encodes video production expertise:
 - **Learning loop** — logs every generation to `heygen-video-producer-log.jsonl` with duration accuracy, settings, and self-evaluation scores
 - **Multi-language** — supports any language HeyGen offers: "Create a 60-second demo narrated in Brazilian Portuguese"
 
+## Why Direct API (Not MCP)
+
+This skill uses HeyGen's REST API directly instead of their [MCP server](https://github.com/HeyGen-Official/heygen-mcp). Here's why:
+
+**The MCP server covers ~15% of the API.** It exposes 6 tools: credits, voices (capped at 100), avatar groups, avatars in group, generate video, and check status. That's it.
+
+**We need endpoints MCP doesn't have:**
+
+| What we need | API endpoint | In MCP? |
+|-------------|-------------|---------|
+| Video Agent (prompt-driven) | `POST /v3/video-agents` | ❌ |
+| Style browsing | `GET /v3/video-agents/styles` | ❌ |
+| Asset upload | `POST /v3/assets` | ❌ |
+| Avatar looks with group filtering | `GET /v3/avatars/looks` | ❌ |
+| Voice previews with signed URLs | `GET /v3/voices` | ❌ (capped at 100) |
+| Interactive sessions | `POST /v3/video-agents/sessions` | ❌ |
+
+The MCP's `generate_avatar_video` wraps the old v2 scene-by-scene API, not the Video Agent. Different endpoint, different capabilities.
+
+**No extra dependencies.** Direct API is just HTTPS with an API key. No Python process, no `uvx`, no MCP client required. The skill works anywhere that can make HTTP calls.
+
+**When MCP would make sense:** If HeyGen ships a v3 MCP server that wraps Video Agent, styles, and assets, the transport difference becomes irrelevant. The prompt quality is still the critical factor regardless of how you call the API. We'd revisit then.
+
 ## API
 
 All endpoints are **v3**. Base URL: `https://api.heygen.com`
@@ -127,6 +150,7 @@ All endpoints are **v3**. Base URL: `https://api.heygen.com`
 | `GET /v3/videos/{id}` | Poll for completion |
 | `GET /v3/avatars/looks` | Avatar discovery (with group filtering) |
 | `GET /v3/voices` | Voice listing with preview URLs |
+| `GET /v3/video-agents/styles` | Style browsing with tag filtering |
 | `POST /v3/assets` | Upload files for attachment |
 | `POST /v3/videos` | Direct control path (avatar videos) |
 
