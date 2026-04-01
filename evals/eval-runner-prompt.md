@@ -88,8 +88,9 @@ For EACH scenario, create one row using `notion-create-pages` with `data_source_
 
 Properties per row:
 ```
-"Scenario": "R{round}-S{number}: {short name}"     ← TITLE
-"Round": {round_number}                              ← NUMBER
+"Scenario": "{short descriptive name}"               ← TITLE (NO round prefix! e.g. "Style-First Video" not "R16-S1: Style-First Video")
+"Scenario #": "{number}"                             ← TEXT (e.g. "1", "2", "9A")
+"Round": "R{round_number}"                           ← SELECT (e.g. "R16", "R17". Must include "R" prefix)
 "Fix Tested": "{what fix or path this tests}"        ← TEXT
 "Prompt": "{the exact prompt used}"                  ← TEXT (truncate to ~200 chars if long)
 "Video": "https://app.heygen.com/videos/{video_id}"  ← URL (or null for dry-run/non-generation)
@@ -108,6 +109,15 @@ Properties per row:
 "Ken Verdict": "—"                                   ← SELECT (Ken fills in later)
 "Ken Notes": ""                                      ← TEXT (Ken fills in later)
 ```
+
+### ⛔ DEDUP RULE (CRITICAL)
+
+Before writing a Notion row, check if a row with the SAME Round + Scenario # already exists:
+1. Search the database for rows where Round = "R{n}" AND Scenario # = "{s}"
+2. If a match exists, UPDATE the existing row instead of creating a new one
+3. If no match exists, create a new row
+
+Duplicate rows are a BLOCKING failure. Every (Round, Scenario #) combination must be unique.
 
 **Write-first, NOT batch:** Write EACH row immediately after its POST call returns (with video_id + session_id). Do NOT wait to batch all scenarios. The goal is crash-resilient data capture.
 
