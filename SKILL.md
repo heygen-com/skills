@@ -125,11 +125,13 @@ Two systems:
 
 ### Structure by Type
 
-- **Product Demo:** Hook (5s) → Problem (10s) → Solution (30s) → CTA (15s)
-- **Explainer:** Context (10s) → Core concept (35s) → Takeaway (15s)
-- **Tutorial:** What we'll build (5s) → Steps (45s) → Recap (10s)
-- **Sales Pitch:** Pain (10s) → Vision (15s) → Product (25s) → CTA (10s)
-- **Announcement:** Hook (5s) → What changed (20s) → Why it matters (25s) → Next (10s)
+Content structure only. Do NOT assign per-scene durations — let Video Agent pace it.
+
+- **Product Demo:** Hook → Problem → Solution → CTA
+- **Explainer:** Context → Core concept → Takeaway
+- **Tutorial:** What we'll build → Steps → Recap
+- **Sales Pitch:** Pain → Vision → Product → CTA
+- **Announcement:** Hook → What changed → Why it matters → Next
 
 ### Critical On-Screen Text
 
