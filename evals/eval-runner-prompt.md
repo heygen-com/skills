@@ -9,16 +9,29 @@ You are testing the HeyGen Video Producer skill as a fresh user. You have ZERO p
 3. Your HeyGen API key is in env var `HEYGEN_API_KEY`.
 4. **Always add `incognito_mode: true`** to every `POST /v3/video-agents` call. This prevents cross-session memory from influencing results and ensures clean, reproducible evaluations.
 
-## Write-First Pattern (CRITICAL)
+## Execution Pattern: SUBMIT → WRITE → STOP (CRITICAL)
 
-After EACH scenario's POST /v3/video-agents call completes, IMMEDIATELY write a Notion row to the Eval Tracker BEFORE polling for completion. This ensures data survives timeouts.
+You MUST follow this exact flow. Violations of this pattern are a BLOCKING failure.
 
-**Step 1: Submit** → POST /v3/video-agents with `incognito_mode: true`, capture video_id + session_id from response.
-**Step 2: Write Notion row** → Status: "🔄 Running", with video_id, session_id, prompt, avatar, target duration, corrections fired. All fields you know AT SUBMISSION TIME.
-**Step 3: Move to next scenario** → Do NOT wait for video completion before moving on.
-**Step 4: After ALL scenarios submitted** → Poll all video_ids in a batch loop. Update each Notion row with actual duration, duration %, score, findings.
+### For each scenario, in order:
+**Step 1: Build prompt** following SKILL.md phases.
+**Step 2: Submit** → POST /v3/video-agents with `incognito_mode: true`. Capture video_id + session_id from response.
+**Step 3: Log the POST payload** → Immediately after submission, echo the EXACT JSON body you sent. Specifically confirm:
+  - Was `incognito_mode: true` present? YES/NO
+  - Was `style_id` present? If so, what value?
+  - Was `avatar_id` present? If so, what value?
+  - What `orientation` was set?
+**Step 4: Write Notion row** → Status: "🔄 Running", with video_id, session_id, prompt summary, avatar, target duration, corrections fired, payload flags (incognito, style_id, avatar_id, orientation). ALL fields you know AT SUBMISSION TIME.
+**Step 5: Move to next scenario.** Do NOT poll. Do NOT wait. Do NOT check video status.
 
-This way, even if you time out during polling, we have every submission recorded with correct video_id, session_id, avatar choice, and prompt.
+### After ALL scenarios are submitted and written to Notion:
+**Step 6: STOP.** Print a summary table of all submissions (scenario, video_id, session_id, payload flags) and exit.
+
+⛔ **DO NOT POLL FOR VIDEO COMPLETION. EVER.** Eve will poll later. Your ONLY job is submit + record + move on.
+⛔ **DO NOT sleep() or wait() between scenarios.** Submit, write row, next.
+⛔ **If you find yourself writing `sleep` or `poll` or checking video status, you are doing it wrong. STOP.**
+
+This pattern exists because polling burns your entire timeout budget. 8 submissions + 8 Notion writes should take <10 minutes total.
 
 ## For Each Scenario
 
@@ -33,8 +46,9 @@ For each scenario, record:
 - **Actual:** [what actually happened]
 - **Video ID:** [id or "N/A - dry run"]
 - **🎬 Video:** [Video Page](https://app.heygen.com/videos/{video_id}) | [Session](https://app.heygen.com/video-agent/{session_id})  ← NOT ?session= query param
-- **Duration:** [actual]s vs [target]s ([ratio]%)
+- **Duration:** [actual]s vs [target]s ([ratio]%) — LEAVE BLANK if not yet polled
 - **Avatar:** [which avatar used, how selected]
+- **Payload Flags:** incognito_mode=[true/false], style_id=[value/none], avatar_id=[value/none], orientation=[value]
 - **Aspect Correction:** [was Phase 3.5 triggered? what was injected?]
 - **Assets Provided:** [list of assets with types, or "none"]
 - **Classification:** [per-asset: type → route chosen (contextualize/attach/both) + reason]
@@ -86,6 +100,8 @@ Properties per row:
 "Avatar Type": "photo_avatar|studio_avatar|video_avatar|none" ← SELECT
 "Phase 3.5 Fired": "__YES__" or "__NO__"             ← CHECKBOX
 "Corrections": ["A: Portrait→Landscape", "C: Background Fill"] ← MULTI_SELECT (array)
+"Incognito Mode": "__YES__" or "__NO__"              ← CHECKBOX (was incognito_mode:true in payload?)
+"Style ID Used": "{style_id value or empty}"          ← TEXT (the actual style_id, or empty string if none)
 "Status": "✅ Complete|⚠️ Stuck Pending|❌ Failed|🔄 Running" ← SELECT
 "Adam Score": {1-10}                                 ← NUMBER
 "Findings": "[P1] {description}. Fix: {recommendation}" ← TEXT
@@ -93,7 +109,9 @@ Properties per row:
 "Ken Notes": ""                                      ← TEXT (Ken fills in later)
 ```
 
-**Write-first, NOT batch:** Write EACH row immediately after its POST call returns (with video_id + session_id). Do NOT wait to batch all scenarios. The goal is crash-resilient data capture. Update rows later with polling results via `notion-update-page`.
+**Write-first, NOT batch:** Write EACH row immediately after its POST call returns (with video_id + session_id). Do NOT wait to batch all scenarios. The goal is crash-resilient data capture.
+
+**DO NOT poll or update rows.** Eve handles polling and scoring separately. Your job ends after all rows are written.
 
 **After creating rows**, also log to `heygen-video-producer-log.jsonl` as before (for machine-readable history).
 
@@ -111,25 +129,11 @@ Properties per row:
 - If the POST response doesn't include `session_id`, document that as a P1 finding.
 - **Every row in the Human Evaluation Tracker MUST have a Session link.** "n/a" is only acceptable for dry-run scenarios.
 
-## ⛔ MANDATORY VALIDATION GATE (before writing to Notion)
+## ⛔ VALIDATION (lightweight — no polling)
 
-**After completing all scenarios and BEFORE creating the Notion doc**, you MUST run this validation step:
+For each submission, validate BEFORE writing the Notion row:
+1. `video_id` is a full 32-character hex string.
+2. `session_id` is a valid UUID with dashes.
+3. You echoed the POST payload and confirmed `incognito_mode: true` was present.
 
-For EVERY video_id you recorded (except dry-runs):
-```bash
-curl -s "https://api.heygen.com/v3/videos/{video_id}" -H "X-Api-Key: $HEYGEN_API_KEY"
-```
-
-Check each response:
-1. The response MUST return a valid JSON object with `data.id` matching your recorded video_id.
-2. The `video_id` MUST be a full 32-character hex string (e.g. `c4b5a87dc32748f89f717576ee01d5aa`). If yours is shorter, it's wrong.
-3. The `session_id` MUST be a valid UUID with dashes (e.g. `c87582f1-fc0f-4074-a7e5-b5140336c734`).
-
-**If ANY video_id fails validation:**
-- Mark that scenario as `❌ UNVERIFIED — video_id did not resolve via GET /v3/videos`
-- Do NOT fabricate or guess IDs. If you lost the ID, say so.
-- Re-run the scenario if time permits. If not, mark it as incomplete.
-
-**If MORE THAN 3 scenarios fail validation, STOP and report the failure to Eve. Do not write a Notion doc with unverified data.**
-
-This gate exists because fabricated video IDs waste Ken's review time. Every link in the Notion doc must work.
+If any ID looks wrong (short, missing, malformed), mark it and move on. Do NOT re-run or poll to verify. Do NOT fabricate IDs.
