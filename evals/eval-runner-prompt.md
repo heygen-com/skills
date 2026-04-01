@@ -8,6 +8,17 @@ You are testing the HeyGen Video Producer skill as a fresh user. You have ZERO p
 2. Read `SKILL.md` completely. This is your only guide.
 3. Your HeyGen API key is in env var `HEYGEN_API_KEY`.
 
+## Write-First Pattern (CRITICAL)
+
+After EACH scenario's POST /v3/video-agents call completes, IMMEDIATELY write a Notion row to the Eval Tracker BEFORE polling for completion. This ensures data survives timeouts.
+
+**Step 1: Submit** → POST /v3/video-agents, capture video_id + session_id from response.
+**Step 2: Write Notion row** → Status: "🔄 Running", with video_id, session_id, prompt, avatar, target duration, corrections fired. All fields you know AT SUBMISSION TIME.
+**Step 3: Move to next scenario** → Do NOT wait for video completion before moving on.
+**Step 4: After ALL scenarios submitted** → Poll all video_ids in a batch loop. Update each Notion row with actual duration, duration %, score, findings.
+
+This way, even if you time out during polling, we have every submission recorded with correct video_id, session_id, avatar choice, and prompt.
+
 ## For Each Scenario
 
 Execute the scenario exactly as described. Follow SKILL.md to the letter. Do NOT improvise or work around issues. If the skill doesn't tell you what to do, that's a finding.
@@ -20,7 +31,7 @@ For each scenario, record:
 - **Expected:** [from scenario file]
 - **Actual:** [what actually happened]
 - **Video ID:** [id or "N/A - dry run"]
-- **🎬 Video:** [Video Page](https://app.heygen.com/videos/{video_id}) | [Session](https://app.heygen.com/video-agent/{session_id})
+- **🎬 Video:** [Video Page](https://app.heygen.com/videos/{video_id}) | [Session](https://app.heygen.com/video-agent/{session_id})  ← NOT ?session= query param
 - **Duration:** [actual]s vs [target]s ([ratio]%)
 - **Avatar:** [which avatar used, how selected]
 - **Aspect Correction:** [was Phase 3.5 triggered? what was injected?]
@@ -67,7 +78,7 @@ Properties per row:
 "Fix Tested": "{what fix or path this tests}"        ← TEXT
 "Prompt": "{the exact prompt used}"                  ← TEXT (truncate to ~200 chars if long)
 "Video": "https://app.heygen.com/videos/{video_id}"  ← URL (or null for dry-run/non-generation)
-"Session": "https://app.heygen.com/video-agent/{session_id}" ← URL
+"Session": "https://app.heygen.com/video-agent/{session_id}" ← URL (path-based, NOT ?session= query param)
 "Target (s)": {target_seconds}                       ← NUMBER
 "Actual (s)": {actual_seconds_or_null}               ← NUMBER
 "Duration %": {percentage_as_integer}                 ← NUMBER (e.g. 106 for 106%)
@@ -81,7 +92,7 @@ Properties per row:
 "Ken Notes": ""                                      ← TEXT (Ken fills in later)
 ```
 
-**Batch create:** Use a single `notion-create-pages` call with all scenarios as an array when possible. This is faster and avoids rate limits.
+**Write-first, NOT batch:** Write EACH row immediately after its POST call returns (with video_id + session_id). Do NOT wait to batch all scenarios. The goal is crash-resilient data capture. Update rows later with polling results via `notion-update-page`.
 
 **After creating rows**, also log to `heygen-video-producer-log.jsonl` as before (for machine-readable history).
 

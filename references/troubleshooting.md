@@ -16,6 +16,23 @@
 
 ---
 
+## Weird Pauses / Unnatural Silence in Videos
+
+**Discovered:** March 31, 2026 (R11 testing, confirmed by Jerry Yan, HeyGen engineer)
+
+**Symptom:** Video has awkward pauses or breaks between sentences. Narrator stops speaking but video continues with dead air before next line.
+
+**Root Cause:** When Video Agent receives a script shorter than the target duration, it treats the script as verbatim speech and inserts silence/breaks to stretch it to the exact requested duration. It won't ad-lib or expand — it just pads with dead air.
+
+**Fix:** Add this directive to EVERY prompt:
+> "This script is a concept and theme to convey — not a verbatim transcript. You have full creative freedom to expand, elaborate, add examples, and fill the duration naturally. Do not pad with silence or pauses."
+
+This tells Video Agent it can expand the script naturally instead of treating it as a fixed speech transcript. Per Jerry Yan: "If you tell it it's not a script to be strictly followed but concept or theme or give it green light to expand the script it will do well."
+
+**Status:** Skill-side fix (prompt directive). HeyGen is also tuning the default behavior but the explicit directive is the reliable workaround.
+
+---
+
 ## Duration Variance (Expected Behavior)
 
 Video Agent controls final video timing internally. Duration accuracy ranges from 79-174% of target across testing. This is NOT a bug.
@@ -40,11 +57,12 @@ Without this trigger phrase, Video Agent acknowledges the directive but doesn't 
 
 ## Generative Fill Visual Quality
 
-Phase 3.5 correction prompts can produce unnatural-looking environments when Video Agent's AI Image tool generates backgrounds. This is a known quality limitation.
+Phase 3.5 correction prompts can produce synthetic-looking backgrounds. The bar is **hyper photo-realistic** — backgrounds should be indistinguishable from real photography.
 
 **Mitigation:**
-- Prescriptive correction prompts (added Round 5) improve results
-- Explicit environment description ("modern studio with monitors and soft lighting") beats vague ("professional background")
+- All correction prompts (A, B, C) now include explicit "HYPER PHOTO-REALISTIC" + anti-CGI directives
+- Specific real-world details beat generic descriptions: "visible mic stands, actual monitors with content" >> "professional studio"
+- Request depth-of-field blur, natural lighting direction, and realistic imperfections
 - Short videos (≤30s) with corrections tend to overshoot duration (~163%)
 
 ---

@@ -39,11 +39,14 @@ FRAMING NOTE: The selected avatar image is in portrait orientation (9:16) but
 this video is landscape (16:9). YOU MUST generate a new variant of the avatar
 image before using it in this video. Use AI Image tool to:
 1. Generate a landscape (16:9) version of the presenter image
-2. Generative fill to extend the scene horizontally — add a professional
-   environment (modern studio, office, or setting matching the video tone)
+2. Generative fill to extend the scene horizontally — add a HYPER PHOTO-REALISTIC
+   environment. Think real photography: actual office spaces, real studios with
+   visible equipment, genuine room interiors with natural imperfections.
+   NOT CGI. NOT stock photo. NOT 3D-rendered. Real-world photographic quality.
 3. Frame the presenter from chest up, centered in the landscape canvas
-4. The background MUST be a real-looking environment, NOT a solid color,
-   NOT transparent, NOT a gradient
+4. The background MUST look like a real photograph — correct lighting direction,
+   natural shadows, depth-of-field blur on background elements, realistic scale.
+   NOT a solid color, NOT transparent, NOT a gradient, NOT synthetic/CGI.
 Do NOT use the original portrait image uncropped. Do NOT add black bars or
 pillarboxing. Do NOT leave a transparent or missing background.
 ```
@@ -55,11 +58,13 @@ FRAMING NOTE: The selected avatar image is in landscape orientation (16:9) but
 this video is portrait (9:16). YOU MUST generate a new variant of the presenter
 image before using it. Use AI Image tool to:
 1. Generate a portrait (9:16) version of the presenter image
-2. Generative fill to extend vertically — add environment above and below
-   the presenter (ceiling, floor, room depth) that looks natural
+2. Generative fill to extend vertically — add HYPER PHOTO-REALISTIC environment
+   above and below the presenter (real ceiling, real floor, room depth with
+   natural imperfections). Think real photography, not CGI or stock imagery.
 3. Focus on head and shoulders, presenter centered in portrait frame
-4. The background MUST be a real-looking environment, NOT a solid color,
-   NOT transparent, NOT a gradient
+4. The background MUST look like a real photograph — correct lighting,
+   natural shadows, depth-of-field blur. NOT a solid color, NOT transparent,
+   NOT a gradient, NOT synthetic/CGI.
 Do NOT use the original landscape image uncropped. Do NOT add letterboxing.
 Do NOT leave transparent or missing background areas.
 ```
@@ -69,19 +74,28 @@ Do NOT leave transparent or missing background areas.
 ```
 BACKGROUND NOTE: The selected avatar is a photo avatar extracted from a static
 photo — it has NO scene background (just the person, cutout-style). YOU MUST
-generate a complete background environment before using this avatar. Use AI Image
-tool to:
-1. Generate a variant of the presenter image WITH a full background scene
-2. For business/tech content: place in a modern studio, office with monitors,
-   or professional podcast set with soft lighting and depth-of-field blur
-3. For casual content: place in a bright room with natural light, plants,
-   or a café-style setting
-4. The presenter should look NATURAL in the environment — correct lighting
-   direction, realistic scale (waist-up or chest-up framing), shadows present
+generate a HYPER PHOTO-REALISTIC background environment before using this avatar.
+Use AI Image tool to:
+1. Generate a variant of the presenter image WITH a full background scene that
+   looks like REAL PHOTOGRAPHY — not CGI, not 3D-rendered, not stock imagery
+2. For business/tech content: place in a REAL modern studio (visible mic stands,
+   actual monitors with content on screen, cable management, real desk surfaces),
+   a real office (imperfect bookshelves, actual papers, natural desk clutter),
+   or a real podcast set (acoustic panels, real lighting rigs, visible equipment)
+3. For casual content: place in a REAL room (actual furniture with wear, real
+   plants not perfect renders, natural window light with shadows, genuine
+   café/kitchen details)
+4. The presenter MUST look NATURAL in the environment:
+   - Correct lighting direction matching the room's light source
+   - Realistic scale (waist-up or chest-up framing)
+   - Natural shadows on and from the presenter
+   - Depth-of-field blur on background (shallow DOF, like a real camera)
 5. Do NOT leave ANY transparent, solid-color, or gradient background
 6. Do NOT make the presenter look oversized relative to the environment
    (the "giant in a room" effect means the scale is wrong — zoom out or
    reframe until the person looks like they naturally belong in the space)
+7. The final image should be INDISTINGUISHABLE from a real photograph.
+   If someone screenshots this video, they should think it was filmed on location.
 The result should look like the presenter was actually filmed in that location.
 ```
 

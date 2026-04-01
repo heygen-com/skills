@@ -135,6 +135,15 @@ Two systems:
 
 Extract every literal on-screen element (numbers, quotes, handles, URLs, CTAs) into a `CRITICAL ON-SCREEN TEXT` block for the prompt. Without this, Video Agent will summarize/rephrase.
 
+### Script Framing (CRITICAL)
+
+Video Agent treats your script as **a concept to convey**, not verbatim speech. If the script is shorter than the target duration, Video Agent will insert awkward pauses/breaks to stretch it to the exact time. This is the #1 cause of "weird pauses."
+
+**Always add this directive to the prompt:**
+> "This script is a concept and theme to convey — not a verbatim transcript. You have full creative freedom to expand, elaborate, add examples, and fill the duration naturally. Do not pad with silence or pauses."
+
+This single line eliminates the pause problem. Without it, Video Agent goes into "as-is speech" mode and pads with dead air.
+
 ### Voice Rules
 
 Write for the ear. Short sentences. Active voice. Contractions are good. Scene breaks create natural pauses.
@@ -153,9 +162,10 @@ Transform the script into an optimized Video Agent prompt.
 
 1. **Narrator framing.** With `avatar_id`: "The selected presenter [explains]..." Without: describe desired presenter or "Voice-over narration only."
 2. **Duration signal.** Use padded seconds (1.3-1.6x target).
-3. **Asset anchoring.** Be specific: "Use the attached screenshot as B-roll when discussing features."
-4. **Tone calibration.** Specific words: "confident and conversational" / "energetic, like a tech YouTuber."
-5. **One topic.** State explicitly.
+3. **Script freedom directive.** ALWAYS include: "This script is a concept and theme to convey — not a verbatim transcript. You have full creative freedom to expand, elaborate, add examples, and fill the duration naturally. Do not pad with silence or pauses."
+4. **Asset anchoring.** Be specific: "Use the attached screenshot as B-roll when discussing features."
+5. **Tone calibration.** Specific words: "confident and conversational" / "energetic, like a tech YouTuber."
+6. **One topic.** State explicitly.
 
 ### Prompt Approach
 
