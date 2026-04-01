@@ -24,9 +24,9 @@ Fetch the preview image and check pixel dimensions (width × height).
 
 | `avatar_type` | Background? | Reason |
 |---|---|---|
-| `studio_avatar` | ⚠️ Maybe | Check preview image — if transparent/solid/empty → "No background" |
+| `photo_avatar` | ✅ Handled by Video Agent | Video Agent generates avatar + environment together during video creation. **No standalone bg correction needed.** |
+| `studio_avatar` | ⚠️ Maybe | Check preview image — if transparent/solid/empty → "No background" → apply Correction C |
 | `video_avatar` | ✅ Yes | Recorded in a real environment |
-| `photo_avatar` | ❌ No | Static photo, typically no scene background |
 
 ## Step 4: Build correction blocks
 
@@ -69,13 +69,14 @@ Do NOT use the original landscape image uncropped. Do NOT add letterboxing.
 Do NOT leave transparent or missing background areas.
 ```
 
-### C) Missing background — photo_avatar type
+### C) Missing background — studio_avatar only
+
+**Only for `studio_avatar` with transparent/solid/empty background. NOT for photo_avatar** (Video Agent handles photo_avatar environments during generation).
 
 ```
-BACKGROUND NOTE: The selected avatar is a photo avatar extracted from a static
-photo — it has NO scene background (just the person, cutout-style). YOU MUST
-generate a HYPER PHOTO-REALISTIC background environment before using this avatar.
-Use AI Image tool to:
+BACKGROUND NOTE: The selected studio avatar has NO scene background (transparent
+or solid color). YOU MUST generate a HYPER PHOTO-REALISTIC background environment
+before using this avatar. Use AI Image tool to:
 1. Generate a variant of the presenter image WITH a full background scene that
    looks like REAL PHOTOGRAPHY — not CGI, not 3D-rendered, not stock imagery
 2. For business/tech content: place in a REAL modern studio (visible mic stands,
@@ -92,10 +93,7 @@ Use AI Image tool to:
    - Depth-of-field blur on background (shallow DOF, like a real camera)
 5. Do NOT leave ANY transparent, solid-color, or gradient background
 6. Do NOT make the presenter look oversized relative to the environment
-   (the "giant in a room" effect means the scale is wrong — zoom out or
-   reframe until the person looks like they naturally belong in the space)
 7. The final image should be INDISTINGUISHABLE from a real photograph.
-   If someone screenshots this video, they should think it was filmed on location.
 The result should look like the presenter was actually filmed in that location.
 ```
 
@@ -111,10 +109,12 @@ Corrections can stack. A portrait photo_avatar in a landscape video gets BOTH A 
 | `studio_avatar` | ✅ matched | ❌ No | Background (C) |
 | `studio_avatar` | ❌ mismatched | ✅ Yes | Framing only (A or B) |
 | `studio_avatar` | ❌ mismatched | ❌ No | Framing (A or B) + Background (C) |
-| `photo_avatar` | ✅ matched | ❌ No (always) | Background (C) |
-| `photo_avatar` | ❌ mismatched | ❌ No (always) | Framing (A or B) + Background (C) |
+| `photo_avatar` | ✅ matched | (n/a) | **None** — Video Agent handles avatar + environment together |
+| `photo_avatar` | ❌ mismatched | (n/a) | **Framing only (A or B)** — gen fill extends canvas |
 
 **How to check if studio_avatar has a background:** Fetch `preview_image_url`. If transparent/checkered, solid color, or cutout → "No background" → inject C.
+
+**photo_avatar rule:** Video Agent generates the avatar and its environment together during video creation. Do NOT inject Correction C for photo_avatars. Only inject framing corrections (A or B) if there's an orientation mismatch.
 
 ## Step 5: Log the correction
 

@@ -49,9 +49,11 @@ Without `avatar_id`: ~80% accuracy average.
 
 ## Phase 3.5 Correction Prompts Not Executing
 
-If aspect ratio corrections (generative fill, reframing) aren't applied, check that the correction prompt includes the exact phrase: **"Use AI Image tool to generative fill"**
+If aspect ratio corrections (generative fill, reframing) aren't applied, check:
 
-Without this trigger phrase, Video Agent acknowledges the directive but doesn't execute it.
+1. **Correction templates must be in SKILL.md, not just referenced.** If the agent only sees a summary pointer ("read references/phase-3-5.md"), it may skip loading the reference and generate without corrections. The full correction text blocks (A, B, C) are inlined in SKILL.md to prevent this.
+2. The correction prompt must include the exact phrase: **"Use AI Image tool to generative fill"** — without this trigger, Video Agent acknowledges the directive but doesn't execute it.
+3. **photo_avatar does NOT need Correction C** (background fill). Video Agent generates avatar + environment together for photo_avatars. Only apply framing corrections (A/B) for orientation mismatches. Correction C is for studio_avatars with transparent/empty backgrounds only.
 
 ---
 

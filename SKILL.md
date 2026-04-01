@@ -190,19 +190,91 @@ Natural Flow produces better delivery for short videos. Scene-by-Scene gives max
 
 ## Phase 3.5 — Aspect Ratio & Background Pre-Check
 
-**Runs automatically when `avatar_id` is set, before Phase 4.**
+**Runs automatically when `avatar_id` is set, before Phase 4. Also runs in Quick Shot mode when avatar_id is present.**
 
-📖 **For full step-by-step logic, correction prompt templates, and the decision matrix → read [references/phase-3-5.md](references/phase-3-5.md)**
+### Steps
 
-**Quick summary:**
-1. Fetch avatar look metadata (`GET /v3/avatars/looks/<id>`)
-2. Determine avatar orientation from preview image dimensions
-3. Determine if background exists (photo_avatar = no, video_avatar = yes, studio_avatar = check preview)
-4. Build correction blocks and append to prompt:
-   - **Orientation mismatch** → framing correction with "Use AI Image tool to generative fill"
-   - **No background** (photo_avatar) → background environment generation
-   - Corrections stack (portrait photo_avatar in landscape = both)
-5. Log the correction type
+1. **Fetch avatar look metadata:** `GET /v3/avatars/looks/<avatar_id>` → extract `avatar_type` and `preview_image_url`
+2. **Determine orientation:** Fetch preview image dimensions. width > height = landscape, height > width = portrait. Fetch fails = assume portrait.
+3. **Determine if background exists:**
+   - `photo_avatar` → Video Agent generates avatar + environment together. **No standalone bg correction needed.**
+   - `studio_avatar` → Check preview. Transparent/solid/empty = no background.
+   - `video_avatar` → Always has background (real environment).
+4. **Build correction blocks** from the matrix below. Append verbatim to prompt. Do NOT ask user.
+5. **Log:** `aspect_correction` field in jsonl entry.
+
+### Correction Stacking Matrix
+
+| avatar_type | Orientation Match? | Has Background? | Corrections |
+|---|---|---|---|
+| `photo_avatar` | ✅ matched | (n/a) | **None** — Video Agent handles it |
+| `photo_avatar` | ❌ mismatched | (n/a) | **Framing (A or B)** — gen fill extends canvas |
+| `studio_avatar` | ✅ matched | ✅ Yes | None |
+| `studio_avatar` | ✅ matched | ❌ No | **Background (C)** |
+| `studio_avatar` | ❌ mismatched | ✅ Yes | **Framing (A or B)** |
+| `studio_avatar` | ❌ mismatched | ❌ No | **Framing (A or B) + Background (C)** |
+| `video_avatar` | ✅ matched | ✅ Yes | None |
+| `video_avatar` | ❌ mismatched | ✅ Yes | **Framing (A or B)** |
+
+### Correction A — Portrait Avatar → Landscape Video
+
+Append this verbatim to the prompt:
+```
+FRAMING NOTE: The selected avatar image is in portrait orientation (9:16) but
+this video is landscape (16:9). YOU MUST generate a new variant of the avatar
+image before using it in this video. Use AI Image tool to:
+1. Generate a landscape (16:9) version of the presenter image
+2. Generative fill to extend the scene horizontally — add a HYPER PHOTO-REALISTIC
+   environment. Think real photography: actual office spaces, real studios with
+   visible equipment, genuine room interiors with natural imperfections.
+   NOT CGI. NOT stock photo. NOT 3D-rendered. Real-world photographic quality.
+3. Frame the presenter from chest up, centered in the landscape canvas
+4. The background MUST look like a real photograph — correct lighting direction,
+   natural shadows, depth-of-field blur on background elements, realistic scale.
+   NOT a solid color, NOT transparent, NOT a gradient, NOT synthetic/CGI.
+Do NOT use the original portrait image uncropped. Do NOT add black bars or
+pillarboxing. Do NOT leave a transparent or missing background.
+```
+
+### Correction B — Landscape Avatar → Portrait Video
+
+Append this verbatim to the prompt:
+```
+FRAMING NOTE: The selected avatar image is in landscape orientation (16:9) but
+this video is portrait (9:16). YOU MUST generate a new variant of the presenter
+image before using it. Use AI Image tool to:
+1. Generate a portrait (9:16) version of the presenter image
+2. Generative fill to extend vertically — add HYPER PHOTO-REALISTIC environment
+   above and below the presenter (real ceiling, real floor, room depth with
+   natural imperfections). Think real photography, not CGI or stock imagery.
+3. Focus on head and shoulders, presenter centered in portrait frame
+4. The background MUST look like a real photograph — correct lighting,
+   natural shadows, depth-of-field blur. NOT a solid color, NOT transparent,
+   NOT a gradient, NOT synthetic/CGI.
+Do NOT use the original landscape image uncropped. Do NOT add letterboxing.
+Do NOT leave transparent or missing background areas.
+```
+
+### Correction C — Missing Background (studio_avatar only)
+
+Only for `studio_avatar` with transparent/solid/empty background. **NOT for photo_avatar.**
+
+Append this verbatim to the prompt:
+```
+BACKGROUND NOTE: The selected studio avatar has NO scene background (transparent
+or solid color). YOU MUST generate a HYPER PHOTO-REALISTIC background environment
+before using this avatar. Use AI Image tool to:
+1. Generate a variant of the presenter image WITH a full background scene that
+   looks like REAL PHOTOGRAPHY — not CGI, not 3D-rendered, not stock imagery
+2. For business/tech content: real modern studio (visible mic stands, actual
+   monitors, cable management, real desk surfaces), real office, or podcast set
+3. For casual content: real room (actual furniture, real plants, natural window
+   light with shadows)
+4. Correct lighting direction, realistic scale (waist-up or chest-up framing),
+   natural shadows, depth-of-field blur (shallow DOF, like a real camera)
+5. Do NOT leave ANY transparent, solid-color, or gradient background
+The result should look like the presenter was actually filmed in that location.
+```
 
 ---
 
