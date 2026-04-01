@@ -128,15 +128,44 @@ Transform the script into an optimized Video Agent prompt.
 4. **Asset anchoring.** Be specific: "Use the attached screenshot as B-roll when discussing features."
 5. **Tone calibration.** Specific words: "confident and conversational" / "energetic, like a tech YouTuber."
 6. **One topic.** State explicitly.
+7. **Style block at the end.** Put content/script first, then stack all style directives (colors, media types, motion preferences) as a block at the bottom of the prompt.
 
 ### Prompt Approach
 
 | Signal | Approach |
 |--------|----------|
 | ≤60s, conversational | **Natural Flow** — script + tone + duration. No scene labels. |
-| >60s, data-heavy, precision | **Scene-by-Scene** — scene labels, visual types, layered B-roll |
+| >60s, data-heavy, precision | **Scene-by-Scene** — scene labels with visual type + VO per scene |
 
-📖 **Prompt structure, visual style blocks → [references/prompt-craft.md](references/prompt-craft.md)**
+### Visual Style Block
+
+Every prompt should end with a style block. Without one, visuals look inconsistent scene-to-scene.
+
+**Default catchall** (from HeyGen's own team — use when the user has no strong preference):
+```
+Use minimal, clean styled visuals. Blue, black, and white as main colors.
+Leverage motion graphics as B-rolls and A-roll overlays. Use AI videos when necessary.
+When real-world footage is needed, use Stock Media.
+Include an intro sequence, outro sequence, and chapter breaks using Motion Graphics.
+```
+
+**Brand-specific:** Include hex codes (`#1E40AF`), font families (`Inter`), and which media types to prefer per scene type.
+
+📖 **Style presets (Minimalistic, Cinematic, Bold, etc.) → [references/official-prompt-guide.md](references/official-prompt-guide.md)**
+
+### Media Type Selection
+
+Video Agent supports three media types. Guide it explicitly or it guesses (often wrong).
+
+| Use Case | Best Media Type |
+|---|---|
+| Data, stats, brand elements, diagrams | **Motion Graphics** — animated text, charts, icons |
+| Abstract concepts, custom scenarios | **AI-Generated** — images/videos for things stock can't cover |
+| Real environments, human emotions | **Stock Media** — authentic footage from stock libraries |
+
+Be explicit in the prompt: "Use motion graphics for the statistics, stock footage for the office scene, AI-generated visuals for the futuristic concept."
+
+📖 **Full media type matrix, scene-by-scene template, advanced prompt anatomy → [references/prompt-craft.md](references/prompt-craft.md)**
 📖 **Named styles (Deconstructed, Swiss Pulse, etc.) → [references/prompt-styles.md](references/prompt-styles.md)**
 📖 **Motion vocabulary and B-roll → [references/motion-vocabulary.md](references/motion-vocabulary.md)**
 
