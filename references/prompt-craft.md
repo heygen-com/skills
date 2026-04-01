@@ -1,43 +1,51 @@
-# Advanced Prompt Craft
+# Prompt Craft Reference
 
-> ⚠️ **EXPERIMENTAL:** These advanced techniques (5-layer B-roll, motion vocabulary) have not been validated against Video Agent output. Use with caution. The main SKILL.md techniques are tested and proven.
+Production-quality prompt engineering for HeyGen Video Agent. Combines official HeyGen guidance with patterns validated across 80+ test videos.
 
-Production-quality prompts for scene-by-scene control. Load this when the user wants cinematic or highly polished output beyond standard narrator videos.
+Load this when the user wants cinematic/polished output, scene-by-scene control, or specific visual styles.
 
-## When to Use This
+---
 
-- User asks for "production quality" or "cinematic" results
-- Video is longer than 90 seconds
-- User wants specific visual styles or B-roll
-- Iterating on a video that needs more visual polish
+## Prompting Levels (from HeyGen Official Guide)
 
-## The Core Insight
+### Level 1: Basic
+Just describe content. Video Agent fills in the rest.
+```
+"Introduce HeyGen to knowledge workers, talk about its Talking Avatar models"
+```
 
-Video Agent is an HTML interpreter. It renders layouts, typography, and structured content natively. Describe B-roll as layered text motion graphics with action verbs ("slams in," "types on," "counts up"). NOT as layout specs ("upper-left, 48pt").
+### Level 2: Script-Driven (RECOMMENDED DEFAULT)
+Paste a full video script. Agent follows scene-by-scene while improving flow, timing, and visuals.
+This is "the single biggest upgrade most people miss." — HeyGen docs
+
+### Level 3: Scene-by-Scene (Maximum Control)
+```
+Scene 1: [Scene Type]
+  Visual: [Describe exact visual]
+  VO/Script: "[What the avatar says]"
+```
+
+**Official recommendation:** Don't assign per-scene timestamps. Natural flow + tone description outperforms rigid scene structure.
+
+---
 
 ## Prompt Anatomy (Production Quality)
 
 ```
 FORMAT:    What kind of video, how long, what energy
 TONE:      Emotional register, references
-AVATAR:    Detailed physical + environment description (60-100 words)
-STYLE:     Named aesthetic with colors, typography, motion rules, transitions
+AVATAR:    "The selected presenter" (when avatar_id set) or delivery style
+STYLE:     Colors, typography, motion rules, transitions (see Style Block)
 CRITICAL ON-SCREEN TEXT:  Exact strings that must appear literally
-SCENE-BY-SCENE:  Individual scene breakdowns with VO and layered visuals
-MUSIC:     Genre, reference artists, energy arc
-NARRATION STYLE:  How to deliver the voiceover
+SCENE-BY-SCENE:  (if >60s) Individual scene breakdowns with VO and visual type
+MUSIC:     Genre, energy arc
 ```
 
-### Example FORMAT + TONE
-
-```
-FORMAT: 75-second high-energy tech briefing. Think: a creator who just got amazing news.
-TONE: Confident, direct, data-backed. Highlights hit hard. Lowlights are honest.
-```
+**Rule: Content/script first, style block at the end.** Keeps creative intent clean and technical specs organized.
 
 ### Critical On-Screen Text
 
-List every exact string. Without this, the agent may rephrase, summarize, or round numbers.
+List every exact string. Without this, Video Agent rephrases, summarizes, or rounds numbers.
 
 ```
 CRITICAL ON-SCREEN TEXT (display literally):
@@ -45,6 +53,81 @@ CRITICAL ON-SCREEN TEXT (display literally):
 - "1.85M Signups — +28% MoM"
 - Quote: "Use technology to serve the message." — Shalev Hani
 ```
+
+---
+
+## Style Block
+
+Every prompt should end with a style block. Without one, visuals look inconsistent scene-to-scene.
+
+### The HeyGen Catchall (official team recommendation)
+```
+Use minimal, clean styled visuals. Blue, black, and white as main colors.
+Leverage motion graphics as B-rolls and A-roll overlays. Use AI videos when necessary.
+When real-world footage is needed, use Stock Media.
+Include an intro sequence, outro sequence, and chapter breaks using Motion Graphics.
+```
+
+### Style Presets (from HeyGen docs)
+
+| Style | Best For | Prompt Language |
+|-------|----------|-----------------|
+| Minimalistic | Corporate, Tech, SaaS | "Use minimalistic, clean visuals with lots of white space" |
+| Cartoon/Animated | Education, Kids | "Use cartoon-style illustrated visuals" |
+| Bold & Vibrant | Marketing, Social | "Use bold, vibrant colors and dynamic visuals" |
+| Cinematic | Brand films, High-end | "Use cinematic quality visuals with dramatic lighting" |
+| Flat Design | Modern, App demos | "Use flat design style with geometric shapes" |
+| Gradient Modern | Tech, Startup | "Use modern gradient backgrounds and sleek transitions" |
+| Retro/Vintage | Nostalgia, Creative | "Use retro-inspired visuals with warm tones" |
+
+### Brand Colors
+
+Be explicit with hex codes and fonts:
+```
+Use #1E40AF as primary blue, #F8FAFC as background white, #0F172A for text.
+Font: Inter family throughout.
+```
+
+Without defined colors, visuals look inconsistent scene-to-scene.
+
+---
+
+## Media Types & When to Use Each
+
+Video Agent supports three media types. Guide it explicitly or it guesses (often wrong).
+
+### Motion Graphics
+Animated text, icons, charts, shapes, transitions.
+- **A-roll overlays:** lower thirds, bullet points, animated callouts
+- **B-roll scenes:** animated explanations, data viz, process flows
+- **Chapter cards:** section breaks, intros, outros
+- **Best for:** Data, statistics, brand elements, technical diagrams
+
+### AI-Generated Images & Videos
+- Conceptual illustrations, abstract concepts
+- Custom scenarios stock can't cover
+- Stylized visuals in particular artistic style
+- **Best for:** Abstract concepts, custom scenarios, product mockups
+
+### Stock Media
+Real-world footage from stock libraries.
+- Authentic scenes (offices, cities, people)
+- Industry-specific (medical, manufacturing, retail)
+- **Best for:** Real environments, human emotions, establishing shots
+
+### Decision Matrix
+
+| Content Type | Motion Graphics | AI Generated | Stock Media |
+|---|---|---|---|
+| Data/Statistics | ✅ Best | ❌ | ❌ |
+| Abstract Concepts | ✅ Good | ✅ Best | ❌ |
+| Real Environments | ❌ | ⚠️ Can work | ✅ Best |
+| Brand Elements | ✅ Best | ❌ | ❌ |
+| Human Emotions | ❌ | ⚠️ Uncanny | ✅ Best |
+| Custom Scenarios | ⚠️ Limited | ✅ Best | ⚠️ May not exist |
+| Technical Diagrams | ✅ Best | ❌ | ❌ |
+
+---
 
 ## Scene Types
 
@@ -54,61 +137,81 @@ CRITICAL ON-SCREEN TEXT (display literally):
 | **FULL SCREEN B-ROLL** | No avatar, motion graphics only | Data visualization, info-dense content |
 | **A-ROLL + OVERLAY** | Split frame: avatar + content | Presenting data while maintaining human connection |
 
-**Rotation is mandatory.** Never 3+ of the same type in a row. At least 2 pure B-roll scenes per video.
+**Rotation is mandatory.** Never 3+ of the same type in a row.
 
 **Voiceover on EVERY scene.** Silent B-roll = broken video.
 
-### Scene Templates
+### Scene-by-Scene Template (HeyGen Official Format)
+
+```
+Scene 1: [Scene Type]
+  Visual: [Describe exact visual — include media type]
+  VO/Script: "[What the avatar says]"
+```
+
+### Detailed Scene Templates (validated in testing)
 
 **A-ROLL:**
 ```
-SCENE 1 — A-ROLL (10s)
+SCENE 1 — A-ROLL
 [Avatar center-frame, excited, hands gesturing]
 VOICEOVER: "The exact script for this scene."
 Lower-third: "TITLE TEXT" white on blue bar.
 ```
 
-**B-ROLL with 5 layers:**
+**B-ROLL with layered motion:**
 ```
-SCENE 2 — FULL SCREEN B-ROLL (12s)
+SCENE 2 — FULL SCREEN B-ROLL
 [NO AVATAR — motion graphic only]
 VOICEOVER: "The exact script for this scene."
-LAYER 1: Dark #1a1a1a background with subtle grid lines pulsing.
-LAYER 2: "HEADLINE" SLAMS in from left in white Bold 100pt at -5 degrees.
-LAYER 3: Three data cards CASCADE from right, staggered 0.3s.
-LAYER 4: Bottom ticker SLIDES in: "supporting text scrolling."
-LAYER 5: Grid lines RIPPLE outward from impact point.
-Hard cut.
+Dark background with subtle grid. "HEADLINE" SLAMS in from left.
+Three data cards CASCADE from right, staggered. Bottom ticker SLIDES in.
 ```
 
 **A-ROLL + OVERLAY:**
 ```
-SCENE 3 — A-ROLL + OVERLAY (10s)
-[SPLIT — Avatar LEFT 35%. Content RIGHT 65%. NO overlap.]
-Avatar gestures toward content side.
+SCENE 3 — A-ROLL + OVERLAY
+[Avatar LEFT 35%. Content RIGHT 65%.]
 VOICEOVER: "The exact script for this scene."
-RIGHT SIDE: "HEADLINE" in cyan 60pt. Three stats COUNT UP below.
+RIGHT SIDE: Stats COUNT UP below headline.
 ```
 
-## Visual Layer System
+---
 
-Every B-roll scene needs 4+ layers. Every element must MOVE.
+## Example Prompts (from HeyGen Official Guide)
 
-| Layer | Purpose | Examples |
-|-------|---------|---------|
-| L1 | Background | Textured surface, grid, gradient |
-| L2 | Hero content | Main headline/number dominating the frame |
-| L3 | Supporting data | Cards, stats, bullet points |
-| L4 | Information bar | Tickers, labels, attributions |
-| L5 | Effects | Particles, glitches, ambient motion |
+### Compliance Training
+```
+Use a professional female avatar. Make a compliance training video explaining phishing
+in detail. Use examples and list top watch-outs. Leverage motion graphics as A-roll
+overlay and B-roll to help explain core concepts.
+```
+
+### Educational Explainer (Voice-Over Only)
+```
+Create a 1-minute video about camera aperture. Use minimal science diagrams and
+visualizations. No avatar needed, only voice-over. Cool neutrals (navy, cyan),
+thin-line diagrams, and slow elegant motion. B-roll is abstract scientific
+illustrations. Sequencing: definition → diagram expansion → conceptual layering.
+```
+
+### Brand Story (Animated)
+```
+Make a video telling the story of how Twitch got started. Use cartoon-style
+animations and overlays. I want Twitch's iconic colors and fonts. Use motion
+graphics overlays and AI-generated B-roll.
+```
+
+---
 
 ## Motion Vocabulary
+
+Every visual element should have a motion verb. Static frames look dead.
 
 ### High Energy
 - **SLAMS** — `"$95M" SLAMS in from left at -5 degrees`
 - **CRASHES** — `Title CRASHES in from right, screen-shake on impact`
 - **PUNCHES** — `Quote card PUNCHES up from bottom`
-- **STAMPS** — `Data blocks STAMP in staggered 0.4s`
 
 ### Medium Energy
 - **CASCADE** — `Three cards CASCADE from top, staggered 0.3s`
@@ -119,41 +222,23 @@ Every B-roll scene needs 4+ layers. Every element must MOVE.
 ### Low Energy
 - **types on** — `Quote types on word by word in italic white`
 - **fades in** — `Logo fades in at center, held 3 seconds`
-- **COUNTS UP** — `"1.85M" COUNTS UP from 0 in amber 96pt`
+- **COUNTS UP** — `"1.85M" COUNTS UP from 0 in amber`
 
-## Avatar Description Guide
+---
 
-The avatar is NOT a fixed headshot. Design it for each video like a costume + set designer.
+## Pro Tips (from HeyGen community)
 
-| Element | Weak | Strong |
-|---------|------|--------|
-| Clothing | "Business casual" | "Black ribbed merino turtleneck, high collar framing jaw" |
-| Environment | "An office" | "Glass-walled conference room. Whiteboard with hand-drawn diagrams" |
-| Monitors | "Computer screens" | "Monitor shows scrolling green terminal text and red alerts" |
-| Lighting | "Well lit" | "Cool blue monitor glow from left, warm amber desk lamp from right" |
+1. **Save your catchall as a template.** Find a style combo that works, reuse it. Consistency builds brand.
+2. **Iterate in conversation.** Video Agent remembers context within a session. "Make the intro shorter" or "swap B-roll in scene 3 for stock footage" without re-prompting everything.
+3. **Stack style at the end.** Content first, style directives last.
+4. **Describe B-roll as motion verbs** ("slams in," "counts up"), NOT layout coordinates ("upper-left, 48pt").
 
-## Timing Guidelines
-
-| Content Type | Duration |
-|---|---|
-| Hook/Intro A-roll | 6-10 seconds |
-| Data-heavy B-roll | 10-15 seconds (NEVER ≤5s — causes black frames) |
-| A-roll + Overlay | 8-12 seconds |
-| CTA / Close A-roll | 6-8 seconds |
-
-**Common video lengths:** Social clip: 30-45s (5-7 scenes) | Briefing: 60-75s (7-9 scenes) | Deep dive: 90-120s (10-13 scenes)
+---
 
 ## What Doesn't Work
 
-- **Layout coordinates** — "upper-left: headline in 48pt" produces blank frames. Use motion verbs instead.
-- **Named artists without specs** — "Ikko Tanaka style" means nothing. Translate to concrete rules.
-- **B-roll under 5 seconds** — Always causes black/empty frames. Use 10-15s minimum.
-- **Static elements** — Every element must have a motion verb. No static frames.
-
-## Top 5 Performing Styles (from 40+ videos)
-
-1. **Deconstructed (Brody)** — Most reliable across all topics
-2. **Swiss Pulse (Müller-Brockmann)** — Best for data-heavy content
-3. **Digital Grid (Crouwel)** — Strong for tech topics
-4. **Geometric Bold (Tanaka)** — Elegant and versatile
-5. **Maximalist Type (Scher)** — High energy, use sparingly
+- **Layout coordinates** — "upper-left: headline in 48pt" → blank frames. Use motion verbs.
+- **Named artists without specs** — "Ikko Tanaka style" means nothing. Translate to colors + shapes + motion.
+- **B-roll under 5 seconds** — Causes black/empty frames. 10s+ minimum.
+- **Static elements** — Every element needs a motion verb.
+- **Per-scene timestamps** — Makes delivery robotic (per HeyGen's own research). Use overall duration only.

@@ -8,7 +8,7 @@ Turns a user's idea into a polished HeyGen narrator video through an intelligent
 
 ```
 heygen-video-producer/
-├── SKILL.md                    # Decision logic + phase flow (~400 lines target)
+├── SKILL.md                    # Decision logic + phase flow (~300 lines target)
 ├── CLAUDE.md                   # This file. Repo rules, structure, contribution guide.
 ├── INSTALL.md                  # Installation instructions
 ├── README.md                   # Public-facing description
@@ -33,7 +33,7 @@ heygen-video-producer/
 
 ## The 500-Line Rule
 
-SKILL.md must stay under 500 lines. It is injected into EVERY prompt turn. At 1,192 lines (57KB), the current SKILL.md burns ~15K tokens of context before the agent reads the user's message. This causes:
+SKILL.md must stay under 300 lines. It is injected into EVERY prompt turn. At 1,192 lines (57KB), the original SKILL.md burned ~15K tokens of context before the agent read the user's message. Current: ~288 lines, ~12.8KB. Exceeding 300 lines causes:
 - Slow first response (agent processes 57KB before acting)
 - Wasted tokens on phases irrelevant to the current turn
 - Eval subagents spending 3+ minutes just reading before making an API call
@@ -42,7 +42,7 @@ SKILL.md must stay under 500 lines. It is injected into EVERY prompt turn. At 1,
 - Frontmatter (name, description, triggers, env requirements)
 - Phase flow overview (what phases exist, when to enter each)
 - Decision trees (mode detection, avatar path selection, style selection)
-- Critical rules that apply EVERY turn (pacing, padding, voice rules, orientation)
+- Critical rules that apply EVERY turn (voice rules, orientation, style guidance)
 - Short "Read references/X.md for details" pointers at each phase
 
 **What moves to references/:**
@@ -79,7 +79,7 @@ SKILL.md must stay under 500 lines. It is injected into EVERY prompt turn. At 1,
 - All v3 endpoints. No v1 or v2 fallbacks.
 - Response format: `{ "error": null | string, "data": T }`
 - Video generation is async: returns `video_id` + `session_id`, poll `GET /v3/videos/{video_id}`
-- Pricing: Video Agent $0.0333/sec, Avatar videos $0.1/sec
+- Pricing: see HeyGen docs (changes frequently, not hardcoded in skill)
 
 ## Eval Infrastructure
 
@@ -131,7 +131,7 @@ These were validated across 9 rounds of testing (80+ videos):
 2. **avatar_id over prompt description.** Passing avatar_id achieves 97.6% duration accuracy vs 77-82% prompt-only.
 3. **When avatar_id is set, omit appearance description from prompt.** Say "the selected presenter" instead. Avoids Video Agent ignoring avatar_id.
 4. **Script-as-prompt approach.** Full scene-labeled script pasted into prompt for one-shot generation.
-5. **Duration padding: 1.6x ≤30s, 1.4x 31-119s, 1.3x ≥120s.** Compensates for Video Agent adding pauses/transitions.
+5. **Trust Video Agent for duration pacing.** No padding multipliers — the API has no structured duration enforcement. State target duration in prompt and let the agent interpret.
 6. **Phase 3.5 correction prompts need explicit "Use AI Image tool to generative fill" trigger.** Without it, Video Agent ignores correction directives.
 7. **Dry-run before API.** Always offer. Shows narrative pitch format before spending credits.
 8. **Quick Shot mode: omit avatar_id, let Video Agent auto-select.** Reduces friction for casual use.

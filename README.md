@@ -62,7 +62,7 @@ Discovery → Script → Prompt Engineering → Generate → Deliver
 ```
 
 1. **Discovery** — Conversational interview. Captures topic, audience, tone, duration, assets. Adapts depth to complexity.
-2. **Script** — 150 wpm pacing with duration padding (1.6x for short videos, 1.3x for long). Scene-by-scene structure.
+2. **Script** — Scene-by-scene structure with script framing directive. Video Agent handles pacing and duration internally.
 3. **Prompt Engineering** — Visual style blocks, media type direction, narrator framing. Scene labels with VO + visual + media type per scene.
 4. **Generate** — Submits to `POST /v3/video-agents` with avatar_id, voice selection, and asset attachments. Polls for completion.
 5. **Deliver** — Session URL immediately (for interactive follow-up), video URL on completion, duration accuracy report.
@@ -102,12 +102,13 @@ Correction prompts use explicit trigger phrases that Video Agent recognizes and 
 
 This isn't an API wrapper. It encodes video production expertise:
 
-- **Duration intelligence** — compensates for Video Agent's compression with variable padding (1.6x ≤30s, 1.4x mid-range, 1.3x ≥120s)
+- **Duration intelligence** — script framing directive tells Video Agent to treat the script as a concept to convey, not verbatim speech
 - **Scene-by-scene prompting** — structured scenes with Visual + VO + media type, not flat paragraphs
-- **Visual style enforcement** — style blocks with colors, fonts, and presets (minimalistic, cinematic, bold, corporate, etc.) plus HeyGen's curated style system
+- **Visual style enforcement** — style blocks with colors, fonts, media type guidance, and HeyGen's curated style presets (from their official prompt guide)
 - **Avatar-by-ID** — explicit `avatar_id` for ~97% duration accuracy vs ~80% with auto-selection
 - **One-shot optimization** — all best practices applied before generation. No wasted credits.
 - **Learning loop** — logs every generation to `heygen-video-producer-log.jsonl` with duration accuracy, settings, and self-evaluation scores
+- **Media type direction** — guides Video Agent on when to use motion graphics vs AI-generated vs stock footage per scene
 - **Multi-language** — supports any language HeyGen offers: "Create a 60-second demo narrated in Brazilian Portuguese"
 
 ## Why Direct API (Not MCP)
@@ -147,8 +148,6 @@ All endpoints are **v3**. Base URL: `https://api.heygen.com`
 | `POST /v3/assets` | Upload files for attachment |
 | `POST /v3/videos` | Direct control path (avatar videos) |
 
-**Pricing:** Video Agent $0.0333/sec · Avatar videos $0.1/sec
-
 ## Evaluation
 
 The skill includes a multi-round autoresearch evaluation framework:
@@ -180,7 +179,7 @@ Results are tracked in the [Eval Tracker](https://www.notion.so/a1b997926fe64692
 | Issue | Status | Workaround |
 |-------|--------|------------|
 | `video_avatar` type fails with "Talking Photo not found" | HeyGen backend bug, fix in progress | Use `studio_avatar` or `photo_avatar` instead |
-| Duration variance (±20%) | Expected — Video Agent controls final timing | Padding rules compensate |
+| Duration variance (±20%) | Expected — Video Agent controls final timing | Script framing directive helps; variance is inherent |
 | Interactive sessions stuck at `processing` | Backlogged | Use one-shot mode |
 | `files[]` URL attachment blocked by CDN/WAF | Known limitation | Download → upload → `asset_id` (primary path) |
 
