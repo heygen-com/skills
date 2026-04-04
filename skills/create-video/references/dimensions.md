@@ -67,15 +67,12 @@ const squareConfig = {
 
 ```bash
 # Landscape 1080p
-curl -X POST "https://api.heygen.com/v2/video/generate" \
+curl -X POST "https://api.heygen.com/v3/video-agents" \
   -H "X-Api-Key: $HEYGEN_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "video_inputs": [...],
-    "dimension": {
-      "width": 1920,
-      "height": 1080
-    }
+    "prompt": "Create a product demo video.",
+    "orientation": "landscape"
   }'
 ```
 

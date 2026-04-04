@@ -1,53 +1,51 @@
 ---
 name: voices
-description: Listing voices, locales, speed/pitch configuration for HeyGen
+description: Listing voices via v3 API, locales, speed/pitch configuration, server-side filtering for HeyGen
 ---
 
 # HeyGen Voices
 
-HeyGen provides a wide variety of AI voices for different languages, accents, and styles. Voices convert your text script into natural-sounding speech.
+HeyGen provides a wide variety of AI voices for different languages, accents, and styles. The v3 voices endpoint (`GET /v3/voices`) is a unified API that replaces both the v2 video voices and v1 TTS audio voices endpoints, with built-in server-side filtering and cursor-based pagination.
 
 ## Listing Available Voices
 
 ### curl
 
 ```bash
-curl -X GET "https://api.heygen.com/v2/voices" \
+curl -X GET "https://api.heygen.com/v3/voices?limit=20" \
   -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
 
 ### TypeScript
 
 ```typescript
-interface Voice {
+interface AudioVoiceItem {
   voice_id: string;
   name: string;
   language: string;
-  gender: "male" | "female";
-  preview_audio: string;
+  gender: string;
+  preview_audio_url: string | null;
   support_pause: boolean;
-  emotion_support: boolean;
+  support_locale: boolean;
+  type: "public" | "private";
 }
 
 interface VoicesResponse {
-  error: null | string;
-  data: {
-    voices: Voice[];
-  };
+  data: AudioVoiceItem[];
+  has_more: boolean;
+  next_token: string | null;
 }
 
-async function listVoices(): Promise<Voice[]> {
-  const response = await fetch("https://api.heygen.com/v2/voices", {
-    headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! },
-  });
+async function listVoices(limit = 20): Promise<AudioVoiceItem[]> {
+  const response = await fetch(
+    `https://api.heygen.com/v3/voices?limit=${limit}`,
+    {
+      headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! },
+    }
+  );
 
   const json: VoicesResponse = await response.json();
-
-  if (json.error) {
-    throw new Error(json.error);
-  }
-
-  return json.data.voices;
+  return json.data;
 }
 ```
 
@@ -57,46 +55,45 @@ async function listVoices(): Promise<Voice[]> {
 import requests
 import os
 
-def list_voices() -> list:
+def list_voices(limit: int = 20) -> list:
     response = requests.get(
-        "https://api.heygen.com/v2/voices",
-        headers={"X-Api-Key": os.environ["HEYGEN_API_KEY"]}
+        "https://api.heygen.com/v3/voices",
+        headers={"X-Api-Key": os.environ["HEYGEN_API_KEY"]},
+        params={"limit": limit},
     )
 
     data = response.json()
-    if data.get("error"):
-        raise Exception(data["error"])
-
-    return data["data"]["voices"]
+    return data["data"]
 ```
 
 ## Response Format
 
 ```json
 {
-  "error": null,
-  "data": {
-    "voices": [
-      {
-        "voice_id": "1bd001e7e50f421d891986aad5158bc8",
-        "name": "Sara",
-        "language": "English",
-        "gender": "female",
-        "preview_audio": "https://files.heygen.ai/...",
-        "support_pause": true,
-        "emotion_support": true
-      },
-      {
-        "voice_id": "de8b5d78f2e0485f88d1e9f5c8e7f9a6",
-        "name": "Paul",
-        "language": "English",
-        "gender": "male",
-        "preview_audio": "https://files.heygen.ai/...",
-        "support_pause": true,
-        "emotion_support": false
-      }
-    ]
-  }
+  "data": [
+    {
+      "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+      "name": "Sara",
+      "language": "English",
+      "gender": "female",
+      "preview_audio_url": "https://files.heygen.ai/...",
+      "support_pause": true,
+      "support_locale": true,
+      "type": "public"
+    },
+    {
+      "voice_id": "de8b5d78f2e0485f88d1e9f5c8e7f9a6",
+      "name": "Paul",
+      "language": "English",
+      "gender": "male",
+      "preview_audio_url": "https://files.heygen.ai/...",
+      "support_pause": true,
+      "support_locale": false,
+      "type": "public"
+    }
+  ],
+  "has_more": true,
+  "next_token": "eyJsYXN0X2lkIjoiZGU4YjVkNzhmMmUwNDg1Zjg4ZDFlOWY1YzhlN2Y5YTYifQ=="
 }
 ```
 
@@ -125,67 +122,133 @@ HeyGen supports many languages including:
 
 ### Basic Voice Usage
 
+In the v3 API, video generation uses a flat structure with `script` and `voice_id` fields inside each scene's `audio` object.
+
+#### curl
+
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scenes": [
+      {
+        "avatar": {
+          "avatar_id": "josh_lite3_20230714",
+          "type": "avatar"
+        },
+        "audio": {
+          "script": "Hello! Welcome to our presentation.",
+          "voice_id": "1bd001e7e50f421d891986aad5158bc8"
+        }
+      }
+    ]
+  }'
+```
+
+#### TypeScript
+
 ```typescript
-const videoConfig = {
-  video_inputs: [
+const videoPayload = {
+  scenes: [
     {
-      character: {
-        type: "avatar",
+      avatar: {
         avatar_id: "josh_lite3_20230714",
-        avatar_style: "normal",
+        type: "avatar",
       },
-      voice: {
-        type: "text",
-        input_text: "Hello! Welcome to our presentation.",
+      audio: {
+        script: "Hello! Welcome to our presentation.",
         voice_id: "1bd001e7e50f421d891986aad5158bc8",
+      },
+    },
+  ],
+};
+
+const response = await fetch("https://api.heygen.com/v3/videos", {
+  method: "POST",
+  headers: {
+    "X-Api-Key": process.env.HEYGEN_API_KEY!,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(videoPayload),
+});
+```
+
+#### Python
+
+```python
+import requests
+import os
+
+payload = {
+    "scenes": [
+        {
+            "avatar": {
+                "avatar_id": "josh_lite3_20230714",
+                "type": "avatar",
+            },
+            "audio": {
+                "script": "Hello! Welcome to our presentation.",
+                "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+            },
+        }
+    ]
+}
+
+response = requests.post(
+    "https://api.heygen.com/v3/videos",
+    headers={
+        "X-Api-Key": os.environ["HEYGEN_API_KEY"],
+        "Content-Type": "application/json",
+    },
+    json=payload,
+)
+```
+
+### Voice with Speed and Pitch Adjustment
+
+Speed and pitch settings are specified in a `voice_settings` object within the `audio` block.
+
+```typescript
+const videoPayload = {
+  scenes: [
+    {
+      avatar: {
+        avatar_id: "josh_lite3_20230714",
+        type: "avatar",
+      },
+      audio: {
+        script: "This is spoken at a faster pace with higher pitch.",
+        voice_id: "1bd001e7e50f421d891986aad5158bc8",
+        voice_settings: {
+          speed: 1.2, // 1.0 is normal, range: 0.5 - 2.0
+          pitch: 10,  // Range: -20 to 20
+        },
       },
     },
   ],
 };
 ```
 
-### Voice with Speed Adjustment
-
-```typescript
-const videoConfig = {
-  video_inputs: [
-    {
-      character: {
-        type: "avatar",
-        avatar_id: "josh_lite3_20230714",
-        avatar_style: "normal",
-      },
-      voice: {
-        type: "text",
-        input_text: "This is spoken at a faster pace.",
-        voice_id: "1bd001e7e50f421d891986aad5158bc8",
-        speed: 1.2, // 1.0 is normal, range: 0.5 - 2.0
-      },
-    },
-  ],
-};
-```
-
-### Voice with Pitch Adjustment
-
-```typescript
-const videoConfig = {
-  video_inputs: [
-    {
-      character: {
-        type: "avatar",
-        avatar_id: "josh_lite3_20230714",
-        avatar_style: "normal",
-      },
-      voice: {
-        type: "text",
-        input_text: "This has a higher pitch.",
-        voice_id: "1bd001e7e50f421d891986aad5158bc8",
-        pitch: 10, // Range: -20 to 20
-      },
-    },
-  ],
-};
+```python
+payload = {
+    "scenes": [
+        {
+            "avatar": {
+                "avatar_id": "josh_lite3_20230714",
+                "type": "avatar",
+            },
+            "audio": {
+                "script": "This is spoken at a faster pace with higher pitch.",
+                "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+                "voice_settings": {
+                    "speed": 1.2,
+                    "pitch": 10,
+                },
+            },
+        }
+    ]
+}
 ```
 
 ## Adding Pauses with Break Tags
@@ -204,10 +267,10 @@ Where `X` is the duration in seconds (e.g., `1s`, `1.5s`, `0.5s`).
 
 | Rule | Example |
 |------|---------|
-| Use seconds with "s" suffix | `<break time="1.5s"/>` ✓ |
-| Must have space before tag | `word <break time="1s"/>` ✓ |
-| Must have space after tag | `<break time="1s"/> word` ✓ |
-| Self-closing tag | `<break time="1s"/>` ✓ |
+| Use seconds with "s" suffix | `<break time="1.5s"/>` |
+| Must have space before tag | `word <break time="1s"/>` |
+| Must have space after tag | `<break time="1s"/> word` |
+| Self-closing tag | `<break time="1s"/>` |
 
 **Incorrect:** `word<break time="1s"/>word` (no spaces)
 **Correct:** `word <break time="1s"/> word`
@@ -238,17 +301,15 @@ First, let's look at the dashboard. <break time="1.5s"/>
 As you can see, it's incredibly intuitive.
 `;
 
-const videoConfig = {
-  video_inputs: [
+const videoPayload = {
+  scenes: [
     {
-      character: {
-        type: "avatar",
+      avatar: {
         avatar_id: "josh_lite3_20230714",
-        avatar_style: "normal",
+        type: "avatar",
       },
-      voice: {
-        type: "text",
-        input_text: scriptWithPauses,
+      audio: {
+        script: scriptWithPauses,
         voice_id: "1bd001e7e50f421d891986aad5158bc8",
       },
     },
@@ -276,19 +337,40 @@ Multiple consecutive break tags are automatically combined:
 
 ## Using Custom Audio Instead of TTS
 
-Instead of text-to-speech, you can provide your own audio:
+Instead of text-to-speech, you can provide your own audio via the `audio_url` field:
+
+### curl
+
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scenes": [
+      {
+        "avatar": {
+          "avatar_id": "josh_lite3_20230714",
+          "type": "avatar"
+        },
+        "audio": {
+          "audio_url": "https://example.com/my-audio.mp3"
+        }
+      }
+    ]
+  }'
+```
+
+### TypeScript
 
 ```typescript
-const videoConfig = {
-  video_inputs: [
+const videoPayload = {
+  scenes: [
     {
-      character: {
-        type: "avatar",
+      avatar: {
         avatar_id: "josh_lite3_20230714",
-        avatar_style: "normal",
+        type: "avatar",
       },
-      voice: {
-        type: "audio",
+      audio: {
         audio_url: "https://example.com/my-audio.mp3",
       },
     },
@@ -296,90 +378,274 @@ const videoConfig = {
 };
 ```
 
+### Python
+
+```python
+payload = {
+    "scenes": [
+        {
+            "avatar": {
+                "avatar_id": "josh_lite3_20230714",
+                "type": "avatar",
+            },
+            "audio": {
+                "audio_url": "https://example.com/my-audio.mp3",
+            },
+        }
+    ]
+}
+```
+
 ## Filtering Voices
+
+The v3 API supports server-side filtering via query parameters, eliminating the need for client-side filtering.
+
+### Available Filter Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `type` | `"public"` \| `"private"` | Filter by voice type |
+| `engine` | string | Filter by voice engine (e.g., `"starfish"`) |
+| `language` | string | Filter by language (e.g., `"English"`) |
+| `gender` | `"male"` \| `"female"` | Filter by gender |
+| `limit` | 1-100 | Results per page |
+| `token` | string | Cursor for next page |
 
 ### By Language
 
+#### curl
+
+```bash
+curl -X GET "https://api.heygen.com/v3/voices?language=English&limit=20" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+```
+
+#### TypeScript
+
 ```typescript
-function filterByLanguage(voices: Voice[], language: string): Voice[] {
-  return voices.filter((v) =>
-    v.language.toLowerCase().includes(language.toLowerCase())
+async function getVoicesByLanguage(language: string): Promise<AudioVoiceItem[]> {
+  const params = new URLSearchParams({ language, limit: "20" });
+  const response = await fetch(
+    `https://api.heygen.com/v3/voices?${params}`,
+    {
+      headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! },
+    }
   );
+
+  const json: VoicesResponse = await response.json();
+  return json.data;
 }
 
-const englishVoices = filterByLanguage(voices, "english");
-const spanishVoices = filterByLanguage(voices, "spanish");
+const englishVoices = await getVoicesByLanguage("English");
+const spanishVoices = await getVoicesByLanguage("Spanish");
+```
+
+#### Python
+
+```python
+def get_voices_by_language(language: str) -> list:
+    response = requests.get(
+        "https://api.heygen.com/v3/voices",
+        headers={"X-Api-Key": os.environ["HEYGEN_API_KEY"]},
+        params={"language": language, "limit": 20},
+    )
+    return response.json()["data"]
+
+english_voices = get_voices_by_language("English")
+spanish_voices = get_voices_by_language("Spanish")
 ```
 
 ### By Gender
 
-```typescript
-function filterByGender(voices: Voice[], gender: "male" | "female"): Voice[] {
-  return voices.filter((v) => v.gender === gender);
-}
+#### curl
 
-const femaleVoices = filterByGender(voices, "female");
+```bash
+curl -X GET "https://api.heygen.com/v3/voices?gender=female&limit=20" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
 
-### By Features
+#### TypeScript
 
 ```typescript
-function filterByFeatures(
-  voices: Voice[],
-  options: { supportPause?: boolean; emotionSupport?: boolean }
-): Voice[] {
-  return voices.filter((v) => {
-    if (options.supportPause !== undefined && v.support_pause !== options.supportPause) {
-      return false;
+async function getVoicesByGender(
+  gender: "male" | "female"
+): Promise<AudioVoiceItem[]> {
+  const params = new URLSearchParams({ gender, limit: "20" });
+  const response = await fetch(
+    `https://api.heygen.com/v3/voices?${params}`,
+    {
+      headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! },
     }
-    if (options.emotionSupport !== undefined && v.emotion_support !== options.emotionSupport) {
-      return false;
-    }
-    return true;
-  });
+  );
+
+  const json: VoicesResponse = await response.json();
+  return json.data;
 }
 
-const expressiveVoices = filterByFeatures(voices, { emotionSupport: true });
+const femaleVoices = await getVoicesByGender("female");
+```
+
+#### Python
+
+```python
+def get_voices_by_gender(gender: str) -> list:
+    response = requests.get(
+        "https://api.heygen.com/v3/voices",
+        headers={"X-Api-Key": os.environ["HEYGEN_API_KEY"]},
+        params={"gender": gender, "limit": 20},
+    )
+    return response.json()["data"]
+
+female_voices = get_voices_by_gender("female")
+```
+
+### By Engine (TTS-Compatible Voices)
+
+To list only TTS-compatible voices, filter by `engine=starfish`:
+
+```bash
+curl -X GET "https://api.heygen.com/v3/voices?engine=starfish&limit=20" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+```
+
+### Combined Filters
+
+```bash
+curl -X GET "https://api.heygen.com/v3/voices?language=English&gender=female&type=public&limit=50" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
 
 ## Voice Selection Helper
+
+Uses server-side filtering and cursor-based pagination to find matching voices across all pages.
+
+### TypeScript
 
 ```typescript
 interface VoiceSelectionCriteria {
   language?: string;
   gender?: "male" | "female";
-  supportPause?: boolean;
-  emotionSupport?: boolean;
+  type?: "public" | "private";
+  engine?: string;
 }
 
-async function findVoice(criteria: VoiceSelectionCriteria): Promise<Voice | null> {
-  const voices = await listVoices();
+async function findVoice(
+  criteria: VoiceSelectionCriteria
+): Promise<AudioVoiceItem | null> {
+  const params = new URLSearchParams({ limit: "50" });
+  if (criteria.language) params.set("language", criteria.language);
+  if (criteria.gender) params.set("gender", criteria.gender);
+  if (criteria.type) params.set("type", criteria.type);
+  if (criteria.engine) params.set("engine", criteria.engine);
 
-  const filtered = voices.filter((v) => {
-    if (criteria.language && !v.language.toLowerCase().includes(criteria.language.toLowerCase())) {
-      return false;
+  const response = await fetch(
+    `https://api.heygen.com/v3/voices?${params}`,
+    {
+      headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! },
     }
-    if (criteria.gender && v.gender !== criteria.gender) {
-      return false;
-    }
-    if (criteria.supportPause !== undefined && v.support_pause !== criteria.supportPause) {
-      return false;
-    }
-    if (criteria.emotionSupport !== undefined && v.emotion_support !== criteria.emotionSupport) {
-      return false;
-    }
-    return true;
-  });
+  );
 
-  return filtered[0] || null;
+  const json: VoicesResponse = await response.json();
+  return json.data[0] || null;
 }
 
 // Usage
 const voice = await findVoice({
-  language: "english",
+  language: "English",
   gender: "female",
-  emotionSupport: true,
+  type: "public",
 });
+```
+
+### Python
+
+```python
+def find_voice(
+    language: str | None = None,
+    gender: str | None = None,
+    voice_type: str | None = None,
+    engine: str | None = None,
+) -> dict | None:
+    params: dict = {"limit": 50}
+    if language:
+        params["language"] = language
+    if gender:
+        params["gender"] = gender
+    if voice_type:
+        params["type"] = voice_type
+    if engine:
+        params["engine"] = engine
+
+    response = requests.get(
+        "https://api.heygen.com/v3/voices",
+        headers={"X-Api-Key": os.environ["HEYGEN_API_KEY"]},
+        params=params,
+    )
+
+    data = response.json()["data"]
+    return data[0] if data else None
+
+# Usage
+voice = find_voice(language="English", gender="female", voice_type="public")
+```
+
+### Paginating Through All Results
+
+```typescript
+async function listAllVoices(
+  criteria: VoiceSelectionCriteria = {}
+): Promise<AudioVoiceItem[]> {
+  const allVoices: AudioVoiceItem[] = [];
+  let token: string | null = null;
+
+  do {
+    const params = new URLSearchParams({ limit: "100" });
+    if (criteria.language) params.set("language", criteria.language);
+    if (criteria.gender) params.set("gender", criteria.gender);
+    if (criteria.type) params.set("type", criteria.type);
+    if (criteria.engine) params.set("engine", criteria.engine);
+    if (token) params.set("token", token);
+
+    const response = await fetch(
+      `https://api.heygen.com/v3/voices?${params}`,
+      {
+        headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! },
+      }
+    );
+
+    const json: VoicesResponse = await response.json();
+    allVoices.push(...json.data);
+    token = json.has_more ? json.next_token : null;
+  } while (token);
+
+  return allVoices;
+}
+```
+
+```python
+def list_all_voices(**filters) -> list:
+    all_voices = []
+    token = None
+
+    while True:
+        params: dict = {"limit": 100, **filters}
+        if token:
+            params["token"] = token
+
+        response = requests.get(
+            "https://api.heygen.com/v3/voices",
+            headers={"X-Api-Key": os.environ["HEYGEN_API_KEY"]},
+            params=params,
+        )
+
+        result = response.json()
+        all_voices.extend(result["data"])
+
+        if not result.get("has_more"):
+            break
+        token = result.get("next_token")
+
+    return all_voices
 ```
 
 ## Multi-Language Videos
@@ -387,29 +653,25 @@ const voice = await findVoice({
 Create videos with different languages per scene:
 
 ```typescript
-const multiLanguageConfig = {
-  video_inputs: [
+const multiLanguagePayload = {
+  scenes: [
     {
-      character: {
-        type: "avatar",
+      avatar: {
         avatar_id: "josh_lite3_20230714",
-        avatar_style: "normal",
+        type: "avatar",
       },
-      voice: {
-        type: "text",
-        input_text: "Hello! Welcome to our global product launch.",
+      audio: {
+        script: "Hello! Welcome to our global product launch.",
         voice_id: "english_voice_id",
       },
     },
     {
-      character: {
-        type: "avatar",
+      avatar: {
         avatar_id: "josh_lite3_20230714",
-        avatar_style: "normal",
+        type: "avatar",
       },
-      voice: {
-        type: "text",
-        input_text: "Hola! Bienvenidos al lanzamiento global de nuestro producto.",
+      audio: {
+        script: "Hola! Bienvenidos al lanzamiento global de nuestro producto.",
         voice_id: "spanish_voice_id",
       },
     },
@@ -421,85 +683,132 @@ const multiLanguageConfig = {
 
 ### Recommended: Use Avatar's Default Voice
 
-Many avatars have a `default_voice_id` that's pre-matched. **This is the best approach.**
+Many avatars have a `default_voice_id` that is pre-matched. Use `GET /v3/avatars/looks` to find it.
+
+#### curl
+
+```bash
+curl -X GET "https://api.heygen.com/v3/avatars/looks?limit=20" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+```
+
+#### TypeScript
 
 ```typescript
-// Using v2 API to get avatar with default voice
 const response = await fetch(
-  "https://api.heygen.com/v2/avatar_group.list?include_public=true",
+  "https://api.heygen.com/v3/avatars/looks?limit=20",
   { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
 );
 const { data } = await response.json();
 
-// Find avatar with a default voice
-const avatar = data.avatar_group_list.find((a: any) => a.default_voice_id);
+// Find an avatar look with a default voice
+const look = data.find((l: any) => l.default_voice_id);
 
-if (avatar) {
-  const videoConfig = {
-    video_inputs: [{
-      character: { type: "avatar", avatar_id: avatar.id },
-      voice: {
-        type: "text",
-        input_text: script,
-        voice_id: avatar.default_voice_id, // Pre-matched voice
+if (look) {
+  const videoPayload = {
+    scenes: [
+      {
+        avatar: {
+          avatar_id: look.avatar_id,
+          type: "avatar",
+        },
+        audio: {
+          script: "Hello! This voice was pre-matched to this avatar.",
+          voice_id: look.default_voice_id,
+        },
       },
-    }],
+    ],
   };
 }
+```
+
+#### Python
+
+```python
+response = requests.get(
+    "https://api.heygen.com/v3/avatars/looks",
+    headers={"X-Api-Key": os.environ["HEYGEN_API_KEY"]},
+    params={"limit": 20},
+)
+looks = response.json()["data"]
+
+# Find a look with a default voice
+look = next((l for l in looks if l.get("default_voice_id")), None)
+
+if look:
+    payload = {
+        "scenes": [
+            {
+                "avatar": {
+                    "avatar_id": look["avatar_id"],
+                    "type": "avatar",
+                },
+                "audio": {
+                    "script": "Hello! This voice was pre-matched to this avatar.",
+                    "voice_id": look["default_voice_id"],
+                },
+            }
+        ]
+    }
 ```
 
 See [avatars.md](avatars.md) for complete examples.
 
 ### Fallback: Match Gender Manually
 
-If avatar has no default voice, match genders manually:
+If the avatar has no default voice, use server-side gender filtering to find a match:
 
 ```typescript
-interface AvatarVoicePair {
-  avatarId: string;
-  voiceId: string;
-  gender: "male" | "female";
-}
+async function findMatchingVoiceForAvatar(
+  avatarGender: "male" | "female",
+  language = "English"
+): Promise<AudioVoiceItem | null> {
+  const params = new URLSearchParams({
+    gender: avatarGender,
+    language,
+    type: "public",
+    limit: "1",
+  });
 
-async function findMatchingAvatarAndVoice(
-  preferredGender?: "male" | "female"
-): Promise<AvatarVoicePair> {
-  const [avatars, voices] = await Promise.all([
-    listAvatars(),
-    listVoices(),
-  ]);
-
-  // Default to male if no preference
-  const gender = preferredGender || "male";
-
-  // Find avatar with matching gender
-  const avatar = avatars.find((a) => a.gender === gender);
-  if (!avatar) {
-    throw new Error(`No ${gender} avatar available`);
-  }
-
-  // Find voice with matching gender AND language
-  const voice = voices.find(
-    (v) => v.gender === gender && v.language.toLowerCase().includes("english")
+  const response = await fetch(
+    `https://api.heygen.com/v3/voices?${params}`,
+    {
+      headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! },
+    }
   );
-  if (!voice) {
-    throw new Error(`No ${gender} English voice available`);
-  }
 
-  return {
-    avatarId: avatar.avatar_id,
-    voiceId: voice.voice_id,
-    gender,
-  };
+  const json: VoicesResponse = await response.json();
+  return json.data[0] || null;
 }
+```
+
+```python
+def find_matching_voice_for_avatar(
+    avatar_gender: str, language: str = "English"
+) -> dict | None:
+    response = requests.get(
+        "https://api.heygen.com/v3/voices",
+        headers={"X-Api-Key": os.environ["HEYGEN_API_KEY"]},
+        params={
+            "gender": avatar_gender,
+            "language": language,
+            "type": "public",
+            "limit": 1,
+        },
+    )
+    data = response.json()["data"]
+    return data[0] if data else None
 ```
 
 ## Best Practices
 
 1. **Match voice gender to avatar** - Always pair male voices with male avatars, female with female
-2. **Match voice to content** - Use professional voices for business content
-3. **Test voice previews** - Listen to preview audio before selecting
-4. **Consider locale** - Match voice accent to target audience
-5. **Use natural pacing** - Adjust speed for clarity, typically 0.9-1.1x
-6. **Add pauses** - Use SSML breaks for more natural speech flow
-7. **Validate availability** - Always verify voice_id exists before using
+2. **Use server-side filters** - Filter by `language`, `gender`, `type`, and `engine` in the query rather than fetching all voices and filtering client-side
+3. **Use avatar default voices** - Prefer the `default_voice_id` from `GET /v3/avatars/looks` for the best avatar-voice pairing
+4. **Test voice previews** - Listen to `preview_audio_url` before selecting a voice
+5. **Consider locale** - Match voice accent to target audience
+6. **Use natural pacing** - Adjust speed via `voice_settings.speed` for clarity, typically 0.9-1.1x
+7. **Add pauses** - Use SSML `<break>` tags for more natural speech flow
+8. **Paginate large results** - Use `token`/`has_more` to iterate through all available voices when needed
+9. **Validate availability** - Always verify `voice_id` exists before using it in video generation
+10. **Use engine filter for TTS** - When you need TTS-compatible voices only, pass `engine=starfish`

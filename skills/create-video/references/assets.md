@@ -307,15 +307,21 @@ async function createVideoWithCustomBackground(
     dimension: { width: 1920, height: 1080 },
   };
 
-  // 3. Generate video
+  // 3. Generate video with Video Agent
   console.log("Generating video...");
-  const response = await fetch("https://api.heygen.com/v2/video/generate", {
+  const response = await fetch("https://api.heygen.com/v3/video-agents", {
     method: "POST",
     headers: {
       "X-Api-Key": process.env.HEYGEN_API_KEY!,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(config),
+    body: JSON.stringify({
+      prompt: "Create a product demo using the uploaded assets",
+      files: [
+        { type: "asset_id", asset_id: logoAssetId },
+        { type: "asset_id", asset_id: bgAssetId },
+      ],
+    }),
   });
 
   const { data } = await response.json();

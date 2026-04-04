@@ -9,54 +9,64 @@ After generating a video, you need to poll for status until the video is complet
 
 ## MCP Tool (Preferred)
 
-If the HeyGen MCP server is connected, use `mcp__heygen__get_video` with the `videoId` parameter. It returns status, video_url, thumbnail_url, duration, title, gif_url, captioned_video_url, and other metadata in a single call.
+If the HeyGen MCP server is connected, use `mcp__heygen__get_video` with the `videoId` parameter. It returns status, video_url, thumbnail_url, duration, title, gif_url, captioned_video_url, video_page_url, and other metadata in a single call.
 
 ## Checking Video Status (Direct API)
 
 ### curl
 
 ```bash
-curl -X GET "https://api.heygen.com/v2/videos/YOUR_VIDEO_ID" \
+curl -X GET "https://api.heygen.com/v3/videos/YOUR_VIDEO_ID" \
   -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
 
 ### TypeScript
 
 ```typescript
+interface VideoDetail {
+  id: string;
+  title: string;
+  status: "pending" | "processing" | "completed" | "failed";
+  created_at: number;              // unix timestamp
+  completed_at: number | null;     // unix timestamp
+  video_url: string | null;
+  thumbnail_url: string | null;
+  gif_url: string | null;
+  captioned_video_url: string | null;
+  subtitle_url: string | null;
+  duration: number | null;
+  folder_id: string | null;
+  output_language: string | null;
+  failure_code: string | null;
+  failure_message: string | null;
+  video_page_url: string | null;   // link to video in HeyGen app
+}
+
 interface VideoStatusResponse {
-  error: null | string;
-  data: {
-    id: string;
-    status: "pending" | "processing" | "completed" | "failed";
-    video_url?: string;
-    thumbnail_url?: string;
-    duration?: number;
-    title?: string;
-    created_at?: string;
-    completed_at?: string;
-    gif_url?: string;
-    captioned_video_url?: string;
-    subtitle_url?: string;
-    folder_id?: string;
-    output_language?: string;
-    failure_code?: string;
-    failure_message?: string;
+  data: VideoDetail;
+}
+
+interface VideoErrorResponse {
+  error: {
+    code: string;
+    message: string;
   };
 }
 
-async function getVideoStatus(videoId: string): Promise<VideoStatusResponse["data"]> {
+async function getVideoStatus(videoId: string): Promise<VideoDetail> {
   const response = await fetch(
-    `https://api.heygen.com/v2/videos/${videoId}`,
+    `https://api.heygen.com/v3/videos/${videoId}`,
     { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
   );
 
-  const json: VideoStatusResponse = await response.json();
+  const json = await response.json();
 
-  if (json.error) {
-    throw new Error(json.error);
+  if (!response.ok) {
+    const err = json as VideoErrorResponse;
+    throw new Error(`${err.error.code}: ${err.error.message}`);
   }
 
-  return json.data;
+  return (json as VideoStatusResponse).data;
 }
 ```
 
@@ -68,13 +78,14 @@ import os
 
 def get_video_status(video_id: str) -> dict:
     response = requests.get(
-        f"https://api.heygen.com/v2/videos/{video_id}",
+        f"https://api.heygen.com/v3/videos/{video_id}",
         headers={"X-Api-Key": os.environ["HEYGEN_API_KEY"]}
     )
 
     data = response.json()
-    if data.get("error"):
-        raise Exception(data["error"])
+    if not response.ok:
+        err = data["error"]
+        raise Exception(f"{err['code']}: {err['message']}")
 
     return data["data"]
 ```
@@ -111,21 +122,23 @@ Video generation typically takes **5-15 minutes**, but can exceed 20 minutes dur
 
 ```json
 {
-  "error": null,
   "data": {
-    "id": "abc123",
+    "id": "v_abc123def456",
+    "title": "My Video",
     "status": "completed",
+    "created_at": 1705312200,
+    "completed_at": 1705312680,
     "video_url": "https://files.heygen.ai/video/abc123.mp4",
     "thumbnail_url": "https://files.heygen.ai/thumbnail/abc123.jpg",
-    "duration": 45.2,
-    "title": "My Video",
-    "created_at": "2024-01-15T10:30:00Z",
-    "completed_at": "2024-01-15T10:38:00Z",
     "gif_url": "https://files.heygen.ai/gif/abc123.gif",
     "captioned_video_url": null,
     "subtitle_url": null,
+    "duration": 45.2,
     "folder_id": null,
-    "output_language": "en"
+    "output_language": null,
+    "failure_code": null,
+    "failure_message": null,
+    "video_page_url": "https://app.heygen.com/video/abc123def456"
   }
 }
 ```
@@ -134,12 +147,34 @@ Video generation typically takes **5-15 minutes**, but can exceed 20 minutes dur
 
 ```json
 {
-  "error": null,
   "data": {
-    "id": "abc123",
+    "id": "v_abc123def456",
+    "title": "My Video",
     "status": "failed",
+    "created_at": 1705312200,
+    "completed_at": null,
+    "video_url": null,
+    "thumbnail_url": null,
+    "gif_url": null,
+    "captioned_video_url": null,
+    "subtitle_url": null,
+    "duration": null,
+    "folder_id": null,
+    "output_language": null,
     "failure_code": "script_too_long",
-    "failure_message": "Script too long for selected avatar"
+    "failure_message": "Script too long for selected avatar",
+    "video_page_url": null
+  }
+}
+```
+
+### Error Response
+
+```json
+{
+  "error": {
+    "code": "video_not_found",
+    "message": "Video with the given ID was not found"
   }
 }
 ```
@@ -352,7 +387,7 @@ async function downloadVideo(videoUrl: string, outputPath = "./output/video.mp4"
 async function generateAndDownloadVideo(config: VideoConfig): Promise<string> {
   // 1. Generate video
   const generateResponse = await fetch(
-    "https://api.heygen.com/v2/video/generate",
+    "https://api.heygen.com/v3/videos",
     {
       method: "POST",
       headers: {
@@ -367,7 +402,7 @@ async function generateAndDownloadVideo(config: VideoConfig): Promise<string> {
   const videoId = generateData.video_id;
   console.log(`Video ID: ${videoId}`);
 
-  // 2. Poll for completion
+  // 2. Poll for completion (uses v3 status endpoint)
   const videoUrl = await waitForVideoWithProgress(
     videoId,
     (status, elapsed) => {
@@ -392,7 +427,7 @@ For long-running generations, save the video_id and check status later rather th
 ```typescript
 interface PendingVideo {
   videoId: string;
-  createdAt: string;
+  createdAt: number;  // unix timestamp
   script: string;
   avatarId: string;
   voiceId: string;
@@ -403,7 +438,7 @@ async function startVideoGeneration(config: VideoGenerateRequest): Promise<Pendi
 
   const pending: PendingVideo = {
     videoId,
-    createdAt: new Date().toISOString(),
+    createdAt: Math.floor(Date.now() / 1000),
     script: config.video_inputs[0].voice.input_text!,
     avatarId: config.video_inputs[0].character.avatar_id!,
     voiceId: config.video_inputs[0].voice.voice_id!,
@@ -431,8 +466,8 @@ async function checkVideoStatus(): Promise<void> {
     fs.readFileSync("pending-video.json", "utf-8")
   );
 
-  const elapsed = Date.now() - new Date(pending.createdAt).getTime();
-  console.log(`Checking video ${pending.videoId} (started ${Math.round(elapsed / 60000)} min ago)...`);
+  const elapsedSeconds = Math.floor(Date.now() / 1000) - pending.createdAt;
+  console.log(`Checking video ${pending.videoId} (started ${Math.round(elapsedSeconds / 60)} min ago)...`);
 
   const status = await getVideoStatus(pending.videoId);
 
@@ -440,6 +475,9 @@ async function checkVideoStatus(): Promise<void> {
     case "completed":
       console.log(`Video ready: ${status.video_url}`);
       console.log(`Duration: ${status.duration}s`);
+      if (status.video_page_url) {
+        console.log(`View in app: ${status.video_page_url}`);
+      }
       // Clean up pending file
       fs.unlinkSync("pending-video.json");
       // Save result
@@ -451,6 +489,7 @@ async function checkVideoStatus(): Promise<void> {
         title: status.title,
         createdAt: status.created_at,
         completedAt: status.completed_at,
+        videoPageUrl: status.video_page_url,
       }, null, 2));
       break;
     case "failed":
@@ -480,8 +519,8 @@ async function main() {
 
   if (shouldWait) {
     // Poll until complete (with 20 min timeout)
-    const result = await waitForVideo(pending.videoId, apiKey, onProgress, 1200000);
-    console.log(`Done: ${result.video_url}`);
+    const result = await waitForVideo(pending.videoId, 1200000);
+    console.log(`Done: ${result}`);
   } else {
     // Just check once and report
     await checkVideoStatus();
@@ -497,6 +536,7 @@ Instead of polling, you can use webhooks to receive notifications when videos co
 
 1. **Use exponential backoff** - Increase poll intervals for long-running jobs
 2. **Set reasonable timeouts** - Most videos complete within 10 minutes
-3. **Handle failures gracefully** - Check error messages for actionable feedback
+3. **Handle failures gracefully** - Check `failure_code` and `failure_message` for actionable feedback
 4. **Consider webhooks** - For production systems, webhooks are more efficient than polling
 5. **Cache video URLs** - Downloaded video URLs are valid for a limited time
+6. **Use `video_page_url`** - Link users directly to the video in the HeyGen app when available

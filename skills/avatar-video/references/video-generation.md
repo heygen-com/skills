@@ -1,167 +1,173 @@
 ---
 name: video-generation
-description: POST /v2/video/generate workflow and multi-scene videos for HeyGen
+description: POST /v3/videos workflow for creating AI avatar videos with HeyGen
 ---
 
 # Video Generation
 
 ## Table of Contents
-- [Video Output Formats](#video-output-formats)
 - [Basic Video Generation](#basic-video-generation)
 - [Request Fields](#request-fields)
-- [Video Configuration Options](#video-configuration-options)
-- [Multi-Scene Videos](#multi-scene-videos)
-- [Using Different Character Types](#using-different-character-types)
-- [Voice Input Types](#voice-input-types)
+- [Type: Avatar](#type-avatar)
+- [Type: Image](#type-image)
+- [Voice Input Modes](#voice-input-modes)
+- [Voice Settings](#voice-settings)
+- [Motion and Expressiveness](#motion-and-expressiveness)
+- [Background Options](#background-options)
+- [Resolution and Aspect Ratio](#resolution-and-aspect-ratio)
 - [Complete Workflow Example](#complete-workflow-example)
 - [Error Handling](#error-handling)
 - [Script Length Limits](#script-length-limits)
 - [Adding Pauses to Scripts](#adding-pauses-to-scripts)
-- [Test Mode](#test-mode)
+- [Transparent Background](#transparent-background)
 - [Production-Ready Workflow](#production-ready-workflow)
-- [Transparent Background Videos (WebM)](#transparent-background-videos-webm)
 - [Best Practices](#best-practices)
 
 ---
 
-The `/v2/video/generate` endpoint is the primary way to create AI avatar videos with HeyGen.
+The `POST /v3/videos` endpoint creates AI avatar videos with HeyGen. The request body is a **discriminated union** on the `type` field with two variants:
 
-## Video Output Formats
+- **`type: "avatar"`** -- Use a HeyGen avatar (video or photo avatar) by its look ID.
+- **`type: "image"`** -- Animate an arbitrary image (via URL, asset ID, or base64). Uses Avatar IV automatically.
 
-| Endpoint | Format | Use Case |
-|----------|--------|----------|
-| `/v2/video/generate` | MP4 | **Standard** - videos with background (most common) |
-| `/v1/video.webm` | WebM | Transparent background - only when needed |
-
-Use MP4 with background for most cases. WebM is only needed when you want to see content *behind* the avatar (e.g., overlaying avatar on a screen recording).
+Each request produces a single video with one avatar/image and one voice input. For multi-scene workflows, create multiple videos and stitch them together in post-production.
 
 ## Basic Video Generation
 
-### curl
+### From a HeyGen avatar (`type: "avatar"`)
 
 ```bash
-curl -X POST "https://api.heygen.com/v2/video/generate" \
+curl -X POST "https://api.heygen.com/v3/videos" \
   -H "X-Api-Key: $HEYGEN_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "video_inputs": [
-      {
-        "character": {
-          "type": "avatar",
-          "avatar_id": "josh_lite3_20230714",
-          "avatar_style": "normal"
-        },
-        "voice": {
-          "type": "text",
-          "input_text": "Hello! Welcome to HeyGen.",
-          "voice_id": "1bd001e7e50f421d891986aad5158bc8"
-        }
-      }
-    ],
-    "dimension": {
-      "width": 1920,
-      "height": 1080
-    }
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "script": "Hello! Welcome to HeyGen.",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "resolution": "1080p",
+    "aspect_ratio": "16:9"
   }'
 ```
 
-## Request Fields
+### From an arbitrary image (`type: "image"`)
 
-### Top-Level Fields
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "image",
+    "image": {
+      "type": "url",
+      "url": "https://example.com/my-photo.jpg"
+    },
+    "script": "Hello from a custom image!",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "resolution": "1080p",
+    "aspect_ratio": "16:9"
+  }'
+```
 
-| Field | Type | Req | Description |
-|-------|------|:---:|-------------|
-| `video_inputs` | array | ✓ | Array of 1-50 video input objects |
-| `dimension` | object | | Video dimensions `{width, height}` |
-| `title` | string | | Video name for organization |
-| `test` | boolean | | Test mode (watermarked, no credits) |
-| `caption` | boolean | | Enable auto-captions |
-| `callback_id` | string | | Custom ID for webhook tracking |
-| `callback_url` | string | | URL for completion notification |
-| `folder_id` | string | | Storage folder ID |
+### Response (same for both)
 
-### video_inputs[].character Fields
-
-| Field | Type | Req | Description |
-|-------|------|:---:|-------------|
-| `type` | string | ✓ | `"avatar"` or `"talking_photo"` |
-| `avatar_id` | string | ✓* | Avatar ID (*required when type is "avatar") |
-| `talking_photo_id` | string | ✓* | Photo ID (*required when type is "talking_photo") |
-| `avatar_style` | string | | `"normal"`, `"closeUp"`, or `"circle"` |
-| `scale` | number | | Avatar scale factor |
-| `offset` | object | | Position offset `{x, y}` |
-
-### video_inputs[].voice Fields
-
-| Field | Type | Req | Description |
-|-------|------|:---:|-------------|
-| `type` | string | ✓ | `"text"`, `"audio"`, or `"silence"` |
-| `voice_id` | string | ✓* | Voice ID (*required when type is "text") |
-| `input_text` | string | ✓* | Script text (*required when type is "text") |
-| `audio_url` | string | ✓* | Audio URL (*required when type is "audio") |
-| `duration` | number | ✓* | Duration in seconds (*required when type is "silence") |
-| `speed` | number | | Speech speed 0.5-2.0 (default 1.0) |
-| `pitch` | number | | Voice pitch -20 to 20 (default 0) |
-
-### video_inputs[].background Fields
-
-| Field | Type | Req | Description |
-|-------|------|:---:|-------------|
-| `type` | string | | `"color"`, `"image"`, or `"video"` |
-| `value` | string | | Hex color (when type is "color") |
-| `url` | string | | Image/video URL (when type is "image"/"video") |
-| `fit` | string | | `"cover"` or `"contain"` |
+```json
+{
+  "data": {
+    "video_id": "abc123",
+    "status": "waiting"
+  }
+}
+```
 
 ### TypeScript
 
 ```typescript
-// Required fields have no '?' - optional fields have '?'
-interface VideoInput {
-  character: {
-    type: "avatar" | "talking_photo";           // Required
-    avatar_id?: string;                         // Required when type="avatar"
-    talking_photo_id?: string;                  // Required when type="talking_photo"
-    avatar_style?: "normal" | "closeUp" | "circle";
-    scale?: number;
-    offset?: { x: number; y: number };
-  };
-  voice: {
-    type: "text" | "audio" | "silence";         // Required
-    input_text?: string;                        // Required when type="text"
-    voice_id?: string;                          // Required when type="text"
-    audio_url?: string;                         // Required when type="audio"
-    duration?: number;                          // Required when type="silence"
-    speed?: number;
-    pitch?: number;
-  };
-  background?: {
-    type?: "color" | "image" | "video";
-    value?: string;
-    url?: string;
-    fit?: "cover" | "contain";
-  };
+// Discriminated union: the `type` field determines which variant is used.
+
+interface AssetInputUrl {
+  type: "url";
+  url: string;
 }
 
-interface VideoGenerateRequest {
-  video_inputs: VideoInput[];                   // Required
-  dimension?: { width: number; height: number };
-  test?: boolean;
+interface AssetInputAssetId {
+  type: "asset_id";
+  asset_id: string;
+}
+
+interface AssetInputBase64 {
+  type: "base64";
+  media_type: string;  // e.g. "image/png"
+  data: string;
+}
+
+type AssetInput = AssetInputUrl | AssetInputAssetId | AssetInputBase64;
+
+interface SharedVideoFields {
+  // Voice source (mutually exclusive groups)
+  script?: string;          // Text script -- requires voice_id
+  voice_id?: string;        // Voice ID for TTS -- required with script
+  audio_url?: string;       // Public URL of audio to lip-sync
+  audio_asset_id?: string;  // HeyGen asset ID of uploaded audio
+
+  // Display
   title?: string;
-  caption?: boolean;
-  callback_id?: string;
+  resolution?: "1080p" | "720p";
+  aspect_ratio?: "16:9" | "9:16";
+
+  // Avatar behavior (photo avatars / image mode)
+  motion_prompt?: string;
+  expressiveness?: "high" | "medium" | "low";
+
+  // Background
+  remove_background?: boolean;
+  background?: {
+    type: "color" | "image";
+    value?: string;     // Hex color (when type is "color")
+    url?: string;       // Image URL (when type is "image")
+    asset_id?: string;  // HeyGen asset ID (when type is "image")
+  };
+
+  // Voice tuning
+  voice_settings?: {
+    speed?: number;   // 0.5 - 1.5
+    pitch?: number;   // -50 to 50
+    locale?: string;  // e.g. "en-US"
+  };
+
+  // Callbacks
   callback_url?: string;
-  folder_id?: string;
+  callback_id?: string;
 }
 
-interface VideoGenerateResponse {
-  error: null | string;
+interface CreateVideoFromAvatar extends SharedVideoFields {
+  type: "avatar";
+  avatar_id: string;       // Required: HeyGen avatar look ID
+}
+
+interface CreateVideoFromImage extends SharedVideoFields {
+  type: "image";
+  image: AssetInput;       // Required: image source (url, asset_id, or base64)
+}
+
+type CreateVideoRequest = CreateVideoFromAvatar | CreateVideoFromImage;
+
+interface CreateVideoResponse {
   data: {
     video_id: string;
+    status: string; // e.g. "waiting"
   };
 }
 
-async function generateVideo(config: VideoGenerateRequest): Promise<string> {
-  const response = await fetch("https://api.heygen.com/v2/video/generate", {
+interface VideoErrorResponse {
+  error: {
+    code: string;
+    message: string;
+  };
+}
+
+async function generateVideo(config: CreateVideoRequest): Promise<string> {
+  const response = await fetch("https://api.heygen.com/v3/videos", {
     method: "POST",
     headers: {
       "X-Api-Key": process.env.HEYGEN_API_KEY!,
@@ -170,13 +176,15 @@ async function generateVideo(config: VideoGenerateRequest): Promise<string> {
     body: JSON.stringify(config),
   });
 
-  const json: VideoGenerateResponse = await response.json();
+  const json = await response.json();
 
-  if (json.error) {
-    throw new Error(json.error);
+  if (!response.ok) {
+    const err = json as VideoErrorResponse;
+    throw new Error(`${err.error.code}: ${err.error.message}`);
   }
 
-  return json.data.video_id;
+  const result = json as CreateVideoResponse;
+  return result.data.video_id;
 }
 ```
 
@@ -188,209 +196,722 @@ import os
 
 def generate_video(config: dict) -> str:
     response = requests.post(
-        "https://api.heygen.com/v2/video/generate",
+        "https://api.heygen.com/v3/videos",
         headers={
             "X-Api-Key": os.environ["HEYGEN_API_KEY"],
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         },
-        json=config
+        json=config,
     )
 
     data = response.json()
-    if data.get("error"):
-        raise Exception(data["error"])
+    if not response.ok:
+        err = data["error"]
+        raise Exception(f"{err['code']}: {err['message']}")
 
     return data["data"]["video_id"]
 ```
 
-## Video Configuration Options
+## Request Fields
 
-### Full Configuration Example
+The v3 API uses a **discriminated union** on the `type` field. The `type` determines which variant-specific fields are required, while audio, display, and output fields are shared across both variants.
+
+### Discriminator
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | `"avatar"` \| `"image"` | **Required.** Selects the creation mode. |
+
+### Type-specific Fields
+
+| Field | Applies to | Type | Description |
+|-------|-----------|------|-------------|
+| `avatar_id` | `type: "avatar"` | string | **Required.** HeyGen avatar look ID. |
+| `image` | `type: "image"` | AssetInput | **Required.** Image source as a discriminated union (see [Type: Image](#type-image)). |
+
+### Shared Audio Fields (mutually exclusive groups)
+
+Provide exactly one audio source: `script` + `voice_id`, or `audio_url`, or `audio_asset_id`.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `script` | string \| null | Text script for the avatar to speak. Requires `voice_id`. |
+| `voice_id` | string \| null | Voice ID for TTS. Required when `script` is provided. |
+| `audio_url` | string \| null | Public URL of audio file to lip-sync. Mutually exclusive with `script`. |
+| `audio_asset_id` | string \| null | HeyGen asset ID of uploaded audio. Mutually exclusive with `script`. |
+
+### Shared Output Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string \| null | Display title in HeyGen dashboard. |
+| `resolution` | `"1080p"` \| `"720p"` \| null | Output resolution. |
+| `aspect_ratio` | `"16:9"` \| `"9:16"` \| null | Output aspect ratio. |
+| `motion_prompt` | string \| null | Natural-language prompt controlling body motion. Photo avatars and image mode. |
+| `expressiveness` | `"high"` \| `"medium"` \| `"low"` \| null | Expression intensity. Photo avatars and image mode. Defaults to `"low"`. |
+| `remove_background` | boolean \| null | Remove the avatar background. |
+| `background` | object \| null | Background config (see [Background Options](#background-options)). |
+| `voice_settings` | object \| null | Voice tuning (see [Voice Settings](#voice-settings)). |
+| `callback_url` | string \| null | URL for completion webhook notification. |
+| `callback_id` | string \| null | Custom ID included in webhook payload. |
+
+## Type: Avatar
+
+Use `type: "avatar"` to create a video from a HeyGen avatar (video or photo avatar) by its look ID. The `avatar_id` field is required.
+
+### curl
+
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "script": "Hello from a HeyGen avatar!",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8"
+  }'
+```
+
+### TypeScript
 
 ```typescript
-const fullConfig: VideoGenerateRequest = {
-  // Test mode (no credits consumed, watermarked output)
-  test: false,
+const videoId = await generateVideo({
+  type: "avatar",
+  avatar_id: "josh_lite3_20230714",
+  script: "Hello from a HeyGen avatar!",
+  voice_id: "1bd001e7e50f421d891986aad5158bc8",
+});
+```
 
-  // Video title (for organization)
-  title: "Product Demo Video",
+### Python
 
-  // Video dimensions
-  dimension: {
-    width: 1920,
-    height: 1080,
+```python
+video_id = generate_video({
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "script": "Hello from a HeyGen avatar!",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+})
+```
+
+## Type: Image
+
+Use `type: "image"` to animate an arbitrary image. The `image` field is required and is itself a discriminated union (`AssetInput`) with three variants:
+
+| Variant | Fields | Description |
+|---------|--------|-------------|
+| `type: "url"` | `url` (string, required) | Public URL of the image. |
+| `type: "asset_id"` | `asset_id` (string, required) | HeyGen asset ID from a previous upload. |
+| `type: "base64"` | `media_type` (string, required), `data` (string, required) | Inline base64-encoded image. |
+
+### 1. Image from URL
+
+#### curl
+
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "image",
+    "image": {
+      "type": "url",
+      "url": "https://example.com/my-photo.jpg"
+    },
+    "script": "Hello from a custom image!",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8"
+  }'
+```
+
+#### TypeScript
+
+```typescript
+const videoId = await generateVideo({
+  type: "image",
+  image: {
+    type: "url",
+    url: "https://example.com/my-photo.jpg",
   },
+  script: "Hello from a custom image!",
+  voice_id: "1bd001e7e50f421d891986aad5158bc8",
+});
+```
 
-  // Video scenes/inputs
-  video_inputs: [
-    {
-      // Avatar configuration
-      character: {
-        type: "avatar",
-        avatar_id: "josh_lite3_20230714",
-        avatar_style: "normal",
-      },
+#### Python
 
-      // Voice configuration
-      voice: {
-        type: "text",
-        input_text: "Welcome to our product demonstration!",
-        voice_id: "1bd001e7e50f421d891986aad5158bc8",
-        speed: 1.0,
-        pitch: 0,
-      },
-
-      // Background configuration
-      background: {
-        type: "color",
-        value: "#FFFFFF",
-      },
+```python
+video_id = generate_video({
+    "type": "image",
+    "image": {
+        "type": "url",
+        "url": "https://example.com/my-photo.jpg",
     },
-  ],
-};
+    "script": "Hello from a custom image!",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+})
 ```
 
-## Multi-Scene Videos
+### 2. Image from Asset ID
 
-Create videos with multiple scenes:
+#### curl
 
-```typescript
-const multiSceneConfig = {
-  video_inputs: [
-    // Scene 1: Introduction
-    {
-      character: {
-        type: "avatar",
-        avatar_id: "josh_lite3_20230714",
-        avatar_style: "normal",
-      },
-      voice: {
-        type: "text",
-        input_text: "Hello! Today I'll show you three key features.",
-        voice_id: "1bd001e7e50f421d891986aad5158bc8",
-      },
-      background: {
-        type: "color",
-        value: "#1a1a2e",
-      },
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "image",
+    "image": {
+      "type": "asset_id",
+      "asset_id": "asset_abc123"
     },
-    // Scene 2: Feature 1
-    {
-      character: {
-        type: "avatar",
-        avatar_id: "josh_lite3_20230714",
-        avatar_style: "closeUp",
-      },
-      voice: {
-        type: "text",
-        input_text: "First, let's look at our dashboard.",
-        voice_id: "1bd001e7e50f421d891986aad5158bc8",
-      },
-      background: {
-        type: "image",
-        url: "https://example.com/dashboard-bg.jpg",
-      },
+    "script": "Hello from an uploaded image!",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8"
+  }'
+```
+
+#### TypeScript
+
+```typescript
+const videoId = await generateVideo({
+  type: "image",
+  image: {
+    type: "asset_id",
+    asset_id: "asset_abc123",
+  },
+  script: "Hello from an uploaded image!",
+  voice_id: "1bd001e7e50f421d891986aad5158bc8",
+});
+```
+
+#### Python
+
+```python
+video_id = generate_video({
+    "type": "image",
+    "image": {
+        "type": "asset_id",
+        "asset_id": "asset_abc123",
     },
-    // Scene 3: Conclusion
-    {
-      character: {
-        type: "avatar",
-        avatar_id: "josh_lite3_20230714",
-        avatar_style: "normal",
-      },
-      voice: {
-        type: "text",
-        input_text: "Thanks for watching! Try it today.",
-        voice_id: "1bd001e7e50f421d891986aad5158bc8",
-      },
-      background: {
-        type: "color",
-        value: "#1a1a2e",
-      },
+    "script": "Hello from an uploaded image!",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+})
+```
+
+### 3. Image from Base64
+
+#### curl
+
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "image",
+    "image": {
+      "type": "base64",
+      "media_type": "image/png",
+      "data": "iVBORw0KGgoAAAANSUhEUgAA..."
     },
-  ],
-  dimension: { width: 1920, height: 1080 },
-};
+    "script": "Hello from a base64 image!",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8"
+  }'
 ```
 
-## Using Different Character Types
-
-### Avatar
+#### TypeScript
 
 ```typescript
-{
-  character: {
-    type: "avatar",
-    avatar_id: "josh_lite3_20230714",
-    avatar_style: "normal"
-  }
-}
+import { readFileSync } from "fs";
+
+const imageData = readFileSync("photo.png").toString("base64");
+
+const videoId = await generateVideo({
+  type: "image",
+  image: {
+    type: "base64",
+    media_type: "image/png",
+    data: imageData,
+  },
+  script: "Hello from a base64 image!",
+  voice_id: "1bd001e7e50f421d891986aad5158bc8",
+});
 ```
 
-### Talking Photo
+#### Python
 
-```typescript
-{
-  character: {
-    type: "talking_photo",
-    talking_photo_id: "your_talking_photo_id"
-  }
-}
+```python
+import base64
+
+with open("photo.png", "rb") as f:
+    image_data = base64.b64encode(f.read()).decode("utf-8")
+
+video_id = generate_video({
+    "type": "image",
+    "image": {
+        "type": "base64",
+        "media_type": "image/png",
+        "data": image_data,
+    },
+    "script": "Hello from a base64 image!",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+})
 ```
 
-## Voice Input Types
+## Voice Input Modes
 
-### Text-to-Speech
+There are three mutually exclusive ways to provide voice input. These work the same for both `type: "avatar"` and `type: "image"`.
 
-```typescript
-{
-  voice: {
-    type: "text",
-    input_text: "Your script here",
-    voice_id: "1bd001e7e50f421d891986aad5158bc8",
-    speed: 1.0,  // 0.5 - 2.0
-    pitch: 0     // -20 to 20
-  }
-}
+### 1. Text-to-Speech (`script` + `voice_id`)
+
+Provide a text script and a voice ID. HeyGen generates speech and lip-syncs the avatar.
+
+#### curl
+
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "script": "This is text-to-speech with a chosen voice.",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "voice_settings": {
+      "speed": 1.1,
+      "pitch": 5
+    }
+  }'
 ```
 
-### Custom Audio
+#### TypeScript
 
 ```typescript
-{
-  voice: {
-    type: "audio",
-    audio_url: "https://example.com/your-audio.mp3"
-  }
-}
+const videoId = await generateVideo({
+  type: "avatar",
+  avatar_id: "josh_lite3_20230714",
+  script: "This is text-to-speech with a chosen voice.",
+  voice_id: "1bd001e7e50f421d891986aad5158bc8",
+  voice_settings: {
+    speed: 1.1,
+    pitch: 5,
+  },
+});
+```
+
+#### Python
+
+```python
+video_id = generate_video({
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "script": "This is text-to-speech with a chosen voice.",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "voice_settings": {
+        "speed": 1.1,
+        "pitch": 5,
+    },
+})
+```
+
+### 2. Custom Audio (`audio_url`)
+
+Provide a pre-recorded audio file by URL. The avatar lip-syncs to it. Do not provide `script` or `voice_id` when using audio input.
+
+#### curl
+
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "audio_url": "https://example.com/narration.mp3"
+  }'
+```
+
+#### TypeScript
+
+```typescript
+const videoId = await generateVideo({
+  type: "avatar",
+  avatar_id: "josh_lite3_20230714",
+  audio_url: "https://example.com/narration.mp3",
+});
+```
+
+#### Python
+
+```python
+video_id = generate_video({
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "audio_url": "https://example.com/narration.mp3",
+})
+```
+
+### 3. Uploaded Audio Asset (`audio_asset_id`)
+
+Use an audio file previously uploaded to HeyGen's asset system.
+
+#### curl
+
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "audio_asset_id": "asset_audio_456"
+  }'
+```
+
+#### TypeScript
+
+```typescript
+const videoId = await generateVideo({
+  type: "avatar",
+  avatar_id: "josh_lite3_20230714",
+  audio_asset_id: "asset_audio_456",
+});
+```
+
+#### Python
+
+```python
+video_id = generate_video({
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "audio_asset_id": "asset_audio_456",
+})
+```
+
+## Voice Settings
+
+Fine-tune TTS output with `voice_settings`. Only applicable when using `script` + `voice_id`.
+
+| Field | Type | Range | Description |
+|-------|------|-------|-------------|
+| `speed` | number | 0.5 - 1.5 | Speech speed multiplier. Default 1.0. |
+| `pitch` | number | -50 to 50 | Voice pitch adjustment. Default 0. |
+| `locale` | string | | Language locale hint (e.g. `"en-US"`, `"es-ES"`). |
+
+### curl
+
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "script": "This has custom voice settings.",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "voice_settings": {
+      "speed": 0.9,
+      "pitch": -10,
+      "locale": "en-US"
+    }
+  }'
+```
+
+### TypeScript
+
+```typescript
+const videoId = await generateVideo({
+  type: "avatar",
+  avatar_id: "josh_lite3_20230714",
+  script: "This has custom voice settings.",
+  voice_id: "1bd001e7e50f421d891986aad5158bc8",
+  voice_settings: {
+    speed: 0.9,
+    pitch: -10,
+    locale: "en-US",
+  },
+});
+```
+
+### Python
+
+```python
+video_id = generate_video({
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "script": "This has custom voice settings.",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "voice_settings": {
+        "speed": 0.9,
+        "pitch": -10,
+        "locale": "en-US",
+    },
+})
+```
+
+## Motion and Expressiveness
+
+Control avatar body motion and facial expressiveness. These work with **photo avatars** (`type: "avatar"`) and **image mode** (`type: "image"`).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `motion_prompt` | string | Natural-language description of desired body motion (e.g. `"lean forward enthusiastically"`, `"nod while speaking"`). |
+| `expressiveness` | `"high"` \| `"medium"` \| `"low"` | Facial expression intensity. Defaults to `"low"`. |
+
+### curl
+
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "script": "I am really excited to show you this feature!",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "motion_prompt": "lean forward with enthusiasm, use hand gestures",
+    "expressiveness": "high"
+  }'
+```
+
+### TypeScript
+
+```typescript
+const videoId = await generateVideo({
+  type: "avatar",
+  avatar_id: "josh_lite3_20230714",
+  script: "I am really excited to show you this feature!",
+  voice_id: "1bd001e7e50f421d891986aad5158bc8",
+  motion_prompt: "lean forward with enthusiasm, use hand gestures",
+  expressiveness: "high",
+});
+```
+
+### Python
+
+```python
+video_id = generate_video({
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "script": "I am really excited to show you this feature!",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "motion_prompt": "lean forward with enthusiasm, use hand gestures",
+    "expressiveness": "high",
+})
+```
+
+## Background Options
+
+Set a custom background with the `background` field.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | `"color"` \| `"image"` | Background type. |
+| `value` | string | Hex color code (when type is `"color"`). |
+| `url` | string | Public image URL (when type is `"image"`). |
+| `asset_id` | string | HeyGen asset ID of uploaded image (when type is `"image"`). |
+
+### Solid Color Background
+
+#### curl
+
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "script": "White background video.",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "background": {
+      "type": "color",
+      "value": "#FFFFFF"
+    }
+  }'
+```
+
+#### TypeScript
+
+```typescript
+const videoId = await generateVideo({
+  type: "avatar",
+  avatar_id: "josh_lite3_20230714",
+  script: "White background video.",
+  voice_id: "1bd001e7e50f421d891986aad5158bc8",
+  background: {
+    type: "color",
+    value: "#FFFFFF",
+  },
+});
+```
+
+#### Python
+
+```python
+video_id = generate_video({
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "script": "White background video.",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "background": {
+        "type": "color",
+        "value": "#FFFFFF",
+    },
+})
+```
+
+### Image Background
+
+#### curl
+
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "script": "Custom image background.",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "background": {
+      "type": "image",
+      "url": "https://example.com/office-bg.jpg"
+    }
+  }'
+```
+
+#### TypeScript
+
+```typescript
+// Using a public URL
+const videoId = await generateVideo({
+  type: "avatar",
+  avatar_id: "josh_lite3_20230714",
+  script: "Custom image background.",
+  voice_id: "1bd001e7e50f421d891986aad5158bc8",
+  background: {
+    type: "image",
+    url: "https://example.com/office-bg.jpg",
+  },
+});
+
+// Using a HeyGen asset
+const videoId2 = await generateVideo({
+  type: "avatar",
+  avatar_id: "josh_lite3_20230714",
+  script: "Background from uploaded asset.",
+  voice_id: "1bd001e7e50f421d891986aad5158bc8",
+  background: {
+    type: "image",
+    asset_id: "asset_bg_789",
+  },
+});
+```
+
+#### Python
+
+```python
+# Using a public URL
+video_id = generate_video({
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "script": "Custom image background.",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "background": {
+        "type": "image",
+        "url": "https://example.com/office-bg.jpg",
+    },
+})
+
+# Using a HeyGen asset
+video_id = generate_video({
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "script": "Background from uploaded asset.",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "background": {
+        "type": "image",
+        "asset_id": "asset_bg_789",
+    },
+})
+```
+
+## Resolution and Aspect Ratio
+
+| Field | Values | Description |
+|-------|--------|-------------|
+| `resolution` | `"1080p"`, `"720p"` | Output resolution. Defaults to `"1080p"`. |
+| `aspect_ratio` | `"16:9"`, `"9:16"` | Output aspect ratio. `"16:9"` for landscape, `"9:16"` for portrait/mobile. |
+
+### curl
+
+```bash
+# Portrait/mobile video
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "script": "This is a portrait video for mobile.",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "resolution": "1080p",
+    "aspect_ratio": "9:16"
+  }'
+```
+
+### TypeScript
+
+```typescript
+// Portrait/mobile video
+const videoId = await generateVideo({
+  type: "avatar",
+  avatar_id: "josh_lite3_20230714",
+  script: "This is a portrait video for mobile.",
+  voice_id: "1bd001e7e50f421d891986aad5158bc8",
+  resolution: "1080p",
+  aspect_ratio: "9:16",
+});
+```
+
+### Python
+
+```python
+# Portrait/mobile video
+video_id = generate_video({
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "script": "This is a portrait video for mobile.",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "resolution": "1080p",
+    "aspect_ratio": "9:16",
+})
 ```
 
 ## Complete Workflow Example
 
+### TypeScript
+
 ```typescript
-async function createVideo(script: string, avatarId: string, voiceId: string) {
+async function createVideo(
+  script: string,
+  avatarId: string,
+  voiceId: string
+): Promise<string> {
   // 1. Generate video
   console.log("Starting video generation...");
   const videoId = await generateVideo({
-    video_inputs: [
-      {
-        character: {
-          type: "avatar",
-          avatar_id: avatarId,
-          avatar_style: "normal",
-        },
-        voice: {
-          type: "text",
-          input_text: script,
-          voice_id: voiceId,
-        },
-        background: {
-          type: "color",
-          value: "#FFFFFF",
-        },
-      },
-    ],
-    dimension: { width: 1920, height: 1080 },
+    type: "avatar",
+    avatar_id: avatarId,
+    script: script,
+    voice_id: voiceId,
+    resolution: "1080p",
+    aspect_ratio: "16:9",
+    background: {
+      type: "color",
+      value: "#FFFFFF",
+    },
   });
 
   console.log(`Video ID: ${videoId}`);
@@ -410,11 +931,18 @@ async function waitForVideo(videoId: string): Promise<string> {
 
   for (let i = 0; i < maxAttempts; i++) {
     const response = await fetch(
-      `https://api.heygen.com/v2/videos/${videoId}`,
+      `https://api.heygen.com/v3/videos/${videoId}`,
       { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
     );
 
-    const { data } = await response.json();
+    const json = await response.json();
+
+    if (!response.ok) {
+      const err = json as VideoErrorResponse;
+      throw new Error(`${err.error.code}: ${err.error.message}`);
+    }
+
+    const { data } = json;
 
     if (data.status === "completed") {
       return data.video_url;
@@ -429,28 +957,124 @@ async function waitForVideo(videoId: string): Promise<string> {
 }
 ```
 
+### Python
+
+```python
+import time
+
+def create_video(script: str, avatar_id: str, voice_id: str) -> str:
+    # 1. Generate video
+    print("Starting video generation...")
+    video_id = generate_video({
+        "type": "avatar",
+        "avatar_id": avatar_id,
+        "script": script,
+        "voice_id": voice_id,
+        "resolution": "1080p",
+        "aspect_ratio": "16:9",
+        "background": {
+            "type": "color",
+            "value": "#FFFFFF",
+        },
+    })
+
+    print(f"Video ID: {video_id}")
+
+    # 2. Poll for completion
+    print("Waiting for video completion...")
+    video_url = wait_for_video(video_id)
+
+    print(f"Video ready: {video_url}")
+    return video_url
+
+
+def wait_for_video(video_id: str, max_attempts: int = 60, poll_interval: int = 10) -> str:
+    for _ in range(max_attempts):
+        response = requests.get(
+            f"https://api.heygen.com/v3/videos/{video_id}",
+            headers={"X-Api-Key": os.environ["HEYGEN_API_KEY"]},
+        )
+
+        data = response.json()
+        if not response.ok:
+            err = data["error"]
+            raise Exception(f"{err['code']}: {err['message']}")
+
+        status = data["data"]["status"]
+
+        if status == "completed":
+            return data["data"]["video_url"]
+        elif status == "failed":
+            raise Exception(data["data"].get("failure_message", "Video generation failed"))
+
+        time.sleep(poll_interval)
+
+    raise Exception("Video generation timed out")
+```
+
 ## Error Handling
 
+The v3 API returns errors in a structured format:
+
+```json
+{
+  "error": {
+    "code": "invalid_request",
+    "message": "avatar_id is required when type is avatar"
+  }
+}
+```
+
+### TypeScript
+
 ```typescript
-async function generateVideoSafe(config: VideoGenerateRequest) {
+async function generateVideoSafe(config: CreateVideoRequest) {
   try {
     const videoId = await generateVideo(config);
     return { success: true, videoId };
   } catch (error) {
-    // Common errors
-    if (error.message.includes("quota")) {
+    const message = error instanceof Error ? error.message : String(error);
+
+    // Common error patterns
+    if (message.includes("quota") || message.includes("credit")) {
       console.error("Insufficient credits");
-    } else if (error.message.includes("avatar")) {
+    } else if (message.includes("avatar")) {
       console.error("Invalid avatar ID");
-    } else if (error.message.includes("voice")) {
+    } else if (message.includes("voice")) {
       console.error("Invalid voice ID");
-    } else if (error.message.includes("script")) {
+    } else if (message.includes("image")) {
+      console.error("Invalid image input");
+    } else if (message.includes("script")) {
       console.error("Script too long or invalid");
     }
 
-    return { success: false, error: error.message };
+    return { success: false, error: message };
   }
 }
+```
+
+### Python
+
+```python
+def generate_video_safe(config: dict) -> dict:
+    try:
+        video_id = generate_video(config)
+        return {"success": True, "video_id": video_id}
+    except Exception as e:
+        message = str(e)
+
+        if "quota" in message or "credit" in message:
+            print("Insufficient credits")
+        elif "avatar" in message:
+            print("Invalid avatar ID")
+        elif "voice" in message:
+            print("Invalid voice ID")
+        elif "image" in message:
+            print("Invalid image input")
+        elif "script" in message:
+            print("Script too long or invalid")
+
+        return {"success": False, "error": message}
 ```
 
 ## Script Length Limits
@@ -467,7 +1091,7 @@ async function generateVideoSafe(config: VideoGenerateRequest) {
 Use `<break>` tags to add pauses in your script:
 
 ```typescript
-const script = "Welcome to our demo. <break time=\"1s\"/> Let me show you the features.";
+const script = 'Welcome to our demo. <break time="1s"/> Let me show you the features.';
 ```
 
 **Format:** `<break time="Xs"/>` where X is seconds (e.g., `1s`, `1.5s`, `0.5s`)
@@ -476,20 +1100,63 @@ const script = "Welcome to our demo. <break time=\"1s\"/> Let me show you the fe
 
 See [voices.md](voices.md) for detailed break tag documentation.
 
-## Test Mode
+## Transparent Background
 
-Use test mode during development:
+Use `remove_background: true` to generate a video with the avatar's background removed. This is useful when you want to overlay the avatar on other content in post-production.
+
+### curl
+
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "script": "This video has the background removed.",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "remove_background": true
+  }'
+```
+
+### TypeScript
 
 ```typescript
-const config = {
-  test: true, // Watermarked output, no credits consumed
-  video_inputs: [...],
-};
+const videoId = await generateVideo({
+  type: "avatar",
+  avatar_id: "josh_lite3_20230714",
+  script: "This video has the background removed.",
+  voice_id: "1bd001e7e50f421d891986aad5158bc8",
+  remove_background: true,
+});
 ```
+
+### Python
+
+```python
+video_id = generate_video({
+    "type": "avatar",
+    "avatar_id": "josh_lite3_20230714",
+    "script": "This video has the background removed.",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "remove_background": True,
+})
+```
+
+**When to use `remove_background`:**
+- Avatar overlaid on screen recordings (Loom-style)
+- Avatar floating over video or image content
+- True alpha-channel compositing in post-production
+
+**When you do NOT need `remove_background`:**
+- Avatar with overlays/text on top of the avatar
+- Standard presenter videos with a solid or image background
 
 ## Production-Ready Workflow
 
-Complete example using avatar's default voice (recommended), proper timeouts, and retry logic:
+Complete example using the avatar's default voice (recommended), proper timeouts, and retry logic.
+
+### TypeScript
 
 ```typescript
 interface VideoGenerationResult {
@@ -505,84 +1172,112 @@ async function generateAvatarVideo(
   script: string,
   options: {
     avatarId?: string; // Specific avatar, or will pick first available
-    width?: number;
-    height?: number;
+    resolution?: "1080p" | "720p";
+    aspectRatio?: "16:9" | "9:16";
   } = {}
 ): Promise<VideoGenerationResult> {
-  const { width = 1920, height = 1080 } = options;
+  const { resolution = "1080p", aspectRatio = "16:9" } = options;
   let { avatarId } = options;
 
-  // 1. List avatars if no specific one provided
+  // 1. List avatar looks if no specific one provided
   if (!avatarId) {
-    console.log("Listing available avatars...");
-    const listResponse = await fetch("https://api.heygen.com/v2/avatars", {
+    console.log("Listing available avatar looks...");
+    const listResponse = await fetch("https://api.heygen.com/v3/avatars/looks", {
       headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! },
     });
+
+    if (!listResponse.ok) {
+      const err = await listResponse.json();
+      throw new Error(`${err.error.code}: ${err.error.message}`);
+    }
+
     const listData = await listResponse.json();
 
-    if (!listData.data?.avatars?.length) {
-      throw new Error("No avatars available");
+    if (!listData.data?.length) {
+      throw new Error("No avatar looks available");
     }
-    avatarId = listData.data.avatars[0].avatar_id;
+    avatarId = listData.data[0].id;
   }
 
-  // 2. Get avatar details including default_voice_id
-  console.log(`Getting details for avatar: ${avatarId}`);
+  // 2. Get avatar look details including default voice
+  console.log(`Getting details for avatar look: ${avatarId}`);
   const detailsResponse = await fetch(
-    `https://api.heygen.com/v2/avatar/${avatarId}/details`,
+    `https://api.heygen.com/v3/avatars/looks/${avatarId}`,
     { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
   );
+
+  if (!detailsResponse.ok) {
+    const err = await detailsResponse.json();
+    throw new Error(`${err.error.code}: ${err.error.message}`);
+  }
+
   const { data: avatar } = await detailsResponse.json();
 
   if (!avatar.default_voice_id) {
-    throw new Error(`Avatar ${avatar.name} has no default voice - select voice manually`);
+    throw new Error(
+      `Avatar ${avatar.name} has no default voice - select a voice manually`
+    );
   }
 
-  console.log(`Using avatar: ${avatar.name} with default voice: ${avatar.default_voice_id}`);
+  console.log(
+    `Using avatar: ${avatar.name} with default voice: ${avatar.default_voice_id}`
+  );
 
-  // 3. Generate video using avatar's default voice
+  // 3. Generate video
   const videoId = await generateVideo({
-    video_inputs: [{
-      character: {
-        type: "avatar",
-        avatar_id: avatar.id, // from details response
-        avatar_style: "normal",
-      },
-      voice: {
-        type: "text",
-        input_text: script,
-        voice_id: avatar.default_voice_id, // pre-matched default voice
-        speed: 1.0,
-      },
-      background: {
-        type: "color",
-        value: "#1a1a2e",
-      },
-    }],
-    dimension: { width, height },
+    type: "avatar",
+    avatar_id: avatarId,
+    script: script,
+    voice_id: avatar.default_voice_id,
+    resolution: resolution,
+    aspect_ratio: aspectRatio,
+    background: {
+      type: "color",
+      value: "#1a1a2e",
+    },
   });
 
   console.log(`Video ID: ${videoId}`);
 
-  // 3. Wait for completion (20 minute timeout - generation can take 15+ min)
-  console.log("Waiting for video generation (typically 5-15 minutes, can be longer)...");
-  const result = await waitForVideo(
-    videoId,
-    process.env.HEYGEN_API_KEY!,
-    (status, elapsed) => {
-      console.log(`  [${Math.round(elapsed / 1000)}s] ${status}`);
-    },
-    1200000 // 20 minute timeout for safety
-  );
+  // 4. Wait for completion (20 minute timeout - generation can take 15+ min)
+  console.log("Waiting for video generation (typically 5-15 minutes)...");
+  const maxAttempts = 120; // 120 * 10s = 20 minutes
+  const pollInterval = 10000;
 
-  return {
-    videoId,
-    videoUrl: result.video_url!,
-    duration: result.duration!,
-    avatarId: avatar.id,
-    voiceId: avatar.default_voice_id,
-    avatarName: avatar.name,
-  };
+  for (let i = 0; i < maxAttempts; i++) {
+    const response = await fetch(
+      `https://api.heygen.com/v3/videos/${videoId}`,
+      { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
+    );
+
+    const json = await response.json();
+
+    if (!response.ok) {
+      const err = json as VideoErrorResponse;
+      throw new Error(`${err.error.code}: ${err.error.message}`);
+    }
+
+    const { data } = json;
+
+    console.log(`  [${Math.round((i * pollInterval) / 1000)}s] ${data.status}`);
+
+    if (data.status === "completed") {
+      return {
+        videoId,
+        videoUrl: data.video_url,
+        duration: data.duration,
+        avatarId: avatarId!,
+        voiceId: avatar.default_voice_id,
+        avatarName: avatar.name,
+      };
+    } else if (data.status === "failed") {
+      throw new Error(data.failure_message || "Video generation failed");
+    }
+
+    await new Promise((r) => setTimeout(r, pollInterval));
+  }
+
+  throw new Error("Video generation timed out after 20 minutes");
 }
 
 // Usage - let it pick an avatar automatically
@@ -591,180 +1286,130 @@ const result = await generateAvatarVideo(
 );
 console.log(`Video ready: ${result.videoUrl}`);
 
-// Or specify a known avatar_id
+// Or specify a known avatar look ID
 const result2 = await generateAvatarVideo(
   "Hello! Welcome to our product demonstration.",
-  { avatarId: "josh_lite3_20230714" }
+  { avatarId: "josh_lite3_20230714", aspectRatio: "9:16" }
 );
 ```
 
-## Transparent Background Videos (WebM)
+### Python
 
-Use WebM **only when you need transparency** - i.e., when the avatar should be overlaid on other video content and you need to see through to what's behind.
+```python
+def generate_avatar_video(
+    script: str,
+    avatar_id: str | None = None,
+    resolution: str = "1080p",
+    aspect_ratio: str = "16:9",
+) -> dict:
+    headers = {"X-Api-Key": os.environ["HEYGEN_API_KEY"]}
 
-**Don't need WebM for:**
-- Avatar with motion graphics/text overlaid ON TOP of avatar
-- Picture-in-picture with solid background
-- Standard presenter videos
+    # 1. List avatar looks if no specific one provided
+    if not avatar_id:
+        print("Listing available avatar looks...")
+        list_resp = requests.get(
+            "https://api.heygen.com/v3/avatars/looks",
+            headers=headers,
+        )
+        list_data = list_resp.json()
+        if not list_resp.ok:
+            err = list_data["error"]
+            raise Exception(f"{err['code']}: {err['message']}")
 
-**Do need WebM for:**
-- Avatar overlaid on screen recording
-- Avatar floating over video background
-- True alpha-channel compositing
+        if not list_data.get("data"):
+            raise Exception("No avatar looks available")
+        avatar_id = list_data["data"][0]["id"]
 
-### WebM Request Fields
+    # 2. Get avatar look details
+    print(f"Getting details for avatar look: {avatar_id}")
+    details_resp = requests.get(
+        f"https://api.heygen.com/v3/avatars/looks/{avatar_id}",
+        headers=headers,
+    )
+    details_data = details_resp.json()
+    if not details_resp.ok:
+        err = details_data["error"]
+        raise Exception(f"{err['code']}: {err['message']}")
 
-**Note:** The WebM endpoint (`/v1/video.webm`) uses a different structure than `/v2/video/generate`.
+    avatar = details_data["data"]
 
-| Field | Type | Req | Description |
-|-------|------|:---:|-------------|
-| `avatar_pose_id` | string | ✓ | Avatar pose ID (from avatar details) |
-| `avatar_style` | string | ✓ | `"normal"` or `"closeUp"` only (no circle) |
-| `input_text` | string | ✓* | Script text (*required if not using input_audio) |
-| `voice_id` | string | ✓* | Voice ID (*required with input_text) |
-| `input_audio` | string | ✓* | Audio URL (*required if not using input_text) |
-| `dimension` | object | | `{width, height}` (default: 1280x720) |
+    if not avatar.get("default_voice_id"):
+        raise Exception(f"Avatar {avatar['name']} has no default voice")
 
-**Either** (`input_text` + `voice_id`) **OR** `input_audio` must be provided, but not both.
+    voice_id = avatar["default_voice_id"]
+    print(f"Using avatar: {avatar['name']} with default voice: {voice_id}")
 
-### curl
+    # 3. Generate video
+    video_id = generate_video({
+        "type": "avatar",
+        "avatar_id": avatar_id,
+        "script": script,
+        "voice_id": voice_id,
+        "resolution": resolution,
+        "aspect_ratio": aspect_ratio,
+        "background": {
+            "type": "color",
+            "value": "#1a1a2e",
+        },
+    })
 
-```bash
-curl -X POST "https://api.heygen.com/v1/video.webm" \
-  -H "X-Api-Key: $HEYGEN_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "avatar_pose_id": "josh_lite3_20230714",
-    "avatar_style": "normal",
-    "input_text": "Hello! This video has a transparent background.",
-    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
-    "dimension": {
-      "width": 1920,
-      "height": 1080
-    }
-  }'
+    print(f"Video ID: {video_id}")
+
+    # 4. Wait for completion (20 minute timeout)
+    print("Waiting for video generation (typically 5-15 minutes)...")
+    max_attempts = 120
+    poll_interval = 10
+
+    for i in range(max_attempts):
+        resp = requests.get(
+            f"https://api.heygen.com/v3/videos/{video_id}",
+            headers=headers,
+        )
+        data = resp.json()
+        if not resp.ok:
+            err = data["error"]
+            raise Exception(f"{err['code']}: {err['message']}")
+
+        status = data["data"]["status"]
+        print(f"  [{i * poll_interval}s] {status}")
+
+        if status == "completed":
+            return {
+                "video_id": video_id,
+                "video_url": data["data"]["video_url"],
+                "duration": data["data"]["duration"],
+                "avatar_id": avatar_id,
+                "voice_id": voice_id,
+                "avatar_name": avatar["name"],
+            }
+        elif status == "failed":
+            raise Exception(
+                data["data"].get("failure_message", "Video generation failed")
+            )
+
+        time.sleep(poll_interval)
+
+    raise Exception("Video generation timed out after 20 minutes")
+
+
+# Usage
+result = generate_avatar_video("Hello! Welcome to our product demonstration.")
+print(f"Video ready: {result['video_url']}")
 ```
 
-### TypeScript
+## Multi-Scene Note
 
-```typescript
-interface WebMVideoRequest {
-  avatar_pose_id: string;                      // Required
-  avatar_style: "normal" | "closeUp";          // Required (no circle support)
-  input_text?: string;                         // Required if not using input_audio
-  voice_id?: string;                           // Required with input_text
-  input_audio?: string;                        // Required if not using input_text
-  dimension?: { width: number; height: number };
-}
-
-async function generateTransparentVideo(
-  script: string,
-  avatarPoseId: string,
-  voiceId: string
-): Promise<string> {
-  const response = await fetch("https://api.heygen.com/v1/video.webm", {
-    method: "POST",
-    headers: {
-      "X-Api-Key": process.env.HEYGEN_API_KEY!,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      avatar_pose_id: avatarPoseId,            // Required
-      avatar_style: "normal",                  // Required: "normal" or "closeUp"
-      input_text: script,                      // Required (with voice_id)
-      voice_id: voiceId,                       // Required (with input_text)
-      dimension: { width: 1920, height: 1080 },
-    }),
-  });
-
-  const { data } = await response.json();
-  return data.video_id;
-}
-```
-
-### When to Use WebM vs MP4
-
-| Scenario | Format | Why |
-|----------|--------|-----|
-| Avatar with overlays on top | **MP4** | Overlays go on top, don't need transparency |
-| Standard presenter | **MP4** | Simpler, more compatible |
-| Loom-style (avatar over screen recording) | **WebM** + `normal`/`closeUp` | Need transparency, crop to circle in post |
-| Avatar floating over video content | **WebM** | Need to see content behind avatar |
-
-**Note:** WebM only supports `normal` and `closeUp` styles. Circle style is not supported for WebM - apply circular masking in your video editor/Remotion instead.
-
-### WebM Example: Loom-Style (Avatar Over Screen Recording)
-
-Generate with `normal` or `closeUp` style (circle not supported for WebM):
-
-```typescript
-// Generate avatar with transparent background
-const videoId = await fetch("https://api.heygen.com/v1/video.webm", {
-  method: "POST",
-  headers: { "X-Api-Key": apiKey, "Content-Type": "application/json" },
-  body: JSON.stringify({
-    avatar_pose_id: avatarPoseId,              // Required
-    avatar_style: "closeUp",                   // Required: "normal" or "closeUp" only
-    input_text: script,                        // Required (with voice_id)
-    voice_id: voiceId,                         // Required (with input_text)
-    dimension: { width: 1920, height: 1080 },
-  }),
-}).then(r => r.json()).then(d => d.data.video_id);
-```
-
-Apply circular masking in Remotion:
-
-```tsx
-import { Video, AbsoluteFill } from "remotion";
-
-export const LoomStyleVideo: React.FC<{
-  screenRecordingUrl: string;
-  avatarWebmUrl: string;
-}> = ({ screenRecordingUrl, avatarWebmUrl }) => {
-  return (
-    <AbsoluteFill>
-      {/* Screen recording as base layer */}
-      <Video src={screenRecordingUrl} style={{ width: "100%", height: "100%" }} />
-
-      {/* Avatar with circular mask applied in CSS */}
-      <Video
-        src={avatarWebmUrl}
-        style={{
-          position: "absolute",
-          bottom: 20,
-          left: 20,
-          width: 150,
-          height: 150,
-          borderRadius: "50%", // Circular mask
-          overflow: "hidden",
-          objectFit: "cover",
-        }}
-      />
-    </AbsoluteFill>
-  );
-};
-```
-
-### Note on Status Polling
-
-WebM videos use the same status endpoint as MP4:
-
-```typescript
-// Same polling as regular videos
-const status = await getVideoStatus(videoId);
-// status.video_url will be a .webm file
-```
+The v3 API creates **one video per request** (single scene). For multi-scene workflows, generate multiple videos and concatenate them in post-production using tools like ffmpeg, Remotion, or a video editor.
 
 ## Best Practices
 
-1. **Preview avatars before generating** - Download `preview_image_url` so user can see what the avatar looks like before committing to a video (see [avatars.md](avatars.md))
-2. **Use avatar's default voice** - Most avatars have a `default_voice_id` that's pre-matched for natural results (see [avatars.md](avatars.md))
-2. **Fallback: match gender manually** - If no default voice, ensure avatar and voice genders match (see [voices.md](voices.md))
-3. **Validate inputs** - Check avatar and voice IDs before generating
-4. **Use test mode** - Test configurations without consuming credits
+1. **Preview avatars before generating** - Download `preview_image_url` so the user can see what the avatar looks like before committing to a video (see [avatars.md](avatars.md))
+2. **Use the avatar's default voice** - Most avatars have a `default_voice_id` that is pre-matched for natural results (see [avatars.md](avatars.md))
+3. **Fallback: match gender manually** - If no default voice, ensure avatar and voice genders match (see [voices.md](voices.md))
+4. **Validate inputs** - Check avatar and voice IDs before generating
 5. **Set generous timeouts** - Use 15-20 minutes; generation often takes 10-15 min, sometimes longer
-6. **Consider async patterns** - For long videos, save video_id and check status later (see [video-status.md](video-status.md))
-7. **Handle errors gracefully** - Implement proper error handling
+6. **Consider async patterns** - For long videos, save `video_id` and check status later (see [video-status.md](video-status.md))
+7. **Handle errors gracefully** - Check `response.ok` and parse the structured `error` object
 8. **Monitor progress** - Implement polling with progress feedback
 9. **Optimize scripts** - Keep scripts concise and natural
-10. **Consider dimensions** - Match dimensions to your use case (see [dimensions.md](dimensions.md))
+10. **Match resolution to use case** - Use `"9:16"` for mobile/social, `"16:9"` for presentations and web

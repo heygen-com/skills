@@ -309,13 +309,21 @@ async function createVideoWithCustomBackground(
 
   // 3. Generate video
   console.log("Generating video...");
-  const response = await fetch("https://api.heygen.com/v2/video/generate", {
+  const response = await fetch("https://api.heygen.com/v3/videos", {
     method: "POST",
     headers: {
       "X-Api-Key": process.env.HEYGEN_API_KEY!,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(config),
+    body: JSON.stringify({
+      type: "avatar" as const,
+      avatar_id: avatarId,
+      script: script,
+      voice_id: voiceId,
+      background: { type: "image", asset_id: bgAssetId },
+      resolution: "1080p",
+      aspect_ratio: "16:9",
+    }),
   });
 
   const { data } = await response.json();
