@@ -15,6 +15,11 @@ One install. Two skills. Full pipeline from identity to video.
 
 **Required:** `HEYGEN_API_KEY` env var.
 
+**Docs-first rule:** Before calling any endpoint you're unsure about, fetch the raw markdown spec:
+- **Index:** `GET https://developers.heygen.com/llms.txt` — full sitemap of every doc page
+- **Any page:** Append `.md` to the URL (e.g. `https://developers.heygen.com/docs/video-agent.md`) for clean markdown
+- Read the spec, THEN build your request. Never guess field names.
+
 ## What's Inside
 
 ### avatar-designer/

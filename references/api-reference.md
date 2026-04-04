@@ -2,6 +2,15 @@
 
 All endpoints use base URL `https://api.heygen.com` with header `X-Api-Key: $HEYGEN_API_KEY`.
 
+## Live Documentation
+
+Canonical docs with exact schemas, curl examples, and field descriptions:
+- **Full index:** https://developers.heygen.com/llms.txt
+- **Any page as markdown:** append `.md` to URL (e.g. `https://developers.heygen.com/docs/video-agent.md`)
+- **API reference pages:** `https://developers.heygen.com/reference/<slug>.md`
+
+When in doubt about a field name or type, fetch the `.md` page before guessing.
+
 ## Endpoints
 
 | Action | Method | Endpoint |

@@ -18,7 +18,10 @@ Extract:
 Fetch the preview image and check pixel dimensions (width × height).
 - width > height → landscape avatar
 - height > width → portrait avatar
+- width == height → **square avatar** (1:1) → ALWAYS needs framing correction
 - Fetch fails or no preview → assume portrait (safer default)
+
+**Square avatars are common** (profile photos, AI-generated character art, etc.). HeyGen only supports 16:9 and 9:16 video output — there is no 1:1 option. A square avatar in either orientation will produce black bars/letterboxing unless generative fill is applied.
 
 ## Step 3: Determine if background exists
 
@@ -69,6 +72,45 @@ Do NOT use the original landscape image uncropped. Do NOT add letterboxing.
 Do NOT leave transparent or missing background areas.
 ```
 
+### D) Square avatar → Landscape video
+
+```
+FRAMING NOTE: The selected avatar image is SQUARE (1:1) but this video is
+landscape (16:9). HeyGen does not support square video output — without
+correction, the video will have black bars on both sides. YOU MUST generate a
+new variant of the avatar image before using it. Use AI Image tool to:
+1. Generate a landscape (16:9) version of the presenter image
+2. Generative fill to extend the scene horizontally — add a HYPER PHOTO-REALISTIC
+   environment on both sides. Think real photography: actual office spaces, real
+   studios with visible equipment, genuine room interiors with natural imperfections.
+   NOT CGI. NOT stock photo. NOT 3D-rendered. Real-world photographic quality.
+3. Frame the presenter centered in the landscape canvas
+4. The background MUST look like a real photograph — correct lighting direction,
+   natural shadows, depth-of-field blur on background elements, realistic scale.
+   NOT a solid color, NOT transparent, NOT a gradient, NOT synthetic/CGI.
+Do NOT use the original square image uncropped. Do NOT add black bars or
+pillarboxing. Do NOT leave a transparent or missing background.
+```
+
+### E) Square avatar → Portrait video
+
+```
+FRAMING NOTE: The selected avatar image is SQUARE (1:1) but this video is
+portrait (9:16). HeyGen does not support square video output — without
+correction, the video will have black bars on top and bottom. YOU MUST generate
+a new variant of the presenter image before using it. Use AI Image tool to:
+1. Generate a portrait (9:16) version of the presenter image
+2. Generative fill to extend vertically — add HYPER PHOTO-REALISTIC environment
+   above and below the presenter (real ceiling, real floor, room depth with
+   natural imperfections). Think real photography, not CGI or stock imagery.
+3. Frame the presenter centered in the portrait canvas
+4. The background MUST look like a real photograph — correct lighting,
+   natural shadows, depth-of-field blur. NOT a solid color, NOT transparent,
+   NOT a gradient, NOT synthetic/CGI.
+Do NOT use the original square image uncropped. Do NOT add letterboxing.
+Do NOT leave transparent or missing background areas.
+```
+
 ### C) Missing background — studio_avatar only
 
 **Only for `studio_avatar` with transparent/solid/empty background. NOT for photo_avatar** (Video Agent handles photo_avatar environments during generation).
@@ -105,12 +147,16 @@ Corrections can stack. A portrait photo_avatar in a landscape video gets BOTH A 
 |---|---|---|---|
 | `video_avatar` | ✅ matched | ✅ Yes | None |
 | `video_avatar` | ❌ mismatched | ✅ Yes | Framing only (A or B) |
+| `video_avatar` | ◻ square | ✅ Yes | Framing only (D or E) |
 | `studio_avatar` | ✅ matched | ✅ Yes (check preview) | None |
 | `studio_avatar` | ✅ matched | ❌ No | Background (C) |
 | `studio_avatar` | ❌ mismatched | ✅ Yes | Framing only (A or B) |
 | `studio_avatar` | ❌ mismatched | ❌ No | Framing (A or B) + Background (C) |
+| `studio_avatar` | ◻ square | ✅ Yes | Framing only (D or E) |
+| `studio_avatar` | ◻ square | ❌ No | Framing (D or E) + Background (C) |
 | `photo_avatar` | ✅ matched | (n/a) | **None** — Video Agent handles avatar + environment together |
 | `photo_avatar` | ❌ mismatched | (n/a) | **Framing only (A or B)** — gen fill extends canvas |
+| `photo_avatar` | ◻ square | (n/a) | **Framing only (D or E)** — gen fill extends canvas |
 
 **How to check if studio_avatar has a background:** Fetch `preview_image_url`. If transparent/checkered, solid color, or cutout → "No background" → inject C.
 
@@ -119,5 +165,5 @@ Corrections can stack. A portrait photo_avatar in a landscape video gets BOTH A 
 ## Step 5: Log the correction
 
 Add to learning log entry:
-- `"aspect_correction"`: `"portrait_to_landscape"` | `"landscape_to_portrait"` | `"background_fill"` | `"both"` | `"none"`
+- `"aspect_correction"`: `"portrait_to_landscape"` | `"landscape_to_portrait"` | `"square_to_landscape"` | `"square_to_portrait"` | `"background_fill"` | `"both"` | `"none"`
 - `"avatar_type"`: the raw value from the API
