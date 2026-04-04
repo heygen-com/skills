@@ -1,19 +1,270 @@
 ---
 name: photo-avatars
-description: Creating avatars from photos (talking photos) for HeyGen
+description: Animating photos into high-quality videos using HeyGen's v3 API with Avatar IV technology
 ---
 
-# Photo Avatars (Talking Photos)
+# Photo Avatars
 
-Photo avatars allow you to animate a static photo and make it speak. This is useful for creating personalized video content from portraits, headshots, or any suitable image.
+Animate a static photo into a speaking video. Use `POST /v3/videos` with `"type": "image"` and a nested `image` field (AssetInput discriminated union: `{ "type": "url", "url": "..." }` or `{ "type": "asset_id", "asset_id": "..." }`) — this uses Avatar IV technology automatically for high-quality results, no avatar group creation needed.
 
-## Creating a Photo Avatar from an Uploaded Image
+## Direct Image-to-Video (v3 API)
 
-The workflow is: **Upload Image → Create Avatar Group → Use in Video**
+### Request Fields
 
-### Step 1: Upload the Image
+| Field | Type | Req | Description |
+|-------|------|:---:|-------------|
+| `type` | string | ✓ | Must be `"image"` |
+| `image` | AssetInput | ✓ | Image to animate. Either `{ "type": "url", "url": "..." }` for a public URL, or `{ "type": "asset_id", "asset_id": "..." }` for an uploaded asset. |
+| `script` | string | ✓ | Text for the avatar to speak |
+| `voice_id` | string | ✓ | Voice to use |
+| `motion_prompt` | string | | Natural-language prompt controlling body motion (photo avatars only) |
+| `expressiveness` | string | | `"high"`, `"medium"`, or `"low"` (photo avatars only, defaults to `"low"`) |
+| `aspect_ratio` | string | | `"16:9"` or `"9:16"` |
+| `resolution` | string | | `"1080p"` or `"720p"` |
+| `remove_background` | boolean | | Remove background from the photo |
 
-Upload a portrait photo using the asset upload endpoint. The response includes an `image_key` which you'll use in the next step.
+**AssetInput** is a discriminated union on the `type` field:
+- URL variant: `{ "type": "url", "url": "https://example.com/photo.jpg" }`
+- Asset ID variant: `{ "type": "asset_id", "asset_id": "uploaded_asset_id" }`
+
+### curl Example
+
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "image",
+    "image": { "type": "url", "url": "https://example.com/portrait.jpg" },
+    "script": "Hello! This is a high-quality photo avatar video.",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "aspect_ratio": "16:9",
+    "resolution": "1080p"
+  }'
+```
+
+Response:
+```json
+{
+  "error": null,
+  "data": {
+    "video_id": "abc123def456"
+  }
+}
+```
+
+### TypeScript Example
+
+```typescript
+type AssetInput =
+  | { type: "url"; url: string }
+  | { type: "asset_id"; asset_id: string };
+
+interface PhotoVideoRequest {
+  type: "image";
+  image: AssetInput;
+  script: string;
+  voice_id: string;
+  motion_prompt?: string;
+  expressiveness?: "high" | "medium" | "low";
+  aspect_ratio?: "16:9" | "9:16";
+  resolution?: "1080p" | "720p";
+  remove_background?: boolean;
+}
+
+interface VideoResponse {
+  error: string | null;
+  data: {
+    video_id: string;
+  };
+}
+
+interface VideoStatusResponse {
+  error: string | null;
+  data: {
+    video_id: string;
+    status: "pending" | "processing" | "completed" | "failed";
+    video_url?: string;
+    thumbnail_url?: string;
+    duration?: number;
+    error?: string;
+  };
+}
+
+async function createPhotoVideo(config: PhotoVideoRequest): Promise<string> {
+  const response = await fetch("https://api.heygen.com/v3/videos", {
+    method: "POST",
+    headers: {
+      "X-Api-Key": process.env.HEYGEN_API_KEY!,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(config),
+  });
+
+  const json: VideoResponse = await response.json();
+  if (json.error) {
+    throw new Error(json.error);
+  }
+
+  return json.data.video_id;
+}
+
+async function pollVideoStatus(videoId: string): Promise<string> {
+  for (let i = 0; i < 120; i++) {
+    const response = await fetch(
+      `https://api.heygen.com/v3/videos/${videoId}`,
+      { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
+    );
+
+    const json: VideoStatusResponse = await response.json();
+
+    if (json.data.status === "completed") {
+      return json.data.video_url!;
+    }
+    if (json.data.status === "failed") {
+      throw new Error(json.data.error ?? "Video generation failed");
+    }
+
+    await new Promise((r) => setTimeout(r, 5000));
+  }
+
+  throw new Error("Video generation timed out");
+}
+
+// Usage
+const videoId = await createPhotoVideo({
+  type: "image",
+  image: { type: "url", url: "https://example.com/portrait.jpg" },
+  script: "Hello! This is a high-quality photo avatar video.",
+  voice_id: "1bd001e7e50f421d891986aad5158bc8",
+  aspect_ratio: "16:9",
+  resolution: "1080p",
+});
+
+const videoUrl = await pollVideoStatus(videoId);
+console.log("Video ready:", videoUrl);
+```
+
+### Python Example
+
+```python
+import requests
+import os
+import time
+
+def create_photo_video(
+    script: str,
+    voice_id: str,
+    image_url: str | None = None,
+    image_asset_id: str | None = None,
+    motion_prompt: str | None = None,
+    expressiveness: str | None = None,
+    aspect_ratio: str = "16:9",
+    resolution: str = "1080p",
+    remove_background: bool = False,
+) -> str:
+    api_key = os.environ["HEYGEN_API_KEY"]
+
+    # Build the AssetInput discriminated union
+    if image_url:
+        image_input = {"type": "url", "url": image_url}
+    elif image_asset_id:
+        image_input = {"type": "asset_id", "asset_id": image_asset_id}
+    else:
+        raise ValueError("Provide either image_url or image_asset_id")
+
+    payload: dict = {
+        "type": "image",
+        "image": image_input,
+        "script": script,
+        "voice_id": voice_id,
+        "aspect_ratio": aspect_ratio,
+        "resolution": resolution,
+    }
+
+    if motion_prompt:
+        payload["motion_prompt"] = motion_prompt
+    if expressiveness:
+        payload["expressiveness"] = expressiveness
+    if remove_background:
+        payload["remove_background"] = True
+
+    resp = requests.post(
+        "https://api.heygen.com/v3/videos",
+        headers={
+            "X-Api-Key": api_key,
+            "Content-Type": "application/json",
+        },
+        json=payload,
+    )
+
+    data = resp.json()
+    if data.get("error"):
+        raise Exception(data["error"])
+
+    return data["data"]["video_id"]
+
+
+def poll_video_status(video_id: str) -> str:
+    api_key = os.environ["HEYGEN_API_KEY"]
+
+    for _ in range(120):
+        resp = requests.get(
+            f"https://api.heygen.com/v3/videos/{video_id}",
+            headers={"X-Api-Key": api_key},
+        )
+        data = resp.json()["data"]
+
+        if data["status"] == "completed":
+            return data["video_url"]
+        if data["status"] == "failed":
+            raise Exception(data.get("error", "Video generation failed"))
+
+        time.sleep(5)
+
+    raise Exception("Video generation timed out")
+
+
+# Usage
+video_id = create_photo_video(
+    image_url="https://example.com/portrait.jpg",
+    script="Hello! This is a high-quality photo avatar video.",
+    voice_id="1bd001e7e50f421d891986aad5158bc8",
+)
+video_url = poll_video_status(video_id)
+print(f"Video ready: {video_url}")
+```
+
+### Motion Prompts and Expressiveness
+
+Use `motion_prompt` and `expressiveness` to control how the photo avatar moves and emotes:
+
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "image",
+    "image": { "type": "url", "url": "https://example.com/portrait.jpg" },
+    "script": "Let me tell you about our exciting new product launch.",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "motion_prompt": "nodding head and smiling, gesturing with hands while speaking",
+    "expressiveness": "high",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+| Expressiveness | Description |
+|----------------|-------------|
+| `low` | Subtle, minimal movement (default) |
+| `medium` | Natural, moderate movement |
+| `high` | Energetic, pronounced movement |
+
+## Uploading Images
+
+If your image is not publicly accessible via URL, upload it first using the asset upload endpoint. Then use the returned asset ID with the `asset_id` variant of the `image` field.
+
+**Endpoint:** `POST https://upload.heygen.com/v1/asset`
 
 ```bash
 curl -X POST "https://upload.heygen.com/v1/asset" \
@@ -36,466 +287,29 @@ Response:
 }
 ```
 
-> **Important:** Save the `image_key` field (not the `id`). The `image_key` is the S3 path used to create the photo avatar.
+Then use the asset `id` in `POST /v3/videos`:
+
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "image",
+    "image": { "type": "asset_id", "asset_id": "741299e941764988b432ed3a6757878f" },
+    "script": "Hello from an uploaded photo!",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8"
+  }'
+```
 
 See [assets.md](assets.md) for full upload details.
 
-### Step 2: Create Photo Avatar Group
-
-Use the `image_key` from the upload response to create a photo avatar group. This processes the image and creates a usable photo avatar.
-
-**Endpoint:** `POST https://api.heygen.com/v2/photo_avatar/avatar_group/create`
-
-```bash
-curl -X POST "https://api.heygen.com/v2/photo_avatar/avatar_group/create" \
-  -H "X-Api-Key: $HEYGEN_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "image_key": "image/741299e941764988b432ed3a6757878f/original.jpg",
-    "name": "My Photo Avatar"
-  }'
-```
-
-| Field | Type | Req | Description |
-|-------|------|:---:|-------------|
-| `image_key` | string | ✓ | S3 image key from upload response |
-| `name` | string | ✓ | Display name for the avatar |
-| `generation_id` | string | | If using AI-generated photo (see below) |
-
-Response:
-```json
-{
-  "error": null,
-  "data": {
-    "id": "045c260bc0364727b2cbe50442c3a5bf",
-    "image_url": "https://files2.heygen.ai/...",
-    "created_at": 1771798135.777256,
-    "name": "My Photo Avatar",
-    "status": "pending",
-    "group_id": "045c260bc0364727b2cbe50442c3a5bf",
-    "is_motion": false,
-    "business_type": "uploaded"
-  }
-}
-```
-
-The `id` (same as `group_id`) is your `talking_photo_id` for video generation.
-
-### Step 3: Wait for Processing
-
-The photo avatar starts with `status: "pending"` and transitions to `"completed"` within seconds. Poll the status endpoint:
-
-**Endpoint:** `GET https://api.heygen.com/v2/photo_avatar/{id}`
-
-```bash
-curl "https://api.heygen.com/v2/photo_avatar/045c260bc0364727b2cbe50442c3a5bf" \
-  -H "X-Api-Key: $HEYGEN_API_KEY"
-```
-
-Wait until `status` is `"completed"` before using in video generation.
-
-### Step 4: Use in Video Generation
-
-Use the photo avatar `id` as `talking_photo_id`:
-
-```typescript
-const videoConfig = {
-  video_inputs: [
-    {
-      character: {
-        type: "talking_photo",
-        talking_photo_id: "045c260bc0364727b2cbe50442c3a5bf",
-      },
-      voice: {
-        type: "text",
-        input_text: "Hello! This is my photo avatar speaking.",
-        voice_id: "1bd001e7e50f421d891986aad5158bc8",
-      },
-    },
-  ],
-  dimension: { width: 1920, height: 1080 },
-};
-```
-
-## TypeScript: Complete Workflow
-
-```typescript
-import fs from "fs";
-import path from "path";
-
-interface AssetUploadResponse {
-  code: number;
-  data: {
-    id: string;
-    image_key: string;
-    url: string;
-  };
-}
-
-interface PhotoAvatarResponse {
-  error: string | null;
-  data: {
-    id: string;
-    group_id: string;
-    image_url: string;
-    name: string;
-    status: string;
-    is_motion: boolean;
-    business_type: string;
-  };
-}
-
-async function createPhotoAvatar(
-  imagePath: string,
-  name: string
-): Promise<string> {
-  // 1. Upload image
-  const resolvedPath = path.resolve(imagePath);
-  const fileBuffer = fs.readFileSync(resolvedPath);
-  const uploadResponse = await fetch("https://upload.heygen.com/v1/asset", {
-    method: "POST",
-    headers: {
-      "X-Api-Key": process.env.HEYGEN_API_KEY!,
-      "Content-Type": "image/jpeg",
-    },
-    body: fileBuffer,
-  });
-
-  const uploadJson: AssetUploadResponse = await uploadResponse.json();
-  if (uploadJson.code !== 100) {
-    throw new Error("Upload failed");
-  }
-
-  const imageKey = uploadJson.data.image_key;
-
-  // 2. Create avatar group
-  const createResponse = await fetch(
-    "https://api.heygen.com/v2/photo_avatar/avatar_group/create",
-    {
-      method: "POST",
-      headers: {
-        "X-Api-Key": process.env.HEYGEN_API_KEY!,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ image_key: imageKey, name }),
-    }
-  );
-
-  const createJson: PhotoAvatarResponse = await createResponse.json();
-  if (createJson.error) {
-    throw new Error(createJson.error);
-  }
-
-  const photoAvatarId = createJson.data.id;
-
-  // 3. Wait for processing
-  await waitForPhotoAvatar(photoAvatarId);
-
-  return photoAvatarId;
-}
-
-async function waitForPhotoAvatar(id: string): Promise<void> {
-  for (let i = 0; i < 30; i++) {
-    const response = await fetch(
-      `https://api.heygen.com/v2/photo_avatar/${id}`,
-      { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
-    );
-
-    const json: PhotoAvatarResponse = await response.json();
-
-    if (json.data.status === "completed") return;
-    if (json.data.status === "failed") {
-      throw new Error("Photo avatar processing failed");
-    }
-
-    await new Promise((r) => setTimeout(r, 2000));
-  }
-
-  throw new Error("Photo avatar processing timed out");
-}
-
-async function createVideoFromPhoto(
-  photoPath: string,
-  script: string,
-  voiceId: string
-): Promise<string> {
-  // 1. Create photo avatar
-  const talkingPhotoId = await createPhotoAvatar(photoPath, "Video Avatar");
-
-  // 2. Generate video
-  const response = await fetch("https://api.heygen.com/v2/video/generate", {
-    method: "POST",
-    headers: {
-      "X-Api-Key": process.env.HEYGEN_API_KEY!,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      video_inputs: [
-        {
-          character: {
-            type: "talking_photo",
-            talking_photo_id: talkingPhotoId,
-          },
-          voice: {
-            type: "text",
-            input_text: script,
-            voice_id: voiceId,
-          },
-        },
-      ],
-      dimension: { width: 1920, height: 1080 },
-    }),
-  });
-
-  const { data } = await response.json();
-  return data.video_id;
-}
-```
-
-## Python: Complete Workflow
-
-```python
-import requests
-import os
-import time
-
-def create_photo_avatar(image_path: str, name: str) -> str:
-    api_key = os.environ["HEYGEN_API_KEY"]
-
-    # 1. Upload image
-    with open(image_path, "rb") as f:
-        upload_resp = requests.post(
-            "https://upload.heygen.com/v1/asset",
-            headers={
-                "X-Api-Key": api_key,
-                "Content-Type": "image/jpeg",
-            },
-            data=f,
-        )
-
-    upload_data = upload_resp.json()
-    if upload_data.get("code") != 100:
-        raise Exception("Upload failed")
-
-    image_key = upload_data["data"]["image_key"]
-
-    # 2. Create avatar group
-    create_resp = requests.post(
-        "https://api.heygen.com/v2/photo_avatar/avatar_group/create",
-        headers={
-            "X-Api-Key": api_key,
-            "Content-Type": "application/json",
-        },
-        json={"image_key": image_key, "name": name},
-    )
-
-    create_data = create_resp.json()
-    if create_data.get("error"):
-        raise Exception(create_data["error"])
-
-    photo_avatar_id = create_data["data"]["id"]
-
-    # 3. Wait for processing
-    for _ in range(30):
-        status_resp = requests.get(
-            f"https://api.heygen.com/v2/photo_avatar/{photo_avatar_id}",
-            headers={"X-Api-Key": api_key},
-        )
-        status = status_resp.json()["data"]["status"]
-        if status == "completed":
-            return photo_avatar_id
-        if status == "failed":
-            raise Exception("Photo avatar processing failed")
-        time.sleep(2)
-
-    raise Exception("Photo avatar processing timed out")
-```
-
-## Listing Existing Talking Photos
-
-Retrieve all talking photos in your account:
-
-**Endpoint:** `GET https://api.heygen.com/v1/talking_photo.list`
-
-```bash
-curl "https://api.heygen.com/v1/talking_photo.list" \
-  -H "X-Api-Key: $HEYGEN_API_KEY"
-```
-
-Response:
-```json
-{
-  "code": 100,
-  "data": [
-    {
-      "id": "ef0ed70f72c6497793e5e36e434d2aea",
-      "image_url": "https://files2.heygen.ai/talking_photo/.../image.WEBP",
-      "circle_image": ""
-    }
-  ]
-}
-```
-
-Each `id` can be used as `talking_photo_id` in video generation.
-
-## Adding Photos to an Existing Group
-
-Add additional photo looks to an existing avatar group:
-
-**Endpoint:** `POST https://api.heygen.com/v2/photo_avatar/avatar_group/add`
-
-```typescript
-async function addPhotosToGroup(
-  groupId: string,
-  imageKeys: string[],
-  name: string
-): Promise<void> {
-  const response = await fetch(
-    "https://api.heygen.com/v2/photo_avatar/avatar_group/add",
-    {
-      method: "POST",
-      headers: {
-        "X-Api-Key": process.env.HEYGEN_API_KEY!,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        group_id: groupId,
-        image_keys: imageKeys,
-        name,
-      }),
-    }
-  );
-
-  const json = await response.json();
-  if (json.error) {
-    throw new Error(json.error);
-  }
-}
-```
-
-## Training a Photo Avatar Group
-
-Train the avatar group for improved animation quality:
-
-**Endpoint:** `POST https://api.heygen.com/v2/photo_avatar/train`
-
-```bash
-curl -X POST "https://api.heygen.com/v2/photo_avatar/train" \
-  -H "X-Api-Key: $HEYGEN_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"group_id": "045c260bc0364727b2cbe50442c3a5bf"}'
-```
-
-Check training status:
-
-**Endpoint:** `GET https://api.heygen.com/v2/photo_avatar/train/status/{group_id}`
-
-## Avatar IV Video Generation
-
-Avatar IV is HeyGen's latest photo avatar technology with improved quality and natural motion. It generates a video directly from an uploaded image, bypassing the avatar group creation step.
-
-**Endpoint:** `POST https://api.heygen.com/v2/video/av4/generate`
-
-```bash
-curl -X POST "https://api.heygen.com/v2/video/av4/generate" \
-  -H "X-Api-Key: $HEYGEN_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "image_key": "image/741299e941764988b432ed3a6757878f/original.jpg",
-    "script": "Hello! This is Avatar IV with enhanced quality.",
-    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
-    "video_orientation": "landscape",
-    "video_title": "My Avatar IV Video"
-  }'
-```
-
-| Field | Type | Req | Description |
-|-------|------|:---:|-------------|
-| `image_key` | string | ✓ | S3 image key from asset upload |
-| `script` | string | ✓ | Text for the avatar to speak |
-| `voice_id` | string | ✓ | Voice to use |
-| `video_orientation` | string | | `"portrait"`, `"landscape"`, or `"square"` |
-| `video_title` | string | | Title for the video |
-| `fit` | string | | `"cover"` or `"contain"` |
-| `custom_motion_prompt` | string | | Motion/expression description |
-| `enhance_custom_motion_prompt` | boolean | | Enhance the motion prompt with AI |
-
-### TypeScript
-
-```typescript
-interface AvatarIVRequest {
-  image_key: string;
-  script: string;
-  voice_id: string;
-  video_orientation?: "portrait" | "landscape" | "square";
-  video_title?: string;
-  fit?: "cover" | "contain";
-  custom_motion_prompt?: string;
-  enhance_custom_motion_prompt?: boolean;
-}
-
-interface AvatarIVResponse {
-  error: null | string;
-  data: {
-    video_id: string;
-  };
-}
-
-async function generateAvatarIVVideo(
-  config: AvatarIVRequest
-): Promise<string> {
-  const response = await fetch(
-    "https://api.heygen.com/v2/video/av4/generate",
-    {
-      method: "POST",
-      headers: {
-        "X-Api-Key": process.env.HEYGEN_API_KEY!,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(config),
-    }
-  );
-
-  const json: AvatarIVResponse = await response.json();
-
-  if (json.error) {
-    throw new Error(json.error);
-  }
-
-  return json.data.video_id;
-}
-```
-
-### Avatar IV Options
-
-| Orientation | Dimensions | Use Case |
-|-------------|------------|----------|
-| `portrait` | 720x1280 | TikTok, Stories |
-| `landscape` | 1280x720 | YouTube, Web |
-| `square` | 720x720 | Instagram Feed |
-
-| Fit | Description |
-|-----|-------------|
-| `cover` | Fill the frame, may crop edges |
-| `contain` | Fit entire image, may show background |
-
-### Custom Motion Prompts
-
-```typescript
-const videoId = await generateAvatarIVVideo({
-  image_key: "image/.../original.jpg",
-  script: "Let me tell you about our product.",
-  voice_id: "1bd001e7e50f421d891986aad5158bc8",
-  custom_motion_prompt: "nodding head and smiling",
-  enhance_custom_motion_prompt: true,
-});
-```
-
-## Generating AI Photo Avatars
+## AI-Generated Photo Avatars
 
 Generate synthetic photo avatars from text descriptions instead of uploading a photo.
 
 **Endpoint:** `POST https://api.heygen.com/v2/photo_avatar/photo/generate`
+
+> **Note:** This endpoint is still v2 (no v3 equivalent). After generating an image, use the resulting image URL in `POST /v3/videos` with `"type": "image"` and `"image": { "type": "url", "url": "..." }` for high-quality video generation.
 
 > **IMPORTANT: All 8 fields are REQUIRED.** The API will reject requests missing any field.
 > When a user asks to "generate an AI avatar of a professional man", you need to ask for or select values for ALL fields below.
@@ -569,114 +383,14 @@ The response includes multiple generated images to choose from:
 }
 ```
 
-### TypeScript
+### AI Photo to Video (Recommended Flow)
 
-```typescript
-interface GeneratePhotoAvatarRequest {
-  name: string;
-  age: "Young Adult" | "Early Middle Age" | "Late Middle Age" | "Senior" | "Unspecified";
-  gender: "Woman" | "Man" | "Unspecified";
-  ethnicity: "White" | "Black" | "Asian American" | "East Asian" | "South East Asian" | "South Asian" | "Middle Eastern" | "Pacific" | "Hispanic" | "Unspecified";
-  orientation: "square" | "horizontal" | "vertical";
-  pose: "half_body" | "close_up" | "full_body";
-  style: "Realistic" | "Pixar" | "Cinematic" | "Vintage" | "Noir" | "Cyberpunk" | "Unspecified";
-  appearance: string;
-}
-
-interface GeneratePhotoAvatarResponse {
-  error: string | null;
-  data: {
-    generation_id: string;
-  };
-}
-
-interface PhotoGenerationStatus {
-  error: string | null;
-  data: {
-    id: string;
-    status: "pending" | "processing" | "success" | "failed";
-    msg: string | null;
-    image_url_list?: string[];
-    image_key_list?: string[];
-  };
-}
-
-async function generatePhotoAvatar(
-  config: GeneratePhotoAvatarRequest
-): Promise<string> {
-  const response = await fetch(
-    "https://api.heygen.com/v2/photo_avatar/photo/generate",
-    {
-      method: "POST",
-      headers: {
-        "X-Api-Key": process.env.HEYGEN_API_KEY!,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(config),
-    }
-  );
-
-  const json: GeneratePhotoAvatarResponse = await response.json();
-
-  if (json.error) {
-    throw new Error(`Photo avatar generation failed: ${json.error}`);
-  }
-
-  return json.data.generation_id;
-}
-
-async function waitForPhotoGeneration(
-  generationId: string
-): Promise<string[]> {
-  for (let i = 0; i < 60; i++) {
-    const response = await fetch(
-      `https://api.heygen.com/v2/photo_avatar/generation/${generationId}`,
-      { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
-    );
-
-    const json: PhotoGenerationStatus = await response.json();
-
-    if (json.error) throw new Error(json.error);
-
-    if (json.data.status === "success") {
-      return json.data.image_key_list!;
-    }
-
-    if (json.data.status === "failed") {
-      throw new Error(json.data.msg ?? "Photo generation failed");
-    }
-
-    await new Promise((r) => setTimeout(r, 5000));
-  }
-
-  throw new Error("Photo generation timed out");
-}
-```
-
-### AI Photo → Avatar Group → Video
-
-Use a generated AI photo to create an avatar group, then generate a video:
+Generate an AI photo, then use the resulting image URL directly in `POST /v3/videos`:
 
 ```typescript
 // 1. Generate AI photo
-const generationId = await generatePhotoAvatar({
-  name: "Product Demo Host",
-  age: "Young Adult",
-  gender: "Woman",
-  ethnicity: "Unspecified",
-  orientation: "horizontal",
-  pose: "half_body",
-  style: "Realistic",
-  appearance: "Professional woman, navy blazer, friendly smile, soft lighting",
-});
-
-// 2. Wait for generation and pick first result
-const imageKeys = await waitForPhotoGeneration(generationId);
-const selectedImageKey = imageKeys[0];
-
-// 3. Create avatar group from the AI photo
-const createResponse = await fetch(
-  "https://api.heygen.com/v2/photo_avatar/avatar_group/create",
+const genResponse = await fetch(
+  "https://api.heygen.com/v2/photo_avatar/photo/generate",
   {
     method: "POST",
     headers: {
@@ -684,31 +398,62 @@ const createResponse = await fetch(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      image_key: selectedImageKey,
       name: "Product Demo Host",
-      generation_id: generationId,
+      age: "Young Adult",
+      gender: "Woman",
+      ethnicity: "Unspecified",
+      orientation: "horizontal",
+      pose: "half_body",
+      style: "Realistic",
+      appearance:
+        "Professional woman, navy blazer, friendly smile, soft lighting",
     }),
   }
 );
 
-const { data } = await createResponse.json();
-const talkingPhotoId = data.id;
+const { data: genData } = await genResponse.json();
+const generationId = genData.generation_id;
 
-// 4. Generate video (after status is "completed")
-const videoId = await generateVideo({
-  video_inputs: [{
-    character: {
-      type: "talking_photo",
-      talking_photo_id: talkingPhotoId,
-    },
-    voice: {
-      type: "text",
-      input_text: "Welcome to our product demo!",
-      voice_id: "1bd001e7e50f421d891986aad5158bc8",
-    },
-  }],
-  dimension: { width: 1920, height: 1080 },
+// 2. Poll until generation completes
+let imageUrl: string | undefined;
+for (let i = 0; i < 60; i++) {
+  const statusResp = await fetch(
+    `https://api.heygen.com/v2/photo_avatar/generation/${generationId}`,
+    { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
+  );
+  const statusJson = await statusResp.json();
+
+  if (statusJson.data.status === "success") {
+    imageUrl = statusJson.data.image_url_list[0];
+    break;
+  }
+  if (statusJson.data.status === "failed") {
+    throw new Error("Photo generation failed");
+  }
+  await new Promise((r) => setTimeout(r, 5000));
+}
+
+if (!imageUrl) throw new Error("Photo generation timed out");
+
+// 3. Create video using v3 API with the generated image URL
+const videoResp = await fetch("https://api.heygen.com/v3/videos", {
+  method: "POST",
+  headers: {
+    "X-Api-Key": process.env.HEYGEN_API_KEY!,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    type: "image" as const,
+    image: { type: "url" as const, url: imageUrl },
+    script: "Welcome to our product demo!",
+    voice_id: "1bd001e7e50f421d891986aad5158bc8",
+    aspect_ratio: "16:9",
+    resolution: "1080p",
+  }),
 });
+
+const { data: videoData } = await videoResp.json();
+console.log("Video ID:", videoData.video_id);
 ```
 
 ### Pre-Generation Checklist
@@ -741,6 +486,99 @@ The `appearance` field is a text prompt - be descriptive:
 - Conflicting attributes
 - Requesting specific real people
 
+## Legacy: Creating Photo Avatar Groups
+
+> **Note:** This is the legacy workflow. For most use cases, prefer the direct `"type": "image"` approach with `POST /v3/videos` described above. The avatar group workflow is more complex and does not produce better results.
+
+The legacy workflow is: **Upload Image -> Create Avatar Group -> Use in Video**
+
+### Step 1: Upload the Image
+
+Upload a portrait photo using the asset upload endpoint (see [Uploading Images](#uploading-images) above).
+
+### Step 2: Create Photo Avatar Group
+
+Use the `image_key` from the upload response to create a photo avatar group.
+
+**Endpoint:** `POST https://api.heygen.com/v2/photo_avatar/avatar_group/create`
+
+```bash
+curl -X POST "https://api.heygen.com/v2/photo_avatar/avatar_group/create" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "image_key": "image/741299e941764988b432ed3a6757878f/original.jpg",
+    "name": "My Photo Avatar"
+  }'
+```
+
+| Field | Type | Req | Description |
+|-------|------|:---:|-------------|
+| `image_key` | string | ✓ | S3 image key from upload response |
+| `name` | string | ✓ | Display name for the avatar |
+| `generation_id` | string | | If using AI-generated photo |
+
+Response:
+```json
+{
+  "error": null,
+  "data": {
+    "id": "045c260bc0364727b2cbe50442c3a5bf",
+    "image_url": "https://files2.heygen.ai/...",
+    "created_at": 1771798135.777256,
+    "name": "My Photo Avatar",
+    "status": "pending",
+    "group_id": "045c260bc0364727b2cbe50442c3a5bf",
+    "is_motion": false,
+    "business_type": "uploaded"
+  }
+}
+```
+
+### Step 3: Wait for Processing
+
+Poll `GET /v2/photo_avatar/{id}` until `status` is `"completed"`.
+
+### Step 4: Use in Video Generation
+
+Use the photo avatar look ID as `avatar_id` in `POST /v3/videos`:
+
+```bash
+curl -X POST "https://api.heygen.com/v3/videos" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "avatar",
+    "avatar_id": "045c260bc0364727b2cbe50442c3a5bf",
+    "script": "Hello! This is my photo avatar speaking.",
+    "voice_id": "1bd001e7e50f421d891986aad5158bc8",
+    "aspect_ratio": "16:9"
+  }'
+```
+
+### Adding Photos to an Existing Group
+
+**Endpoint:** `POST https://api.heygen.com/v2/photo_avatar/avatar_group/add`
+
+| Field | Type | Req | Description |
+|-------|------|:---:|-------------|
+| `group_id` | string | ✓ | Existing avatar group ID |
+| `image_keys` | string[] | ✓ | Array of S3 image keys |
+| `name` | string | ✓ | Name for the new looks |
+
+### Training a Photo Avatar Group
+
+**Endpoint:** `POST https://api.heygen.com/v2/photo_avatar/train`
+
+```bash
+curl -X POST "https://api.heygen.com/v2/photo_avatar/train" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"group_id": "045c260bc0364727b2cbe50442c3a5bf"}'
+```
+
+Check training status: `GET /v2/photo_avatar/train/status/{group_id}`
+
 ## Managing Photo Avatars
 
 ### Get Photo Avatar Details
@@ -748,7 +586,7 @@ The `appearance` field is a text prompt - be descriptive:
 **Endpoint:** `GET https://api.heygen.com/v2/photo_avatar/{id}`
 
 ```typescript
-async function getPhotoAvatar(id: string): Promise<PhotoAvatarResponse> {
+async function getPhotoAvatar(id: string): Promise<any> {
   const response = await fetch(
     `https://api.heygen.com/v2/photo_avatar/${id}`,
     { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
@@ -797,24 +635,6 @@ async function deletePhotoAvatarGroup(groupId: string): Promise<void> {
 }
 ```
 
-## API Reference
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `upload.heygen.com/v1/asset` | POST | Upload image (returns `image_key`) |
-| `/v2/photo_avatar/avatar_group/create` | POST | Create photo avatar from `image_key` |
-| `/v2/photo_avatar/avatar_group/add` | POST | Add photos to existing group |
-| `/v2/photo_avatar/train` | POST | Train avatar group |
-| `/v2/photo_avatar/train/status/{group_id}` | GET | Check training status |
-| `/v2/photo_avatar/{id}` | GET | Get photo avatar details/status |
-| `/v2/photo_avatar/{id}` | DELETE | Delete photo avatar |
-| `/v2/photo_avatar_group/{id}` | DELETE | Delete avatar group |
-| `/v2/photo_avatar/photo/generate` | POST | Generate AI photo from text |
-| `/v2/photo_avatar/generation/{id}` | GET | Check AI generation status |
-| `/v2/video/av4/generate` | POST | Avatar IV video from `image_key` |
-| `/v1/talking_photo.list` | GET | List all existing talking photos |
-| `/v2/video/generate` | POST | Generate video with `talking_photo_id` |
-
 ## Photo Requirements
 
 ### Technical Requirements
@@ -837,12 +657,30 @@ async function deletePhotoAvatarGroup(groupId: string): Promise<void> {
 
 ## Best Practices
 
-1. **Use high-quality photos** - Better input = better output
-2. **Front-facing portraits** - Work best for animation
-3. **Neutral expressions** - Allow for more natural animation
-4. **Use Avatar IV for best quality** - Latest generation technology
-5. **Train avatar groups** - Improves animation quality
-6. **Reuse photo avatar IDs** - Once created, use the same `talking_photo_id` across multiple videos
+1. **Use `POST /v3/videos` with `"type": "image"` for the best quality** - This is the recommended path and automatically uses Avatar IV technology
+2. **Use `"image": { "type": "asset_id", ... }` for private images** - Upload first via `POST upload.heygen.com/v1/asset`, then pass the asset ID in the `image` field
+3. **Use high-quality photos** - Better input = better output
+4. **Front-facing portraits work best** - Clear face visibility produces the most natural animation
+5. **Use `motion_prompt` for natural movement** - Describe the body language you want (e.g., "nodding and gesturing")
+6. **Start with `expressiveness: "low"`** - Increase to `"medium"` or `"high"` only if you want more energetic movement
+7. **Avoid the legacy avatar group workflow** - The direct `"type": "image"` approach is simpler and produces equivalent or better results
+
+## API Reference
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v3/videos` | POST | **Recommended** - Create video from photo with `"type": "image"` and nested `image` AssetInput |
+| `/v3/videos/{video_id}` | GET | Poll video generation status |
+| `upload.heygen.com/v1/asset` | POST | Upload image (returns asset `id` and `image_key`) |
+| `/v2/photo_avatar/photo/generate` | POST | Generate AI photo from text description |
+| `/v2/photo_avatar/generation/{id}` | GET | Check AI photo generation status |
+| `/v2/photo_avatar/{id}` | GET | Get photo avatar details/status |
+| `/v2/photo_avatar/{id}` | DELETE | Delete photo avatar |
+| `/v2/photo_avatar_group/{id}` | DELETE | Delete avatar group |
+| `/v2/photo_avatar/avatar_group/create` | POST | Legacy: Create photo avatar group from `image_key` |
+| `/v2/photo_avatar/avatar_group/add` | POST | Legacy: Add photos to existing group |
+| `/v2/photo_avatar/train` | POST | Legacy: Train avatar group |
+| `/v2/photo_avatar/train/status/{group_id}` | GET | Legacy: Check training status |
 
 ## Limitations
 

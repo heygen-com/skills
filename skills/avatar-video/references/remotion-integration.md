@@ -93,32 +93,23 @@ async function generateHeyGenVideo(
 ): Promise<string> {
   const dimension = DIMENSIONS[preset];
 
-  const response = await fetch("https://api.heygen.com/v2/video/generate", {
+  const response = await fetch("https://api.heygen.com/v3/videos", {
     method: "POST",
     headers: {
       "X-Api-Key": process.env.HEYGEN_API_KEY!,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      video_inputs: [
-        {
-          character: {
-            type: "avatar",
-            avatar_id: avatarId,
-            avatar_style: "normal",
-          },
-          voice: {
-            type: "text",
-            input_text: script,
-            voice_id: voiceId,
-          },
-          background: {
-            type: "color",
-            value: "#00FF00", // Green screen for compositing
-          },
-        },
-      ],
-      dimension,
+      type: "avatar" as const,
+      avatar_id: avatarId,
+      script,
+      voice_id: voiceId,
+      background: {
+        type: "color",
+        value: "#00FF00", // Green screen for compositing
+      },
+      resolution: preset === "landscape_1080p" ? "1080p" : "720p",
+      aspect_ratio: preset.startsWith("portrait") ? "9:16" : "16:9",
     }),
   });
 
@@ -176,30 +167,23 @@ async function generateAvatarForRemotion(
 ): Promise<string> {
   const { style = "normal", backgroundColor = "#1a1a2e" } = options;
 
-  const response = await fetch("https://api.heygen.com/v2/video/generate", {
+  const response = await fetch("https://api.heygen.com/v3/videos", {
     method: "POST",
     headers: {
       "X-Api-Key": process.env.HEYGEN_API_KEY!,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      video_inputs: [{
-        character: {
-          type: "avatar",
-          avatar_id: avatarId,
-          avatar_style: style,
-        },
-        voice: {
-          type: "text",
-          input_text: script,
-          voice_id: voiceId,
-        },
-        background: {
-          type: "color",
-          value: backgroundColor,
-        },
-      }],
-      dimension: { width: 1920, height: 1080 },
+      type: "avatar" as const,
+      avatar_id: avatarId,
+      script,
+      voice_id: voiceId,
+      background: {
+        type: "color",
+        value: backgroundColor,
+      },
+      resolution: "1080p",
+      aspect_ratio: "16:9",
     }),
   });
 
@@ -213,20 +197,21 @@ async function generateAvatarForRemotion(
 Only use when you need to see content *behind* the avatar (e.g., avatar overlaid on screen recording):
 
 ```typescript
-// Use /v1/video.webm endpoint for transparent background
-// Note: Different structure than /v2/video/generate
-const response = await fetch("https://api.heygen.com/v1/video.webm", {
+// Use POST /v3/videos with remove_background: true for transparent background
+const response = await fetch("https://api.heygen.com/v3/videos", {
   method: "POST",
   headers: {
     "X-Api-Key": process.env.HEYGEN_API_KEY!,
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    avatar_pose_id: avatarPoseId,  // Required: avatar pose ID
-    avatar_style: "normal",        // Required: "normal" or "closeUp" only
-    input_text: script,            // Required (with voice_id)
-    voice_id: voiceId,             // Required (with input_text)
-    dimension: { width: 1920, height: 1080 },
+    type: "avatar" as const,
+    avatar_id: avatarId,
+    script,
+    voice_id: voiceId,
+    remove_background: true,       // Transparent background
+    resolution: "1080p",
+    aspect_ratio: "16:9",
   }),
 });
 ```
