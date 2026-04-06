@@ -168,6 +168,8 @@ Typical wait: 30-90 seconds for photo avatars, 1-3 minutes for prompt avatars. T
 
 **Do NOT proceed to video generation or voice selection until this check passes.** Videos submitted with an unready avatar will fail.
 
+> **⛔ HARD GATE: You MUST have a non-null `preview_image_url` from the polling response saved in a variable before continuing. If you do not have this URL, STOP. Do not proceed to Phase 2b, Phase 3, or any later phase.**
+
 ### Phase 2b — Look Approval
 
 Once the avatar is ready (preview URL available), show it to the user for approval:
@@ -189,6 +191,8 @@ For photo avatars, usually 1 iteration is enough. If the user wants a different 
 
 **Do NOT skip this step.** Never proceed to voice selection without user approval of the look.
 
+> **⛔ HARD GATE: You MUST have received an explicit approval response ("looks good", "yes", "approve", thumbs up, or equivalent) from the user before continuing. If the user has not approved, STOP. Do not proceed to Phase 3 or any later phase. Silence is not approval.**
+
 ---
 
 Map identity fields to HeyGen enums for the prompt:
@@ -206,6 +210,12 @@ Show the prompt to the user before creating:
 
 ### Phase 3 — Voice Selection
 
+> **⛔ PRECONDITION:** Before starting this phase, verify:
+> 1. You have a `preview_image_url` from polling (Phase 2 complete)
+> 2. The user explicitly approved the look (Phase 2b complete)
+>
+> If either is missing, GO BACK. Do not proceed.
+
 Match a voice from HeyGen's library:
 
 ```
@@ -219,6 +229,13 @@ GET https://api.heygen.com/v3/voices
 5. User picks one
 
 ### Phase 4 — Save to AVATAR File
+
+> **⛔ PRECONDITION:** Before saving, verify you have:
+> 1. A confirmed-ready `avatar_item.id` (preview_image_url was non-null)
+> 2. User approval of the look
+> 3. User-selected voice_id from Phase 3
+>
+> If any are missing, GO BACK to the incomplete phase.
 
 Update the HeyGen section of `AVATAR-<NAME>.md`:
 

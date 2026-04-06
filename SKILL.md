@@ -60,7 +60,7 @@ Check for any `AVATAR-*.md` files in the workspace root.
   
   After avatar-designer completes and writes the AVATAR file, return here and continue to Phase 1 with the new avatar pre-loaded.
 
-- **Avatar readiness gate:** After loading an avatar (whether from an existing AVATAR file or freshly created), verify it's ready before using it in video generation. Call `GET /v3/avatars/looks?group_id=<group_id>` and confirm `preview_image_url` is non-null. If null, poll every 10s up to 5 min. Videos submitted with an unready avatar will fail.
+- **⛔ Avatar readiness gate (BLOCKING):** After loading an avatar (whether from an existing AVATAR file or freshly created), verify it's ready before using it in video generation. Call `GET /v3/avatars/looks?group_id=<group_id>` and confirm `preview_image_url` is non-null. If null, poll every 10s up to 5 min. **Do NOT proceed to Phase 1 until this check passes.** Videos submitted with an unready avatar WILL fail silently.
 
 - **Quick Shot exception:** If the user explicitly says "skip avatar" / "use stock" / "just generate", skip this phase and proceed without an avatar.
 
