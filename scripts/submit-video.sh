@@ -48,16 +48,13 @@ USAGE
   exit 1
 fi
 
-PAYLOAD_FILE="$1"
-BASE_URL="https://api.heygen.com"
+export PAYLOAD_FILE="$1"
+export BASE_URL="https://api.heygen.com"
 
 # All logic in Python for safe JSON handling
 python3 << 'PYEOF'
 import json, os, sys, urllib.request, urllib.error
 
-payload_file = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("PAYLOAD_FILE", "")
-
-# Use env var since heredoc doesn't get shell args
 payload_file = os.environ["PAYLOAD_FILE"]
 base_url = os.environ["BASE_URL"]
 api_key = os.environ["HEYGEN_API_KEY"]
