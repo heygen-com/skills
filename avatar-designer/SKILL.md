@@ -82,8 +82,19 @@ Determine the target identity:
 If the AVATAR file exists and has a HeyGen section filled in:
 > "You already have an avatar set up. Want to add a new look, update it, or start fresh?"
 
-If the AVATAR file exists but HeyGen section is empty: proceed to Phase 2.
+If the AVATAR file exists but HeyGen section is empty: proceed to Reference Photo Nudge.
 If no AVATAR file exists: proceed to Phase 1.
+
+### Reference Photo Nudge (First-Time Only)
+
+Before generating anything, ask if they have a reference image. Photo avatars produce significantly better face consistency across videos than prompt-generated ones.
+
+> "Before I create your avatar — do you have a reference photo? A headshot or clear photo of the face gives way better results than generating from a text description. Drop it here if you have one, or say 'skip' and I'll generate from your identity description."
+
+This applies to ALL targets (agent, user, named character). For agents, check if a reference photo path already exists in the AVATAR file's Appearance section or in IDENTITY.md before asking.
+
+- **Photo provided** → upload via `POST /v3/assets`, then use Type B (photo) creation in Phase 2
+- **Skip** → use Type A (prompt) creation in Phase 2
 
 ### Phase 1 — Identity Extraction
 
@@ -92,9 +103,10 @@ If no AVATAR file exists: proceed to Phase 1.
 **For users/named characters:** Conversational onboarding. Ask naturally, not as a form:
 - "What do you look like? Age, hair, general vibe?"
 - "How would you describe your voice? Calm? Energetic? Any accent?"
-- "Any reference photo I can work from?"
 
 Write `AVATAR-<NAME>.md` with the Appearance and Voice sections filled in. Leave HeyGen section empty.
+
+Then proceed to the **Reference Photo Nudge** before Phase 2.
 
 ### Phase 2 — Avatar Creation
 
