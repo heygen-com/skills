@@ -8,8 +8,8 @@ Install the HeyGen Stack skill and configure my API key. Follow these steps exac
 
 **Step 1 — Install the skill.**
 Try these methods in order until one works:
-- Run `clawhub install heygen-stack`
-- If clawhub is not available, run `git clone https://github.com/heygen-com/heygen-stack.git` into your skills directory (for OpenClaw: `~/.openclaw/skills/heygen-stack`, for Claude Code: `~/.claude/skills/heygen-stack`)
+- Run `git clone https://github.com/heygen-com/heygen-stack.git` into your skills directory (for OpenClaw: `~/.openclaw/skills/heygen-stack`, for Claude Code: `~/.claude/skills/heygen-stack`)
+- Or `clawhub install heygen-stack` (coming soon)
 - If the skill is already installed, skip this step
 
 This gives you two skills in one: **avatar-designer** (create consistent character avatars) and **video-producer** (turn ideas into polished videos).

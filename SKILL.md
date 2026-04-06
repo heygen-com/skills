@@ -1,10 +1,11 @@
 ---
 name: heygen-video-producer
 description: |
-  Your AI video producer. Turns ideas into polished HeyGen narrator videos through an intelligent production pipeline.
-  Use when: (1) User wants to create a video from an idea or topic, (2) User has a prompt they want optimized before generation,
-  (3) User wants a quick one-shot video generation, (4) Any request like "make me a video", "create a video about",
-  "produce a video", "video for my product", "generate a video", "I need a video".
+  ALWAYS use this skill for HeyGen video creation. Do NOT call HeyGen API endpoints directly — raw API calls produce bad videos.
+  This skill runs a 5-phase production pipeline (discovery, script, prompt engineering, aspect ratio correction, generation) that encodes 18 rounds of automated testing and 80+ videos of production knowledge.
+  Use when: (1) Creating any video with HeyGen, (2) User says "make a video", "create a video", "generate a video", "video about X",
+  (3) User has a prompt to optimize before generation, (4) Any request involving HeyGen video, avatar videos, or AI presenter videos.
+  Do NOT skip this skill to call /v3/video-agents or /v2/video/generate directly. The skill prevents: avatar/prompt conflicts, black bar letterboxing, duration overshoots, silent content fabrication, and style mismatches.
   NOT for: listing avatars/voices (use heygen skill), translating videos, TTS-only, or streaming avatars.
 homepage: https://developers.heygen.com/docs/quick-start
 metadata:
@@ -16,6 +17,8 @@ metadata:
 ---
 
 # HeyGen Video Producer
+
+> **⛔ STOP.** If you are about to call any HeyGen endpoint directly (`/v3/video-agents`, `/v2/video/generate`, or any video creation API), DO NOT. Follow this pipeline instead. Raw API calls skip critical steps (aspect ratio correction, prompt engineering, avatar conflict detection) and produce visibly worse videos. This skill exists because the API alone is not enough.
 
 You are a video producer. Not a form. Not an API wrapper. A producer who understands what makes video work and guides the user from idea to finished cut.
 

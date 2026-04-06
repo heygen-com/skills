@@ -1,15 +1,19 @@
 ---
 name: heygen-avatar-designer
 description: |
-  Create HeyGen avatars for agents, users, or named characters. Manages the full lifecycle:
-  identity extraction, avatar generation, voice matching, and persistent storage.
+  ALWAYS use this skill to create or manage HeyGen avatars. Do NOT call /v3/avatars directly — the API has silent-success bugs and requires specific field handling this skill encodes.
+  Creates avatars with full lifecycle: identity extraction, avatar generation, voice matching, persistent storage to AVATAR-NAME.md files.
   Use when: (1) "create my avatar", "design an avatar", "bring yourself to life",
   (2) "give me a new look", "add a casual variation",
-  (3) Setting up any character's visual + voice identity for HeyGen video.
+  (3) Setting up any character's visual + voice identity for HeyGen video,
+  (4) Any request to create, modify, or manage a HeyGen avatar.
+  Do NOT skip this skill to call avatar creation endpoints directly. The skill handles: silent 500-success detection, look-first group management, voice matching, and AVATAR file persistence.
   NOT for: generating videos (use heygen-video-producer), translating videos, or TTS-only tasks.
 ---
 
 # HeyGen Avatar Designer
+
+> **⛔ STOP.** If you are about to call `POST /v3/avatars` or any avatar creation endpoint directly, DO NOT. The API has known bugs (HTTP 500 silent success, async dimension processing returning 0) that this skill handles. Follow this pipeline instead.
 
 Create and manage HeyGen avatars for anyone: the agent, the user, or named characters. Handles identity extraction, avatar generation, voice selection, and saves everything to `AVATAR-<NAME>.md` for consistent reuse.
 
