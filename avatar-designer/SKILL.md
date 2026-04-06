@@ -148,6 +148,22 @@ Body: file=@<photo_path>
 
 **Response:** Returns `avatar_item.id` (look ID) and `avatar_item.group_id` (character identity).
 
+**⚠️ Avatar creation is async.** The API returns success immediately, but the avatar is NOT ready for video generation yet. You MUST poll before proceeding:
+
+```bash
+# Poll until preview_image_url appears (avatar is ready)
+curl -s "https://api.heygen.com/v3/avatars/looks?group_id=<group_id>" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+```
+
+Check every **10 seconds**. The avatar is ready when:
+- `preview_image_url` is non-null in the look response
+- `image_width` and `image_height` are non-zero
+
+Typical wait: 30-90 seconds for photo avatars, 1-3 minutes for prompt avatars. Timeout after 5 minutes and tell the user to check the HeyGen dashboard.
+
+**Do NOT proceed to video generation or voice selection until this check passes.** Videos submitted with an unready avatar will fail.
+
 Map identity fields to HeyGen enums for the prompt:
 - **age**: Young Adult | Early Middle Age | Late Middle Age | Senior | Unspecified
 - **gender**: Man | Woman | Unspecified
