@@ -209,7 +209,7 @@ YouTube/web/LinkedIn → `"landscape"` | TikTok/Reels/Shorts → `"portrait"` | 
 ### Steps
 
 1. **Fetch avatar look metadata:** `GET /v3/avatars/looks/<avatar_id>` → extract `avatar_type` and `preview_image_url`
-2. **Determine orientation:** Fetch preview image dimensions. width > height = landscape, height > width = portrait, width == height = square. Fetch fails = assume portrait.
+2. **Determine orientation AND aspect ratio:** Fetch preview image dimensions. width > height = landscape, height > width = portrait, width == height = square. Fetch fails = assume portrait. **Then compute the ratio** (larger/smaller). HeyGen requires ~1.78 (16:9). If ratio is NOT between 1.73–1.83, the avatar needs a framing correction even if orientation matches (e.g., 4:3 portrait avatar in 9:16 video = black bars).
 3. **Detect avatar visual style:** Classify as photorealistic, animated, 3D rendered, or stylized. Determines fill language.
 4. **Determine background:** `photo_avatar` → no standalone bg correction needed. `studio_avatar` → check if transparent/solid/empty. `video_avatar` → always has background.
 5. **Build correction note(s)** from the matrix. Append to prompt silently.
@@ -219,18 +219,17 @@ YouTube/web/LinkedIn → `"landscape"` | TikTok/Reels/Shorts → `"portrait"` | 
 
 ### Correction Matrix
 
-| avatar_type | Orientation Match? | Has Background? | Corrections |
+| avatar_type | Orientation | Aspect Ratio | Corrections |
 |---|---|---|---|
-| `photo_avatar` | ✅ matched | (n/a) | None |
-| `photo_avatar` | ❌ mismatched | (n/a) | Framing correction |
-| `photo_avatar` | ◻ square | (n/a) | Framing correction (always) |
-| `studio_avatar` | ✅ matched | ✅ Yes | None |
-| `studio_avatar` | ✅ matched | ❌ No | Background correction |
-| `studio_avatar` | ❌ mismatched | ✅ Yes | Framing correction |
-| `studio_avatar` | ❌ mismatched | ❌ No | Framing + Background |
-| `studio_avatar` | ◻ square | ✅ Yes | Framing correction (always) |
-| `studio_avatar` | ◻ square | ❌ No | Framing + Background |
-| `video_avatar` | ✅ matched | ✅ Yes | None |
+| `photo_avatar` | ✅ same | ✅ ~16:9 | None |
+| `photo_avatar` | ✅ same | ❌ not 16:9 | Ratio fix (gen fill to 16:9 or 9:16) |
+| `photo_avatar` | ❌ different | any | Framing correction |
+| `photo_avatar` | ◻ square | n/a | Framing correction (always) |
+| `studio_avatar` | ✅ same | ✅ ~16:9 | None (if bg exists) / Background (if no bg) |
+| `studio_avatar` | ✅ same | ❌ not 16:9 | Ratio fix (+Background if no bg) |
+| `studio_avatar` | ❌ different | any | Framing (+Background if no bg) |
+| `studio_avatar` | ◻ square | n/a | Framing (+Background if no bg) |
+| `video_avatar` | ✅ same | ✅ ~16:9 | None |
 | `video_avatar` | ❌ mismatched | ✅ Yes | Framing correction |
 | `video_avatar` | ◻ square | ✅ Yes | Framing correction (always) |
 
