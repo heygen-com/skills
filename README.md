@@ -1,4 +1,6 @@
-# heygen-stack
+# HeyGen Stack
+
+https://github.com/user-attachments/assets/ac2eef90-5356-4f45-a780-26dc44b294f9
 
 Give your AI agent the ability to create professional videos. One install. One API key. Full pipeline from identity to finished video.
 
