@@ -278,20 +278,41 @@ Do NOT leave any transparent, solid-color, or gradient background.
 - **Full Producer**: User approved script. Proceed.
 - **Quick Shot**: Generate immediately.
 
-### API Call
+### API Call — USE THE WRAPPER SCRIPT
+
+**⛔ NEVER call `POST /v3/video-agents` directly via curl or urllib.** Always use the submission wrapper script. It enforces Phase 3.5 automatically — checking avatar dimensions and appending FRAMING NOTE when needed.
 
 📖 **Full request/response schemas, interactive sessions, webhooks → [../references/api-reference.md](../references/api-reference.md)**
 
+**Step 1: Write payload JSON file**
 ```bash
-curl -s -X POST "https://api.heygen.com/v3/video-agents" \
-  -H "X-Api-Key: $HEYGEN_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"prompt":"...","avatar_id":"...","voice_id":"...","style_id":"...","orientation":"landscape","files":[...]}'
+cat > /tmp/heygen-payload.json << 'EOF'
+{
+  "prompt": "<your constructed prompt from Phase 3>",
+  "avatar_id": "<from discovery>",
+  "voice_id": "<from discovery>",
+  "style_id": "<optional>",
+  "orientation": "landscape",
+  "files": []
+}
+EOF
 ```
 
-Response: `{"data": {"video_id": "...", "session_id": "..."}}`
+**Step 2: Submit via wrapper**
+```bash
+bash <skill_dir>/scripts/submit-video.sh /tmp/heygen-payload.json
+```
 
-**⚠️ Always capture `session_id`.** Session URL: `https://app.heygen.com/video-agent/{session_id}`. Cannot be recovered later.
+The script will:
+1. Fetch avatar dimensions from the API
+2. Detect orientation mismatches (including square avatars)
+3. Append the correct FRAMING NOTE to the prompt if needed
+4. Submit to `POST /v3/video-agents`
+5. Output JSON: `{"video_id":"...","session_id":"...","framing_applied":"none|square_to_landscape|..."}`
+
+**⚠️ Always capture `session_id` from the output.** Session URL: `https://app.heygen.com/video-agent/{session_id}`. Cannot be recovered later.
+
+**Why the wrapper exists:** Agents consistently bypass Phase 3.5 when calling the API directly. The wrapper makes framing correction impossible to skip — it runs automatically before every submission.
 
 ### Polling
 
