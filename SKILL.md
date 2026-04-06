@@ -1,11 +1,11 @@
 ---
 name: heygen-video-producer
 description: |
-  ALWAYS use this skill for HeyGen video creation. Do NOT call HeyGen API endpoints directly — raw API calls produce bad videos.
-  This skill runs a 5-phase production pipeline (discovery, script, prompt engineering, aspect ratio correction, generation) that encodes 18 rounds of automated testing and 80+ videos of production knowledge.
-  Use when: (1) Creating any video with HeyGen, (2) User says "make a video", "create a video", "generate a video", "video about X",
-  (3) User has a prompt to optimize before generation, (4) Any request involving HeyGen video, avatar videos, or AI presenter videos.
-  Do NOT skip this skill to call /v3/video-agents or /v2/video/generate directly. The skill prevents: avatar/prompt conflicts, black bar letterboxing, duration overshoots, silent content fabrication, and style mismatches.
+  Create narrator and presenter videos where an AI avatar speaks on camera.
+  Use when: the user wants someone presenting, explaining, hosting, pitching, or narrating on screen.
+  Handles avatar discovery, script writing, prompt engineering, aspect ratio correction, and generation.
+  Encodes 16 eval rounds and 80+ videos of production knowledge to prevent common failures.
+  NOT for: cinematic footage, b-roll, motion graphics, or clips without a speaker — use video_generate for those.
   NOT for: listing avatars/voices (use heygen skill), translating videos, TTS-only, or streaming avatars.
 homepage: https://developers.heygen.com/docs/quick-start
 metadata:
