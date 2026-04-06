@@ -266,6 +266,8 @@ YouTube/web/LinkedIn → `"landscape"` | TikTok/Reels/Shorts → `"portrait"` | 
 
 1. Download the avatar's `preview_image_url` to a local file
 2. **Use the AI Image tool** (e.g., `image_generate` with the avatar image as reference) to generative-fill and extend the canvas from {source} to {target} orientation
+   - **Output MUST be exactly 16:9 for landscape (e.g. 1792x1024) or 9:16 for portrait (e.g. 1024x1792).** No other ratios. HeyGen Video Agent only accepts 16:9 and 9:16. Any other ratio (3:2, 4:3, etc.) causes zoom/crop artifacts.
+   - Specify explicit `size` parameter: `1792x1024` for landscape, `1024x1792` for portrait
    - Detect avatar visual style first (see Avatar Visual Style Detection below)
    - Photorealistic avatar → photorealistic environment fill
    - Animated/illustrated avatar → matching illustrated environment fill
