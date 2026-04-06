@@ -67,6 +67,13 @@ Format:
 **Top sections** (Appearance, Voice) are portable natural language. Any platform can use them.
 **HeyGen section** is runtime config with API IDs. Skills read this to make API calls.
 
+## UX Rules
+
+1. **Be concise.** No video IDs, session IDs, or raw API responses in chat. The user sees the result, not the plumbing.
+2. **Polling is silent.** When polling for avatar readiness, do NOT send "Still processing..." updates. Poll silently. Only speak when: (a) the avatar is ready and you're showing the preview, or (b) it's been >2 minutes and you're giving a single "Taking longer than usual, still working on it" update.
+3. **One checkpoint per phase.** Show the result, ask for approval, wait. Don't bundle Phase 3 (voice) with Phase 2b (look approval) in the same message.
+4. **Show, don't dump.** When presenting the avatar preview, show the image and a 1-line summary ("Here's your avatar — portrait, realistic style"). Not a table of every parameter.
+
 ## Skill Announcement
 
 Start every invocation with:
