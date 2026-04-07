@@ -17,9 +17,25 @@ Two angles, one category:
 
 ## Quick Start
 
-Get your API key from [app.heygen.com/settings](https://app.heygen.com/settings/api?nav=API). Then copy and paste the following prompt to your agent:
+Get your API key from [app.heygen.com/settings](https://app.heygen.com/settings/api?nav=API).
 
-> Install the HeyGen Stack skill: `git clone https://github.com/heygen-com/heygen-stack.git` into your skills directory (OpenClaw: `~/.openclaw/skills/heygen-stack`, Claude Code: `~/.claude/skills/heygen-stack`). My HeyGen API key is `[HEYGEN_API_KEY]`. Save it to your persistent environment config and validate it works by calling `GET https://api.heygen.com/v3/user/me` with header `X-Api-Key`. Then use the heygen-identity skill to create an avatar of me from this photo: [PHOTO_URL]. Once the avatar is ready, make a 30-second video of me introducing myself, casual tone.
+**Option 1 — ClawHub (recommended):**
+```bash
+clawhub install heygen-stack
+```
+
+**Option 2 — Git clone:**
+```bash
+# OpenClaw
+git clone https://github.com/heygen-com/heygen-stack.git ~/.openclaw/workspace/skills/heygen-stack
+
+# Claude Code
+git clone https://github.com/heygen-com/heygen-stack.git ~/.claude/skills/heygen-stack
+```
+
+Then copy and paste the following prompt to your agent:
+
+> My HeyGen API key is `[HEYGEN_API_KEY]`. Save it to your persistent environment config and validate it works by calling `GET https://api.heygen.com/v3/user/me` with header `X-Api-Key`. Then use the heygen-identity skill to create an avatar of me from this photo: [PHOTO_URL]. Once the avatar is ready, make a 30-second video of me introducing myself, casual tone.
 
 ## What's Inside
 
@@ -78,12 +94,11 @@ Each skill works independently. You don't need an avatar to make a video (stock 
 
 ## Security & Scripts
 
-This skill includes two shell scripts in `scripts/`:
+This skill includes one shell script in `scripts/`:
 
-- **`scripts/submit-video.sh`** — wraps the HeyGen `/v3/video-agents` API call. Validates avatar dimensions, detects orientation mismatches, appends framing corrections, then POSTs to HeyGen. Only network call: `api.heygen.com`. No data is sent anywhere else.
 - **`scripts/update-check.sh`** — checks `raw.githubusercontent.com/heygen-com/heygen-stack/main/VERSION` against your local VERSION file. Read-only. No data transmitted. Run manually with `bash scripts/update-check.sh` if you want a version check.
 
-Neither script runs automatically. The update check is opt-in only.
+The script does not run automatically. The update check is opt-in only.
 
 The skill reads and writes `AVATAR-<NAME>.md` files in your workspace. No data leaves your machine except to `api.heygen.com` (video generation) and `raw.githubusercontent.com` (version check, opt-in).
 

@@ -1,16 +1,11 @@
 ---
-name: heygen-video-message
+name: heygen-stack
 description: |
-  Create a video featuring a human presenter — your avatar, a team member, or a named character —
-  delivering a message. Built for identity-first and messaging-first video use cases.
-  Use when: (1) sending a personalized video message (outreach, update, announcement, pitch, knowledge),
-  (2) creating a presenter-led explainer, tutorial, or product demo with a human face on screen,
-  (3) "make a video of me saying...", "send a video to my leads", "record an update for my team",
-  "create a video pitch", "make a loom-style message", "I want to appear in this video".
-  Accepts avatar_id from heygen-identity for identity-first videos, or uses a stock presenter.
-  Returns video share URL + session URL for iteration.
-  Encodes 22 eval rounds and 80+ videos of production knowledge to prevent common failures.
-  NOT for: cinematic footage or b-roll without a presenter, translating videos, TTS-only, or streaming avatars.
+  AI video skill for identity-first and messaging-first video using HeyGen.
+  Includes two sub-skills: heygen-identity (create a persistent avatar) and
+  heygen-video-message (create presenter-led videos and messages).
+  Use when: creating AI avatar videos, sending personalized video messages,
+  building a digital identity, or any HeyGen video generation task.
 homepage: https://developers.heygen.com/docs/quick-start
 metadata:
   openclaw:
