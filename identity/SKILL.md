@@ -59,14 +59,15 @@ Format:
 - Think: <one-line analogy>
 
 ## HeyGen
-- Avatar ID: <look_id — pass as avatar_id in videos>
-- Group ID: <character identity — reuse to add looks>
+- Group ID: <character identity anchor — THE stable reference, never changes>
 - Voice ID: <matched or designed voice>
 - Voice Name: <human-readable>
 - Voice Designed: <true if custom-designed, false if picked from catalog>
 - Voice Seed: <seed value used, if designed>
-- Looks: default=<id>, casual=<id>, ...
+- Looks: landscape=<look_id>, portrait=<look_id>, square=<look_id>
 - Last Synced: <ISO timestamp>
+
+⚠️ look_ids are ephemeral — always resolve fresh from group_id at runtime via GET /v3/avatars/looks?group_id=<id>. Never hardcode look_id as the primary avatar reference.
 ```
 
 **Top sections** (Appearance, Voice) are portable natural language. Any platform can use them.

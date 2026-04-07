@@ -215,9 +215,23 @@ YouTube/web/LinkedIn → `"landscape"` | TikTok/Reels/Shorts → `"portrait"` | 
 
 **Runs automatically when `avatar_id` is set, before Generate.**
 
+### Avatar ID Resolution (ALWAYS run first)
+
+**Never trust a stored `look_id` — looks are ephemeral and get deleted.** Always resolve fresh from the `group_id`:
+
+```bash
+# Step 0: Resolve look_id from group_id at runtime
+curl -s "https://api.heygen.com/v3/avatars/looks?group_id=<group_id>&limit=20" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+```
+
+From the response, pick the look matching the target orientation (landscape = `image_width > image_height`, portrait = `image_height > image_width`). Use the first match. If no looks exist in the group, tell the user — do not proceed with a stale look_id.
+
+**Rule:** Store only `group_id` in AVATAR files. Resolve `look_id` at runtime. If you have both, always verify the `look_id` is still valid before using it.
+
 ### Steps
 
-1. **Fetch avatar look metadata:** `GET /v3/avatars/looks/<avatar_id>` → extract `avatar_type` and `preview_image_url`
+1. **Fetch avatar look metadata:** After resolving `look_id` from group above → `GET /v3/avatars/looks/<resolved_look_id>` → extract `avatar_type` and `preview_image_url`
 2. **Determine orientation AND aspect ratio:** Fetch preview image dimensions. width > height = landscape, height > width = portrait, width == height = square. Fetch fails = assume portrait. **Then compute the ratio** (larger/smaller). HeyGen requires ~1.78 (16:9). If ratio is NOT between 1.73–1.83, the avatar needs a framing correction even if orientation matches (e.g., 4:3 portrait avatar in 9:16 video = black bars).
 3. **Detect avatar visual style:** Classify as photorealistic, animated, 3D rendered, or stylized. Determines fill language.
 4. **Determine background:** `photo_avatar` → no standalone bg correction needed. `studio_avatar` → check if transparent/solid/empty. `video_avatar` → always has background.
