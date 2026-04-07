@@ -23,7 +23,24 @@ metadata:
     primaryEnv: HEYGEN_API_KEY
 ---
 
-# HeyGen Video Producer
+# HeyGen Stack
+
+## Files & Paths
+
+This skill reads and writes the following. No other files are accessed without explicit user instruction.
+
+| Operation | Path | Purpose |
+|-----------|------|---------|
+| Read | `AVATAR-<NAME>.md` | Load saved avatar identity (group_id, voice_id) |
+| Read | `SOUL.md`, `IDENTITY.md` | Extract identity details when creating a new avatar (heygen-identity only) |
+| Write | `AVATAR-<NAME>.md` | Save new avatar identity after creation |
+| Write | `heygen-video-message-log.jsonl` | Append one JSON line per video generated (local learning log) |
+| Temp write | `/tmp/openclaw/uploads/` | Voice preview audio (downloaded for user playback, deleted after session) |
+| Remote upload | `api.heygen.com/v3/assets` | User-provided images/files uploaded to HeyGen for use in video |
+
+No other workspace files are read or modified. Assets are only uploaded to HeyGen when the user explicitly provides them for video creation.
+
+---
 
 > **⛔ STOP.** If you are about to call any HeyGen video creation endpoint directly, DO NOT. Follow this pipeline instead. Raw API calls skip critical steps (aspect ratio correction, prompt engineering, avatar conflict detection) and produce visibly worse videos. This skill exists because the API alone is not enough. **v3 only — never call v1 or v2 endpoints.**
 
