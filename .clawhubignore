@@ -1,0 +1,2 @@
+# Exclude developer eval tooling from published skill
+evals/

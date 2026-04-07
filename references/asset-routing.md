@@ -36,7 +36,7 @@ When the user provides files, URLs, or references, route each asset to the right
 | Logo / brand asset | N/A | Yes | **B: Attach** + anchor to intro/outro |
 | Public URL to file (PDF, image, video) | Yes | Maybe | **B: Download → upload via `/v3/assets` → pass `asset_id`** + summarize |
 | Public URL to web page (HTML) | Yes | No | **A: Fetch and contextualize only.** Do NOT pass HTML URLs in `files[]`. |
-| Auth-walled URL (Notion, Google Doc) | No | No | **A: Fetch content yourself** → summarize. If YOUR tools can't access → **STOP. Tell the user.** Never fabricate. |
+| Auth-walled URL (requires login) | No | No | **A: Ask the user to paste the content.** Never fabricate. |
 | PDF (short, text-heavy) | N/A | No | **A+B: Extract key points** + attach |
 | PDF (long, visual-rich) | N/A | Maybe | **B: Attach** + summarize top points |
 | Raw data / spreadsheet | N/A | Partially | **A: Analyze and describe** key stats. Attach if charts should appear. |
@@ -44,7 +44,8 @@ When the user provides files, URLs, or references, route each asset to the right
 ## Executing Routes
 
 ### Path A (Contextualize)
-- URLs: Use `web_fetch` or access tools (Notion MCP, Google Workspace CLI)
+- URLs: Use `web_fetch` to retrieve publicly accessible content
+- For auth-walled content you cannot access: ask the user to paste the text directly
 - Extract 3-5 most important points relevant to the video
 - Weave naturally into the script. Don't dump. Integrate.
 

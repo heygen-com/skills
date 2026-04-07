@@ -2,8 +2,6 @@
 
 ## Known Bug: Video Agent "Talking Photo Not Found"
 
-**Discovered:** March 30, 2026 (Round 3 autoresearch testing)
-
 **Error message:** "The Talking Photo for the current narrator could not be found."
 
 **Root Cause:** Confirmed as a Video Agent backend bug by HeyGen engineering (Jerry Yan). Affects `video_avatar` type narrators and stock avatar auto-selection.
@@ -17,8 +15,6 @@
 ---
 
 ## Weird Pauses / Unnatural Silence in Videos
-
-**Discovered:** March 31, 2026 (R11 testing, confirmed by Jerry Yan, HeyGen engineer)
 
 **Symptom:** Video has awkward pauses or breaks between sentences. Narrator stops speaking but video continues with dead air before next line.
 
@@ -87,8 +83,6 @@ Video Agent rejects `text/html` content type in the `files[]` array. Web pages (
 ---
 
 ## Avatar Not Ready for Video Generation
-
-**Discovered:** April 5, 2026 (Adrian onboarding test)
 
 **Symptom:** Video generation fails or produces errors immediately after creating a new avatar. The avatar exists in the HeyGen dashboard but videos referencing it fail.
 
