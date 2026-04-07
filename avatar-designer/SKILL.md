@@ -1,11 +1,13 @@
 ---
 name: heygen-avatar-designer
 description: |
-  Create HeyGen avatars for agents, users, or named characters. Manages the full lifecycle:
-  identity extraction, avatar generation, voice matching, and persistent storage.
-  Use when: (1) "create my avatar", "design an avatar", "bring yourself to life",
-  (2) "give me a new look", "add a casual variation",
-  (3) Setting up any character's visual + voice identity for HeyGen video.
+  Create a persistent AI avatar that looks and sounds like a specific person — the user, the agent,
+  or any named character — for use in identity-first videos and messaging.
+  Use when: (1) someone wants to appear in a video as themselves ("I want my face in a video",
+  "create my digital twin", "build an avatar of me"), (2) setting up a visual identity before
+  making videos or sending video messages, (3) "create my avatar", "design an avatar",
+  "give me a consistent look across my videos", "bring yourself to life".
+  Returns avatar_id + voice_id — pass directly to heygen-video-producer to create videos.
   NOT for: generating videos (use heygen-video-producer), translating videos, or TTS-only tasks.
 ---
 

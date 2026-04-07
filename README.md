@@ -2,52 +2,59 @@
 
 https://github.com/user-attachments/assets/ac2eef90-5356-4f45-a780-26dc44b294f9
 
-Give your AI agent the ability to create professional videos. One install. One API key. Full pipeline from identity to finished video.
+Give your AI agent the ability to create videos featuring real people — and send them like messages.
 
-**heygen-stack** is an AI skill that turns any coding agent (OpenClaw, Claude Code, Codex, etc.) into a video producer. It handles avatar creation, script writing, prompt engineering, aspect ratio correction, style selection, and delivery. Built by HeyGen.
+**heygen-stack** is an AI skill for identity-first and messaging-first video. Your agent can create a persistent digital avatar of you (or anyone), then produce videos where that person delivers a message — personalized outreach, team updates, announcements, pitches, explainers. One install. One API key.
 
 ```
-"Hey, can you create a video introducing yourself?"
+"Send a video message to my leads introducing our new feature."
 ```
-→ Avatar creation → Script → Prompt optimization → Style → Video → Share link
+→ Create your avatar → Write the message → Generate the video → Deliver the link
+
+Two angles, one category:
+- **Identity-first:** photo → avatar → voice → video. Your face, your voice, every video.
+- **Messaging-first:** video as the new message — outreach, updates, pitches, knowledge, announcements.
 
 ## Quick Start
 
 Get your API key from [app.heygen.com/settings](https://app.heygen.com/settings/api?nav=API). Then copy and paste the following prompt to your agent:
 
-> Install the HeyGen Stack skill: `git clone https://github.com/heygen-com/heygen-stack.git` into your skills directory (OpenClaw: `~/.openclaw/skills/heygen-stack`, Claude Code: `~/.claude/skills/heygen-stack`). My HeyGen API key is `[HEYGEN_API_KEY]`. Save it to your persistent environment config and validate it works by calling `GET https://api.heygen.com/v3/user/me` with header `X-Api-Key`. Then create an avatar for yourself using the avatar-designer skill and make a video introducing yourself, 30-60 seconds, casual tone.
+> Install the HeyGen Stack skill: `git clone https://github.com/heygen-com/heygen-stack.git` into your skills directory (OpenClaw: `~/.openclaw/skills/heygen-stack`, Claude Code: `~/.claude/skills/heygen-stack`). My HeyGen API key is `[HEYGEN_API_KEY]`. Save it to your persistent environment config and validate it works by calling `GET https://api.heygen.com/v3/user/me` with header `X-Api-Key`. Then use the avatar-designer skill to create an avatar of me from this photo: [PHOTO_URL]. Once the avatar is ready, make a 30-second video of me introducing myself, casual tone.
 
 ## What's Inside
 
 Two skills that work standalone or chain together:
 
-### video-producer
-Turn an idea into a polished video. Handles the full pipeline:
-
-- **Discovery** — interviews you about purpose, audience, tone, duration
-- **Script** — structures content by type (demo, explainer, tutorial, pitch)
-- **Prompt Craft** — transforms script into an optimized Video Agent prompt with style blocks, media type selection, and visual direction
-- **Frame Check** — detects avatar orientation mismatches and applies generative fill (no black bars, ever)
-- **Generate & Deliver** — submits to HeyGen API, polls, delivers share link with duration accuracy report
-
-```
-You: "Make a 45-second explainer about our API"
-Agent: [asks 2-3 smart questions about audience and tone]
-Agent: [writes script, shows you for approval]
-Agent: [generates video, delivers share link]
-```
-
 ### avatar-designer
-Create a consistent visual identity for your agent, yourself, or any character.
+Create a persistent digital identity — your face, your voice — for use across every video you make.
 
 - Reads identity files (`SOUL.md`, `IDENTITY.md`) or asks conversationally
 - Creates a HeyGen avatar with matched voice
 - Saves to `AVATAR-<NAME>.md` for automatic reuse across videos
+- Returns `avatar_id` + `voice_id` — pass directly to video-producer
 
 ```
-You: "Create an avatar for our product mascot"
-Agent: [extracts identity, generates avatar, matches voice]
-Agent: → AVATAR-MASCOT.md (avatar_id + voice_id, reusable)
+You: "I want to appear in videos as myself"
+Agent: [uploads your photo, creates avatar, matches voice]
+Agent: → AVATAR-YOU.md (avatar_id + voice_id, reusable forever)
+```
+
+### video-producer
+Send a video as yourself — personalized, presenter-led, delivered like a message.
+
+Use cases: personalized outreach, team updates, product announcements, pitches, knowledge transfer, explainers.
+
+- **Discovery** — interviews you about purpose, audience, tone, duration
+- **Script** — structures content by message type (outreach, update, announcement, pitch, explainer)
+- **Prompt Craft** — transforms script into an optimized Video Agent prompt with style blocks and visual direction
+- **Frame Check** — detects avatar orientation mismatches and applies generative fill (no black bars, ever)
+- **Generate & Deliver** — submits to HeyGen API, polls, delivers share link with duration accuracy report
+
+```
+You: "Send a 45-second video update to my team about the launch"
+Agent: [loads your avatar, asks 2 smart questions]
+Agent: [writes the message, shows you for approval]
+Agent: [generates video with your face, delivers share link]
 ```
 
 When both skills are installed, video-producer automatically picks up avatars created by avatar-designer.

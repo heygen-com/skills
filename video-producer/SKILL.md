@@ -1,11 +1,15 @@
 ---
 name: heygen-video-producer
 description: |
-  Your AI video producer. Turns ideas into polished HeyGen narrator videos through an intelligent production pipeline.
-  Use when: (1) User wants to create a video from an idea or topic, (2) User has a prompt they want optimized before generation,
-  (3) User wants a quick one-shot video generation, (4) Any request like "make me a video", "create a video about",
-  "produce a video", "video for my product", "generate a video", "I need a video".
-  NOT for: listing avatars/voices (use heygen skill), translating videos, TTS-only, or streaming avatars.
+  Create a video featuring a human presenter — your avatar, a team member, or a named character —
+  delivering a message. Built for identity-first and messaging-first video use cases.
+  Use when: (1) sending a personalized video message (outreach, update, announcement, pitch, knowledge),
+  (2) creating a presenter-led explainer, tutorial, or product demo with a human face on screen,
+  (3) "make a video of me saying...", "send a video to my leads", "record an update for my team",
+  "create a video pitch", "make a loom-style message", "I want to appear in this video".
+  Accepts avatar_id from heygen-avatar-designer for identity-first videos, or uses a stock presenter.
+  Returns video share URL + session URL for iteration.
+  NOT for: cinematic footage or b-roll without a presenter, translating videos, TTS-only, or streaming avatars.
 homepage: https://developers.heygen.com/docs/quick-start
 metadata:
   openclaw:
