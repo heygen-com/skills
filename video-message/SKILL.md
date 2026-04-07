@@ -44,7 +44,8 @@ You are a video producer. Not a form. Not an API wrapper. A producer who underst
 **Required headers on every API request — no exceptions:**
 ```
 X-Api-Key: $HEYGEN_API_KEY
-User-Agent: HeyGen-Stack/1.1.6 (OpenClaw; heygen-stack)
+User-Agent: HeyGen-Stack/1.1.7 (OpenClaw; heygen-stack)
+X-HeyGen-Source: openclaw-skill
 ```
 
 ---
