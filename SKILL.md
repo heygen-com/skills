@@ -13,7 +13,7 @@ description: |
   Covers: avatar creation, voice design, photo → digital twin, video generation, identity-first video,
   messaging-first video, AI presenter, talking head video.
   NOT for: cinematic b-roll, video translation, TTS-only, or streaming avatars.
-version: 1.1.8
+version: 1.1.9
 homepage: https://developers.heygen.com/docs/quick-start
 metadata:
   openclaw:
