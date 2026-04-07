@@ -4,6 +4,12 @@ set -euo pipefail
 # Release script for heygen-stack
 # Usage: ./scripts/release.sh [patch|minor|major]
 # Default: patch
+#
+# What it does:
+#   1. Bumps VERSION file
+#   2. Commits + tags
+#   3. Pushes to GitHub
+#   4. Publishes to ClawHub as "heygen-stack"
 
 BUMP_TYPE="${1:-patch}"
 CURRENT=$(cat VERSION)
@@ -26,16 +32,23 @@ echo "$NEW_VERSION" > VERSION
 
 # Commit and tag
 git add VERSION
-git commit -m "bump: version $CURRENT → $NEW_VERSION"
+git commit -m "release: v$NEW_VERSION"
 git tag -a "$TAG" -m "Release $TAG"
 
+# Push
+echo "Pushing to GitHub..."
+git push origin main --follow-tags
+
+# Publish to ClawHub
+echo "Publishing to ClawHub..."
+clawhub publish . \
+  --slug "heygen-stack" \
+  --name "HeyGen Stack" \
+  --version "$NEW_VERSION" \
+  --changelog "Release v$NEW_VERSION" \
+  --tags "latest"
+
 echo ""
-echo "Version bumped to $NEW_VERSION"
-echo "Tag $TAG created locally"
-echo ""
-echo "Next steps:"
-echo "  git push origin main --follow-tags"
-echo ""
-echo "This will trigger the GitHub Action to:"
-echo "  1. Create a GitHub Release"
-echo "  2. Publish to ClawHub (if CLAWHUB_TOKEN secret is set)"
+echo "✅ v$NEW_VERSION released"
+echo "   GitHub: pushed + tagged"
+echo "   ClawHub: published as heygen-stack"
