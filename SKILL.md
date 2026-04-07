@@ -1,5 +1,6 @@
 ---
 name: heygen-stack
+display_name: HeyGen Stack
 description: |
   Create AI avatar videos and video messages using HeyGen. Includes two skills:
   heygen-identity — build a persistent digital avatar from a photo (identity-first),
