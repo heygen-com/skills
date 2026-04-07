@@ -171,6 +171,8 @@ Show the prompt to the user before creating:
 > **Settings:** Young Adult | Woman | East Asian | Realistic
 > Look good? (yes / adjust / completely different)
 
+⛔ **STOP. Wait for the user to approve or adjust. Do NOT call the avatar creation API until the user confirms.**
+
 ### Phase 3 — Voice
 
 Two paths: **Design** (describe what you want, get matched voices) or **Browse** (filter the catalog manually).
@@ -197,6 +199,8 @@ Returns 3 voice options per seed. Present all 3 with inline audio previews:
 - Send as audio attachment: `message(action:send, media:"/tmp/voice-design-<n>.mp3", caption:"Option <n>: <voice_name> — <gender>, <language>")` so it plays inline in Telegram/Discord
 - After all previews sent, present selection buttons
 
+⛔ **STOP. Wait for the user to pick a voice via buttons or text. Do NOT select a voice yourself or proceed to Phase 4 until the user explicitly chooses.**
+
 If none match:
 > "None of these hitting right? I can try a different set (same description, different variations) or you can tweak the description."
 
@@ -216,7 +220,7 @@ GET https://api.heygen.com/v3/voices
 2. Filter by gender and language
 3. Pick top 3 candidates based on personality match
 4. Present with inline audio previews (same download + send pattern as Path A)
-5. User picks one
+5. ⛔ **STOP. Wait for the user to pick. Do NOT auto-select.**
 
 ### Phase 4 — Save to AVATAR File
 
@@ -260,6 +264,14 @@ When the user wants to refine:
 **Default to Mode 2 (new look under same group).** Only create a new group when the user explicitly wants a different character identity. This keeps the account clean and makes looks reusable across skills.
 
 Each iteration updates the AVATAR file. The file is always the source of truth.
+
+## UX Rules
+
+**Be interactive at decision points, silent everywhere else.**
+
+- At checkpoints (avatar approval, voice selection): STOP and wait for user input. Never auto-select.
+- Between checkpoints: work silently. Do not narrate your reasoning, list parameters, or explain what you're about to do.
+- After the user picks a voice: save the file and confirm. One message. Don't recap the journey.
 
 ## Video Producer Integration
 
