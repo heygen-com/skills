@@ -108,7 +108,7 @@ curl -X POST "https://api.heygen.com/v3/avatars" \
     "avatar_group_id": "<optional — include to add look to existing character>"
   }'
 ```
-Prompt max: 200 characters. Optional: up to 3 `reference_images`.
+Prompt max: 1000 characters. Optional: up to 3 `reference_images`.
 
 **Video avatar (from user's video recording):**
 ```bash
