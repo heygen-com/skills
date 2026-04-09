@@ -8,20 +8,26 @@ Get your API key from [app.heygen.com/settings](https://app.heygen.com/settings/
 clawhub install heygen-stack
 ```
 
+ClawHub installs to your agent's default skills directory automatically.
+
 ## Option 2 — Git clone
 
-**OpenClaw:**
+Clone into your agent's skills directory:
+
+**OpenClaw** (default: `~/.openclaw/skills/heygen-stack`, custom installs may differ — check your config):
 ```bash
-git clone https://github.com/heygen-com/heygen-stack.git ~/.openclaw/workspace/skills/heygen-stack
+git clone https://github.com/heygen-com/heygen-stack.git ~/.openclaw/skills/heygen-stack
 ```
 
-**Claude Code:**
+**Claude Code** (default: `~/.claude/skills/heygen-stack`):
 ```bash
 git clone https://github.com/heygen-com/heygen-stack.git ~/.claude/skills/heygen-stack
 ```
 
+> Not sure where your skills directory is? Ask your agent: *"Where is your skills directory?"*
+
 ## First Run
 
-Paste this prompt to your agent (works on OpenClaw and Claude Code):
+Paste this prompt to your agent — it will find the right paths automatically:
 
-> Install the HeyGen Stack skill: git clone https://github.com/heygen-com/heygen-stack.git into your skills directory (OpenClaw: ~/.openclaw/workspace/skills/heygen-stack, Claude Code: ~/.claude/skills/heygen-stack). My HeyGen API key is `[HEYGEN_API_KEY]`. Store it as HEYGEN_API_KEY in your environment config if supported, otherwise use it directly in this session. Validate it works by calling `GET https://api.heygen.com/v3/users/me` with header `X-Api-Key`. Then use the heygen-avatar-designer skill to create an avatar for yourself, and use heygen-video-producer to make a video introducing yourself, 30-60 seconds, casual tone.
+> My HeyGen API key is `[YOUR_API_KEY_HERE]`. Install the HeyGen Stack skill from https://github.com/heygen-com/heygen-stack.git — clone it into your skills directory (find it with your config or ask if unsure). Save the API key as `HEYGEN_API_KEY` in your environment config. Validate by calling `GET https://api.heygen.com/v3/users/me` with header `X-Api-Key`. Then use the heygen-avatar-designer skill to create an avatar for yourself, and heygen-video-producer to make a 30-60 second intro video, casual tone.
