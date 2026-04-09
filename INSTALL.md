@@ -24,4 +24,4 @@ git clone https://github.com/heygen-com/heygen-stack.git ~/.claude/skills/heygen
 
 Paste the following prompt to your agent:
 
-> My HeyGen API key is `[HEYGEN_API_KEY]`. Save it to your persistent environment config and validate it works by calling `GET https://api.heygen.com/v3/user/me` with header `X-Api-Key`. Then create an avatar for yourself using the heygen-identity skill and make a video introducing yourself, 30-60 seconds, casual tone.
+> My HeyGen API key is `[HEYGEN_API_KEY]`. Save it to your persistent environment config and validate it works by calling `GET https://api.heygen.com/v3/user/me` with header `X-Api-Key`. Then create an avatar for yourself using the heygen-avatar-designer skill and make a video introducing yourself, 30-60 seconds, casual tone.

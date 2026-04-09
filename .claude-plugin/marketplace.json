@@ -1,0 +1,27 @@
+{
+  "name": "heygen",
+  "owner": {
+    "name": "HeyGen",
+    "url": "https://heygen.com"
+  },
+  "plugins": [
+    {
+      "name": "heygen",
+      "source": "./",
+      "description": "HeyGen skills for avatar creation, identity-first video, and personalized video messages. Invoke as /heygen:avatar-designer or /heygen:video-producer.",
+      "version": "1.0.0",
+      "skills": [
+        {
+          "name": "avatar-designer",
+          "path": "heygen-avatar-designer",
+          "invoke": "/heygen:avatar-designer"
+        },
+        {
+          "name": "video-producer",
+          "path": "heygen-video-producer",
+          "invoke": "/heygen:video-producer"
+        }
+      ]
+    }
+  ]
+}

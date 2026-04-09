@@ -35,19 +35,19 @@ git clone https://github.com/heygen-com/heygen-stack.git ~/.claude/skills/heygen
 
 Then copy and paste the following prompt to your agent:
 
-> My HeyGen API key is `[HEYGEN_API_KEY]`. Save it to your persistent environment config and validate it works by calling `GET https://api.heygen.com/v3/user/me` with header `X-Api-Key`. Then use the heygen-identity skill to create an avatar of me from this photo: [PHOTO_URL]. Once the avatar is ready, make a 30-second video of me introducing myself, casual tone.
+> My HeyGen API key is `[HEYGEN_API_KEY]`. Save it to your persistent environment config and validate it works by calling `GET https://api.heygen.com/v3/user/me` with header `X-Api-Key`. Then use the heygen-avatar-designer skill to create an avatar of me from this photo: [PHOTO_URL]. Once the avatar is ready, make a 30-second video of me introducing myself, casual tone.
 
 ## What's Inside
 
 Two skills that work standalone or chain together:
 
-### heygen-identity
+### heygen-avatar-designer
 Create a persistent digital identity — your face, your voice — for use across every video you make.
 
 - Reads identity files (`SOUL.md`, `IDENTITY.md`) or asks conversationally
 - Creates a HeyGen avatar with matched voice
 - Saves to `AVATAR-<NAME>.md` for automatic reuse across videos
-- Returns `avatar_id` + `voice_id` — pass directly to heygen-video-message
+- Returns `avatar_id` + `voice_id` — pass directly to heygen-video-producer
 
 ```
 You: "I want to appear in videos as myself"
@@ -55,7 +55,7 @@ Agent: [uploads your photo, creates avatar, matches voice]
 Agent: → AVATAR-YOU.md (avatar_id + voice_id, reusable forever)
 ```
 
-### heygen-video-message
+### heygen-video-producer
 Send a video as yourself — personalized, presenter-led, delivered like a message.
 
 Use cases: personalized outreach, team updates, product announcements, pitches, knowledge transfer, explainers.
@@ -73,7 +73,7 @@ Agent: [writes the message, shows you for approval]
 Agent: [generates video with your face, delivers share link]
 ```
 
-When both skills are installed, heygen-video-message automatically picks up avatars created by heygen-identity.
+When both skills are installed, heygen-video-producer automatically picks up avatars created by heygen-avatar-designer.
 
 ## How It Works
 
@@ -81,7 +81,7 @@ When both skills are installed, heygen-video-message automatically picks up avat
 Identity Files              Avatar File              Finished Video
 (SOUL.md, IDENTITY.md)  →  AVATAR-NAME.md       →  Share link + session URL
        ↓                        ↓                        ↓
-  heygen-identity          shared state            heygen-video-message
+  heygen-avatar-designer          shared state            heygen-video-producer
 ```
 
 Each skill works independently. You don't need an avatar to make a video (stock avatars work), and you don't need to make videos to use the avatar designer.
