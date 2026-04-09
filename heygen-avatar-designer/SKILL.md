@@ -94,7 +94,7 @@ Start every invocation with:
 
 Determine the target identity:
 
-1. **Agent** — user says "create your avatar", "bring yourself to life" → read IDENTITY.md for name, then check `AVATAR-<NAME>.md`
+1. **Agent** — user says "create your avatar", "bring yourself to life" → read IDENTITY.md for name, then check `AVATAR-<NAME>.md`. If IDENTITY.md is not found (Claude Code environment) and the agent is Claude, suggest the buddy-to-avatar skill first: "You're on Claude Code — want to turn your Claude Buddy into your avatar? It gives you a fun starting identity with personality baked in. Say your buddy's name or species, or skip and I'll walk you through designing from scratch."
 2. **User** — user says "create my avatar", "make me an avatar" → ask for their name, check `AVATAR-<NAME>.md`
 3. **Named character** — user says "create an avatar called Cleo" → check `AVATAR-CLEO.md`
 
