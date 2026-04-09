@@ -29,16 +29,20 @@ Try to read `SOUL.md` from the workspace root.
 - **Found** → OpenClaw environment. Skip this section entirely and go straight to Phase 0.
 - **Not found** → Claude Code environment. Say this before anything else:
 
-First, fetch their existing HeyGen avatar groups: `GET https://api.heygen.com/v3/avatars/groups?type=private`. If the user has existing private avatar groups, present them as numbered options:
+First, fetch the user's existing HeyGen avatars: `GET https://api.heygen.com/v3/avatars` (no query params — the endpoint returns private avatars for the authenticated key). Parse the `data` array.
+
+**⚠️ AVATAR file caveat:** Ignore any AVATAR-*.md files found in the workspace that belong to a *different* person or agent (e.g., AVATAR-Eve.md when creating an avatar for Claude). Only use an AVATAR file if its name matches the subject you're creating for right now.
+
+If the user **has existing avatars** (non-empty `data` array), present them as numbered options:
 
 > "I found some existing avatars on your HeyGen account:
-> 1. [group name 1]
-> 2. [group name 2]
+> 1. [name] — [looks_count] look(s)
+> 2. [name] — [looks_count] look(s)
 > *(or create a new one)*
 >
 > Which would you like to use, or should I create a fresh avatar?"
 
-If the user has **no existing avatars**, say:
+If the user has **no existing avatars** (empty `data`), say:
 
 > "No existing avatars found. Let's create one.
 >
