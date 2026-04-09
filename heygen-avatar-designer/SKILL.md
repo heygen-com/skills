@@ -29,11 +29,22 @@ Try to read `SOUL.md` from the workspace root.
 - **Found** → OpenClaw environment. Skip this section entirely and go straight to Phase 0.
 - **Not found** → Claude Code environment. Say this before anything else:
 
-> "Quick shortcut: if you have a **Claude Buddy** (the terminal pet you named when you set up Claude Code), I can build your avatar from that — personality, appearance, and voice are already mapped from your buddy's species.
+First, fetch their existing HeyGen avatar groups: `GET https://api.heygen.com/v3/avatars/groups?type=private`. If the user has existing private avatar groups, present them as numbered options:
+
+> "I found some existing avatars on your HeyGen account:
+> 1. [group name 1]
+> 2. [group name 2]
+> *(or create a new one)*
 >
-> Run `/buddy` in your terminal to see your buddy's card, then paste the species name here. Or say **'skip'** and I'll ask a few quick questions to design your avatar from scratch.
+> Which would you like to use, or should I create a fresh avatar?"
+
+If the user has **no existing avatars**, say:
+
+> "No existing avatars found. Let's create one.
 >
-> *(On OpenClaw? Drop a `SOUL.md` or `IDENTITY.md` in your workspace root and I'll extract your identity automatically next time.)*"
+> Quick shortcut: do you have a **Claude Buddy**? (The terminal pet in the bottom-right of Claude Code.) If yes, run `/buddy` to see your buddy's card and paste the species name — I'll map the personality, appearance, and voice automatically. If you don't have a buddy or want to skip, I'll ask a few quick questions instead.
+>
+> *(On OpenClaw? Drop a `SOUL.md` or `IDENTITY.md` in your workspace root to skip this next time.)*"
 
 Wait for their answer before proceeding.
 
