@@ -117,7 +117,7 @@ This applies to ALL targets (agent, user, named character). For agents, check if
 
 ### Phase 1 — Identity Extraction
 
-**For the agent:** Read `SOUL.md`, `IDENTITY.md`, and existing `AVATAR-<NAME>.md` from the workspace. Extract appearance and voice traits.
+**For the agent:** Try to read `SOUL.md`, `IDENTITY.md`, and existing `AVATAR-<NAME>.md` from the workspace. If found, extract appearance and voice traits automatically. If not found (e.g. Claude Code environment), skip to conversational onboarding — ask the user to describe the agent's appearance and voice instead.
 
 **For users/named characters:** Conversational onboarding. Ask naturally, not as a form:
 - "What do you look like? Age, hair, general vibe?"
