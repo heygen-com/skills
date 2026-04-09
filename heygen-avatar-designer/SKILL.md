@@ -171,15 +171,17 @@ Adds a variation to an existing character. Read the Group ID from the AVATAR fil
 
 Two creation types:
 
-**Type A — From prompt:**
+**Type A — From prompt (AI-generated appearance):**
 ```json
 {
   "type": "prompt",
   "name": "<name>",
-  "prompt": "<appearance prompt built from AVATAR file>",
+  "prompt": "<appearance prompt, max 1000 chars>",
   "avatar_group_id": "<optional — Mode 2 only>"
 }
 ```
+
+Prompt limit is 1000 characters. Be descriptive — include style, features, expression, lighting. The API spec says 200 but the actual enforced limit is 1000.
 
 **Type B — From reference image:**
 ```json
