@@ -62,9 +62,13 @@ X-HeyGen-Source: openclaw-skill
 | "Just generate" / skip questions | **Quick Shot** | Generate |
 | "Interactive" / iterate with agent | **Interactive Session** | Generate (experimental) |
 
+**Language-agnostic routing:** These signals describe user *intent*, not literal keywords. Match intent regardless of input language.
+
 **Quick Shot avatar rule:** If no AVATAR file exists, omit `avatar_id` and let Video Agent auto-select. If an AVATAR file exists, use it — and Frame Check STILL RUNS.
 
 **Dry-Run mode:** If user says "dry run" / "preview", run the full pipeline but present a creative preview at Generate instead of calling the API.
+
+**Non-English videos:** The same pipeline applies. Scripts are written in the video language. Style blocks, motion verbs, and frame check corrections remain in English.
 
 Default to Full Producer. Better to ask one smart question than generate a mediocre video.
 
@@ -74,7 +78,7 @@ Default to Full Producer. Better to ask one smart question than generate a medio
 
 Interview the user. Be conversational, skip anything already answered.
 
-**Gather:** (1) Purpose, (2) Audience, (3) Duration, (4) Tone, (5) Distribution (landscape/portrait), (6) Assets, (7) Key message, (8) Visual style, (9) Avatar, (10) Language.
+**Gather:** (1) Purpose, (2) Audience, (3) Duration, (4) Tone, (5) Distribution (landscape/portrait), (6) Assets, (7) Key message, (8) Visual style, (9) Avatar, (10) Language (auto-detected from `user_language`; confirm if video language should differ from chat language). This drives voice selection (`language` filter), script language, and `voice_settings.locale`.
 
 ### Assets
 
@@ -132,6 +136,8 @@ When `style_id` is set, the prompt's Visual Style Block becomes optional — the
 
 ### Structure by Type
 
+**Script language:** Write the script in the video language (from Discovery item 10). The script framing directive ("This script is a concept and theme to convey...") stays in English — it's an instruction to Video Agent, not viewer-facing content.
+
 Content structure only. Do NOT assign per-scene durations — let Video Agent pace naturally.
 
 - **Product Demo:** Hook → Problem → Solution → CTA
@@ -175,6 +181,7 @@ Transform the script into an optimized Video Agent prompt.
 5. **Tone calibration.** Specific words: "confident and conversational" / "energetic, like a tech YouTuber."
 6. **One topic.** State explicitly.
 7. **Style block at the end.** Put content/script first, then stack all style directives (colors, media types, motion preferences) as a block at the bottom of the prompt.
+8. **Language separation.** Script content and narration in the video language. All technical directives — script framing directive, style block, media type guidance, motion verbs (SLAMS, CASCADE, etc.), and frame check corrections — stay in English. Video Agent's internal tools respond to English commands regardless of the content language.
 
 ### Prompt Approach
 

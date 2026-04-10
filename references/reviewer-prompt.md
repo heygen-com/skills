@@ -58,6 +58,13 @@ Your job: review this prompt objectively and provide a professional assessment. 
 - Does it feel like a professional production brief or a casual request?
 - Is there anything missing that would significantly improve the output?
 
+### 11. Language Consistency (non-English videos only)
+- If the video language is not English, is the script/narration in the correct language?
+- Are technical directives (style block, motion verbs, frame check corrections) still in English?
+- Is there a clean separation between content language and directive language?
+- FAIL if the script is in English but the user requested a non-English video.
+- FAIL if technical directives were translated out of English.
+
 ## Output Format
 
 Respond with EXACTLY this format:

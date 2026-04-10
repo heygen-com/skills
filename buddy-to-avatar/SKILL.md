@@ -117,6 +117,8 @@ The handoff is pre-filled — skip the avatar designer's interview phases:
 
 ## Phase 4 — Create Intro Video
 
+**Script language:** Generate the intro video script in `user_language`. Appearance prompts to the avatar creation API stay in English (image generation works best with English prompts). But the video narration script — including the hook, stat brag, speed-round, personality quote, and sign-off — should all be in the video language.
+
 After avatar + voice are confirmed, hand off to **heygen-video-producer** with a pre-built brief:
 
 **Auto-generated script template (stat-reveal intro):**

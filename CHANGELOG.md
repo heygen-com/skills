@@ -1,5 +1,29 @@
 # Changelog
 
+## v1.3.0 (2026-04-10) — i18n Support
+
+### Added
+- **Language Detection** — Skills detect user's language from input and communicate in that language
+- **Language-aware voice selection** — Voice API calls filter by detected language; `voice_settings.locale` guidance added
+- **Non-English script generation** — Scripts and narration generated in the video language
+- **i18n eval suite** — Test scenarios across English, Japanese, Spanish, Korean with scoring rubric
+- **Japanese example prompt** in prompt-craft reference
+- **Language consistency criterion** (#11) in reviewer prompt
+
+### Changed
+- Mode Detection is now explicitly language-agnostic (semantic intent matching, not English keyword matching)
+- User-facing messages converted from hardcoded English strings to semantic descriptions the LLM adapts to user's language
+- Buddy voice construction pattern uses `{video_language}` instead of hardcoded "English"
+- Buddy sign-off lines converted to semantic descriptions instead of English idioms
+- Test video prompt (Phase 5) generates greeting in video language instead of hardcoded English
+
+### Documentation
+- Added `> Language note` callouts to motion-vocabulary.md and prompt-styles.md explaining English-only directives
+- Updated api-reference.md with `voice_settings.locale` guidance and language filter examples
+- All reference files document the content-language vs directive-language separation
+
+---
+
 ## v1.2.7 (2026-04-09)
 
 ### Bug Fixes

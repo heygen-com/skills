@@ -139,7 +139,7 @@ curl -s -X POST "https://api.heygen.com/v3/videos" \
 | `expressiveness` | string | `"high"`, `"medium"`, or `"low"` (photo avatars) |
 | `remove_background` | boolean | Remove avatar background |
 | `background` | object | `{type:"color", value:"#1E40AF"}` or `{type:"image", url:"..."}` |
-| `voice_settings` | object | `{speed: 1.0, pitch: 0, locale: "en-US"}` |
+| `voice_settings` | object | `{speed: 1.0, pitch: 0, locale: "en-US"}` — set locale to match video language (e.g., `ja-JP`, `es-ES`, `ko-KR`) |
 
 **When to use which:**
 
@@ -278,6 +278,12 @@ curl -s -X POST "https://api.heygen.com/v3/voices" \
 Returns 3 voices per seed. Deterministic: same prompt + seed always returns the same set. If none match, increment seed and try again. Each voice has a `preview_audio_url` (MP3) for user auditioning.
 
 **Key:** This is semantic search, not generation. Free to call. No voice slots consumed.
+
+**Language matching:** Include the target language in the voice design prompt (e.g., "Japanese speaker", "Korean native"). For voice browsing, use the `language` query parameter:
+```bash
+curl -s "https://api.heygen.com/v3/voices?type=public&language=ja&limit=20" \
+  -H "X-Api-Key: $HEYGEN_API_KEY"
+```
 
 ## Pricing
 

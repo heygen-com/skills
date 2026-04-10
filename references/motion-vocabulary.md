@@ -9,6 +9,8 @@ Video Agent is an HTML interpreter. It renders layouts, typography, and structur
 
 Based on patterns from 40+ produced videos.
 
+> **Language note:** Motion verbs MUST remain in English regardless of the video's content language. Video Agent's rendering engine responds to these specific English verbs. Do not translate "SLAMS", "CASCADE", "COUNTS UP", etc. They are API-level commands, not viewer-facing text.
+
 ## Motion Verbs
 
 Use these exact verbs in prompts. Video Agent responds to them. Without them, you get static frames.

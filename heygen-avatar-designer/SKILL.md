@@ -33,22 +33,9 @@ First, fetch the user's existing HeyGen avatars: `GET https://api.heygen.com/v3/
 
 **⚠️ AVATAR file caveat:** Ignore any AVATAR-*.md files found in the workspace that belong to a *different* person or agent (e.g., AVATAR-Eve.md when creating an avatar for Claude). Only use an AVATAR file if its name matches the subject you're creating for right now.
 
-If the user **has existing avatars** (non-empty `data` array), present them as numbered options:
+If the user **has existing avatars** (non-empty `data` array), present them as numbered options and ask which to use or whether to create a new one. Communicate in `user_language`.
 
-> "I found some existing avatars on your HeyGen account:
-> 1. [name] — [looks_count] look(s)
-> 2. [name] — [looks_count] look(s)
-> *(or create a new one)*
->
-> Which would you like to use, or should I create a fresh avatar?"
-
-If the user has **no existing avatars** (empty `data`), say:
-
-> "No existing avatars found. Let's create one.
->
-> Quick shortcut: do you have a **Claude Buddy**? (The terminal pet in the bottom-right of Claude Code.) If yes, run `/buddy` to see your buddy's card and paste the species name — I'll map the personality, appearance, and voice automatically. If you don't have a buddy or want to skip, I'll ask a few quick questions instead.
->
-> *(On OpenClaw? Drop a `SOUL.md` or `IDENTITY.md` in your workspace root to skip this next time.)*"
+If the user has **no existing avatars** (empty `data`), tell them none were found and offer two paths: (1) Claude Buddy shortcut (run `/buddy` and paste the species name for automatic personality/appearance/voice mapping), or (2) manual creation with a few quick questions. Mention the OpenClaw `SOUL.md` shortcut for future reference. Communicate in `user_language`.
 
 Wait for their answer before proceeding.
 
@@ -138,7 +125,7 @@ If no AVATAR file exists: proceed to Phase 1.
 
 Before generating anything, ask if they have a reference image. Photo avatars produce significantly better face consistency across videos than prompt-generated ones.
 
-> "Before I create your avatar — do you have a reference photo? A headshot or clear photo of the face gives way better results than generating from a text description. Drop it here if you have one, or say 'skip' and I'll generate from your identity description."
+Ask if they have a reference photo, explaining that a headshot or clear face photo gives much better results than text-only generation. Offer to skip for prompt-based creation. Communicate in `user_language`.
 
 This applies to ALL targets (agent, user, named character). For agents, check if a reference photo path already exists in the AVATAR file's Appearance section or in IDENTITY.md before asking.
 
@@ -149,9 +136,7 @@ This applies to ALL targets (agent, user, named character). For agents, check if
 
 **For the agent:** Try to read `SOUL.md`, `IDENTITY.md`, and existing `AVATAR-<NAME>.md` from the workspace. If found, extract appearance and voice traits automatically. If not found (e.g. Claude Code environment), skip to conversational onboarding — ask the user to describe the agent's appearance and voice instead.
 
-**For users/named characters:** Conversational onboarding. Ask naturally, not as a form:
-- "What do you look like? Age, hair, general vibe?"
-- "How would you describe your voice? Calm? Energetic? Any accent?"
+**For users/named characters:** Conversational onboarding. Ask naturally about their appearance (age, hair, general vibe) and voice (calm, energetic, accent). Not as a form — be conversational. Communicate in `user_language`.
 
 Write `AVATAR-<NAME>.md` with the Appearance and Voice sections filled in. Leave HeyGen section empty.
 
@@ -226,8 +211,7 @@ Show the prompt to the user before creating:
 
 Two paths: **Design** (describe what you want, get matched voices) or **Browse** (filter the catalog manually).
 
-Ask the user:
-> "Want me to find a voice based on your description, or browse the catalog yourself?"
+Ask whether they want voice design (describe what they want) or catalog browsing. Communicate in `user_language`.
 
 Default to **Design** if the AVATAR file has a Voice section with personality traits.
 
@@ -235,10 +219,12 @@ Default to **Design** if the AVATAR file has a Voice section with personality tr
 
 Find matching voices via semantic search using the Voice section from the AVATAR file. This searches HeyGen's full voice library. No new voices are generated and no quota is consumed.
 
+**Language matching:** The voice design prompt should specify the target language from `user_language`. Example for Japanese: `"A calm, warm female voice. Professional but approachable. Japanese speaker."` This ensures semantic search returns voices in the correct language.
+
 ```bash
 POST https://api.heygen.com/v3/voices
 {
-  "prompt": "<built from AVATAR Voice section: tone, accent, energy, personality>",
+  "prompt": "<built from AVATAR Voice section: tone, accent, energy, personality. Include target language.>",
   "seed": 0
 }
 ```
@@ -285,8 +271,7 @@ Update the HeyGen section of `AVATAR-<NAME>.md`:
 - Last Synced: <ISO timestamp>
 ```
 
-Tell the user:
-> "Avatar saved to AVATAR-<NAME>.md. Other skills like heygen-video-producer will pick it up automatically."
+Confirm the avatar is saved and that other skills (like heygen-video-producer) will pick it up automatically. Communicate in `user_language`.
 
 ### Phase 5 — Test (Optional)
 
@@ -297,9 +282,11 @@ POST https://api.heygen.com/v3/video-agents
 {
   "avatar_id": "<avatar_id>",
   "voice_id": "<voice_id>",
-  "prompt": "Hi, I'm <name>. Nice to meet you!"
+  "prompt": "<short greeting in the video language>"
 }
 ```
+
+Generate a natural greeting in the video language (from `user_language`). Examples: English "Hi, I'm [name]. Nice to meet you!", Japanese "[name]です。はじめまして！", Spanish "Hola, soy [name]. ¡Mucho gusto!", Korean "안녕하세요, [name]입니다. 만나서 반갑습니다!"
 
 ## Iteration Flow
 

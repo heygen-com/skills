@@ -99,14 +99,24 @@ Build the voice design prompt by combining the **top 2 stat influences**. Pick t
 
 ```
 "[Primary stat descriptor], [secondary stat descriptor]. [Species] personality.
-[Gender] voice, [language]. Think: [one-line character analogy]."
+[Gender] voice, {video_language}. Think: [one-line character analogy]."
 ```
 
-**Example (Bramble — CHAOS:77, WISDOM:27):**
+Use the video language from `user_language` (e.g., English, Japanese, Korean, Spanish). Never hardcode "English."
+
+**Example (Bramble — CHAOS:77, WISDOM:27, English):**
 ```
 "Fast-talking, unpredictable cadence, wild energy shifts, excitable.
 Slightly thoughtful undertone but overwhelmed by chaos.
 Gender neutral voice, English.
+Think: an overexcited cartoon sidekick who talks before thinking."
+```
+
+**Example (same buddy, Japanese):**
+```
+"Fast-talking, unpredictable cadence, wild energy shifts, excitable.
+Slightly thoughtful undertone but overwhelmed by chaos.
+Gender neutral voice, Japanese.
 Think: an overexcited cartoon sidekick who talks before thinking."
 ```
 
@@ -126,13 +136,15 @@ The highest stat influences the avatar's pose/expression in the prompt:
 
 How each stat balance affects the intro video script:
 
-| Dominant Stat | Script Tone | Sign-off Style |
+| Dominant Stat | Script Tone | Sign-off Style (generate in video language) |
 |---|---|---|
-| DEBUGGING | Analytical, breaks down own stats like code review | "Now if you'll excuse me, I have bugs to accidentally create." |
-| PATIENCE | Warm, takes time with each stat, reassuring | "Take your time. I'll be right here when you need me." |
-| CHAOS | Manic, rapid-fire, jumps between topics | "Stick with me — it's gonna be a WILD ride!" |
-| WISDOM | Reflective, frames stats as lessons learned | "The code speaks to those who listen. I sometimes listen." |
-| SNARK | Deadpan, self-deprecating, roasts own low stats | "You're welcome. Or whatever." |
+| DEBUGGING | Analytical, breaks down own stats like code review | A nerdy self-deprecating quip about creating bugs |
+| PATIENCE | Warm, takes time with each stat, reassuring | A gentle reassurance that they'll be there when needed |
+| CHAOS | Manic, rapid-fire, jumps between topics | An excited promise of wild adventures ahead |
+| WISDOM | Reflective, frames stats as lessons learned | A wry observation about listening to code |
+| SNARK | Deadpan, self-deprecating, roasts own low stats | A dismissive "you're welcome" |
+
+Generate the sign-off naturally in the video language. The descriptions above are the *vibe*, not literal translations.
 
 ## Video Prompt Style Block by Rarity
 

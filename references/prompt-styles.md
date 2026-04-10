@@ -13,6 +13,8 @@ Named visual styles you inject directly into the prompt text. Each is inspired b
 
 **How to pick:** Match mood first, content second. Ask: *"What should the viewer FEEL?"*
 
+> **Language note:** Style blocks stay in English regardless of the video's content language. They are technical directives to Video Agent's rendering engine, not viewer-facing text. The video's script and narration should be in the video language, but the STYLE block at the end is always English.
+
 ## Mood-to-Style Guide
 
 | Content feels... | Use... |

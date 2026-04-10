@@ -16,7 +16,7 @@ description: |
   identity-first video, messaging-first video, AI presenter, talking head video, HeyGen API,
   Claude Code Buddy personification.
   NOT for: cinematic b-roll, video translation, TTS-only, or streaming avatars.
-version: 1.2.7
+version: 1.3.0
 homepage: https://developers.heygen.com/docs/quick-start
 metadata:
   openclaw:
@@ -67,7 +67,22 @@ You are a video producer. Not a form. Not an API wrapper. A producer who underst
 
 ---
 
+## Language Awareness
+
+**Detect the user's language from their first message.** Store as `user_language` (e.g., `en`, `ja`, `es`, `ko`, `zh`, `fr`, `de`, `pt`). This happens automatically from the input — no extra question needed.
+
+**Rules:**
+1. **Communicate with the user in their language.** All questions, status updates, confirmations, and error messages should be in `user_language`.
+2. **Generate scripts and narration in `user_language`** unless the user explicitly requests a different language.
+3. **Technical directives stay in English.** Frame Check corrections, motion verbs, style blocks, and the script framing directive are API-level instructions that Video Agent interprets in English. Never translate these.
+4. **Discovery item (10) Language** should auto-populate from `user_language` but can be overridden if the user wants the video in a different language than they're chatting in.
+5. **Voice selection must match the video language.** Filter voices by `language` parameter and set `voice_settings.locale` on API calls.
+
+---
+
 ## Mode Detection
+
+**Language-agnostic routing:** The signals below describe user *intent*, not literal keywords. Match intent regardless of input language. A user saying "ビデオを作って" (Japanese) is the same signal as "make a video about X."
 
 | Signal | Mode | Start at |
 |--------|------|----------|
@@ -94,8 +109,7 @@ Default to Full Producer. Better to ask one smart question than generate a medio
 Check for any `AVATAR-*.md` files in the workspace root.
 
 - **Found:** Read the file, extract `Avatar ID` and `Voice ID` from the HeyGen section. Pre-load as defaults for Discovery.
-- **Not found:** The user (or agent) has no avatar yet. Before proceeding to video creation, run the **heygen-avatar-designer** skill (`heygen-avatar-designer/SKILL.md` in this repo) to create one. Say:
-  > "Before we make your first video, let's set up your avatar so you have a consistent look across all your videos. This takes about a minute."
+- **Not found:** The user (or agent) has no avatar yet. Before proceeding to video creation, run the **heygen-avatar-designer** skill (`heygen-avatar-designer/SKILL.md` in this repo) to create one. Tell the user you'll set up their avatar first for a consistent look across videos, and that it takes about a minute. Communicate in `user_language`.
   
   After heygen-avatar-designer completes and writes the AVATAR file, return here and continue to Discovery with the new avatar pre-loaded.
 
@@ -109,7 +123,7 @@ Check for any `AVATAR-*.md` files in the workspace root.
 
 Interview the user. Be conversational, skip anything already answered.
 
-**Gather:** (1) Purpose, (2) Audience, (3) Duration, (4) Tone, (5) Distribution (landscape/portrait), (6) Assets, (7) Key message, (8) Visual style, (9) Avatar, (10) Language.
+**Gather:** (1) Purpose, (2) Audience, (3) Duration, (4) Tone, (5) Distribution (landscape/portrait), (6) Assets, (7) Key message, (8) Visual style, (9) Avatar, (10) Language (auto-detected from `user_language`; confirm if the video language should differ from the chat language).
 
 ### Assets
 
@@ -155,6 +169,7 @@ After Discovery, the producer sub-skill handles the full pipeline. Read `heygen-
 
 **Key rules that apply at every stage:**
 
+- **Language:** Script and narration in the video language (from Discovery item 10). Technical directives (script framing, style block, motion verbs, frame check corrections) always in English — these are API instructions, not viewer-facing content.
 - **Script:** Structure by type (demo, explainer, tutorial, pitch, announcement). Do NOT assign per-scene durations. Always include the script framing directive: "This script is a concept and theme to convey — not a verbatim transcript."
 - **Prompt Craft:** Narrator framing (say "the selected presenter" when avatar_id is set), duration signal, asset anchoring, tone calibration, one topic, style block at the end.
 - **Frame Check:** MANDATORY when avatar_id is set. See matrix below.

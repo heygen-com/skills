@@ -178,6 +178,17 @@ RIGHT SIDE: Stats COUNT UP below headline.
 
 ---
 
+### Non-English Videos
+
+The same prompt structure applies regardless of language:
+1. **Script/narration:** In the video language
+2. **Style block:** Always English (Video Agent directive)
+3. **Motion verbs:** Always English (SLAMS, CASCADE, etc.)
+4. **Critical on-screen text:** In whatever language should appear on screen
+5. **Scene labels:** English (Scene 1, Scene 2) — structural, not rendered
+
+---
+
 ## Example Prompts (from HeyGen Official Guide)
 
 ### Compliance Training
@@ -201,6 +212,24 @@ Make a video telling the story of how Twitch got started. Use cartoon-style
 animations and overlays. I want Twitch's iconic colors and fonts. Use motion
 graphics overlays and AI-generated B-roll.
 ```
+
+### Product Introduction (Japanese — non-English example)
+```
+日本のナレッジワーカー向けにHeyGenを紹介する1分間のビデオを作成してください。
+トーキングアバターモデルの特徴を説明し、具体的な活用例を3つ含めてください。
+ナレーターは選択されたプレゼンターが説明します。
+
+CRITICAL ON-SCREEN TEXT (display literally):
+- "HeyGen アバター V"
+- "3分で動画作成"
+- "API連携対応"
+
+STYLE — SWISS PULSE (Müller-Brockmann): Black/white + electric blue #0066FF.
+Grid-locked. Helvetica Bold. Animated counters. Diagonal accents.
+Grid wipe transitions.
+```
+
+Note: Script content is in Japanese but STYLE block and scene labels remain in English — these are Video Agent directives, not viewer-facing content.
 
 ---
 
