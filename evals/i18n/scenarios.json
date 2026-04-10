@@ -1,0 +1,174 @@
+{
+  "version": "1.0",
+  "languages": ["en", "ja", "es", "ko"],
+  "locale_map": {
+    "en": "en-US",
+    "ja": "ja-JP",
+    "es": "es-ES",
+    "ko": "ko-KR"
+  },
+  "scenarios": [
+    {
+      "id": "routing-full-producer",
+      "skill": "heygen-stack",
+      "description": "Vague video request triggers Full Producer mode",
+      "inputs": {
+        "en": "make a video about our new product launch",
+        "ja": "新製品の発売についてのビデオを作って",
+        "es": "haz un video sobre el lanzamiento de nuestro nuevo producto",
+        "ko": "신제품 출시에 대한 비디오를 만들어줘"
+      },
+      "expected": {
+        "mode": "Full Producer",
+        "starts_at": "Discovery",
+        "user_facing_language": "{input_language}"
+      }
+    },
+    {
+      "id": "routing-quick-shot",
+      "skill": "heygen-stack",
+      "description": "Quick shot / skip questions request",
+      "inputs": {
+        "en": "just generate a video, skip the questions",
+        "ja": "質問はスキップして、ビデオを生成して",
+        "es": "solo genera un video, salta las preguntas",
+        "ko": "질문 건너뛰고 비디오 바로 만들어"
+      },
+      "expected": {
+        "mode": "Quick Shot",
+        "starts_at": "Generate",
+        "user_facing_language": "{input_language}"
+      }
+    },
+    {
+      "id": "routing-buddy",
+      "skill": "heygen-stack",
+      "description": "Buddy pipeline trigger",
+      "inputs": {
+        "en": "bring my buddy to life",
+        "ja": "バディに命を吹き込んで",
+        "es": "dale vida a mi buddy",
+        "ko": "내 버디를 살려줘"
+      },
+      "expected": {
+        "mode": "Buddy Pipeline",
+        "starts_at": "buddy-to-avatar/SKILL.md",
+        "user_facing_language": "{input_language}"
+      }
+    },
+    {
+      "id": "discovery-interview",
+      "skill": "heygen-video-producer",
+      "description": "Discovery questions asked in user's language",
+      "inputs": {
+        "en": "I want to make a product demo video",
+        "ja": "製品デモビデオを作りたいです",
+        "es": "quiero hacer un video de demostración de producto",
+        "ko": "제품 데모 비디오를 만들고 싶어요"
+      },
+      "expected": {
+        "discovery_questions_language": "{input_language}",
+        "gathers_all_10_fields": true,
+        "language_field_detected": true
+      }
+    },
+    {
+      "id": "voice-selection-language",
+      "skill": "heygen-avatar-designer",
+      "description": "Voice selected matches user's language",
+      "inputs": {
+        "en": "create my avatar, I speak English",
+        "ja": "アバターを作って、日本語を話します",
+        "es": "crea mi avatar, hablo español",
+        "ko": "아바터를 만들어줘, 한국어를 해요"
+      },
+      "expected": {
+        "voice_api_language_filter": "{input_language_code}",
+        "voice_settings_locale": "{locale_code}",
+        "user_facing_language": "{input_language}"
+      }
+    },
+    {
+      "id": "test-video-prompt",
+      "skill": "heygen-avatar-designer",
+      "description": "Phase 5 test video uses user's language",
+      "inputs": {
+        "en": "test the avatar",
+        "ja": "アバターをテストして",
+        "es": "prueba el avatar",
+        "ko": "아바터 테스트해줘"
+      },
+      "expected": {
+        "test_prompt_language": "{input_language}",
+        "not_hardcoded_english": true
+      }
+    },
+    {
+      "id": "script-generation",
+      "skill": "heygen-video-producer",
+      "description": "Script generated in user's language, directives in English",
+      "inputs": {
+        "en": "make a 30 second video about AI trends",
+        "ja": "AIトレンドについての30秒ビデオを作って",
+        "es": "haz un video de 30 segundos sobre tendencias de IA",
+        "ko": "AI 트렌드에 대한 30초 비디오를 만들어줘"
+      },
+      "expected": {
+        "script_language": "{input_language}",
+        "style_block_language": "en",
+        "motion_verbs_language": "en",
+        "frame_check_language": "en"
+      }
+    },
+    {
+      "id": "prompt-craft-mixed",
+      "skill": "heygen-video-producer",
+      "description": "Final prompt has content in user language + English technical directives",
+      "inputs": {
+        "en": "product launch video, cinematic style, 60 seconds",
+        "ja": "製品発売ビデオ、シネマティックスタイル、60秒",
+        "es": "video de lanzamiento de producto, estilo cinematográfico, 60 segundos",
+        "ko": "제품 출시 비디오, 시네마틱 스타일, 60초"
+      },
+      "expected": {
+        "script_content_language": "{input_language}",
+        "script_framing_directive_language": "en",
+        "style_block_language": "en",
+        "framing_correction_language": "en",
+        "motion_verbs_language": "en"
+      }
+    },
+    {
+      "id": "buddy-species-voice",
+      "skill": "buddy-to-avatar",
+      "description": "Buddy voice prompt uses user's language",
+      "inputs": {
+        "en": "bring my penguin buddy Bramble to life, CHAOS:77 WISDOM:27",
+        "ja": "ペンギンのバディBrambleに命を吹き込んで、CHAOS:77 WISDOM:27",
+        "es": "dale vida a mi buddy pingüino Bramble, CHAOS:77 WISDOM:27",
+        "ko": "펭귄 버디 Bramble을 살려줘, CHAOS:77 WISDOM:27"
+      },
+      "expected": {
+        "voice_language_filter": "{input_language_code}",
+        "intro_script_language": "{input_language}",
+        "appearance_prompt_language": "en",
+        "user_facing_language": "{input_language}"
+      }
+    },
+    {
+      "id": "error-messages",
+      "skill": "heygen-avatar-designer",
+      "description": "Error messages in user's language",
+      "inputs": {
+        "en": "create an avatar (API key missing scenario)",
+        "ja": "アバターを作って（APIキーがない場合）",
+        "es": "crea un avatar (falta la clave API)",
+        "ko": "아바터를 만들어줘 (API 키가 없는 경우)"
+      },
+      "expected": {
+        "error_message_language": "{input_language}",
+        "technical_details_language": "en_acceptable"
+      }
+    }
+  ]
+}

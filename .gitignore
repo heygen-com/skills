@@ -4,7 +4,6 @@
 node_modules/
 *.jsonl
 
-# Evals are dev-only, not shipped to users
-# Remove this line if you want to contribute eval scenarios
-evals/
+# Eval baselines are dev-only (generated output), but scenarios and rubric are tracked
+evals/baselines/
 scripts/release.sh
