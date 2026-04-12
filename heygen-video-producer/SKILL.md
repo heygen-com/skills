@@ -230,101 +230,74 @@ YouTube/web/LinkedIn → `"landscape"` | TikTok/Reels/Shorts → `"portrait"` | 
 
 ---
 
-## Frame Check — Aspect Ratio & Background Pre-Check
+## Frame Check
 
-**Runs automatically when `avatar_id` is set, before Generate.**
+**Runs automatically when `avatar_id` is set, before Generate. Appends correction notes to the Video Agent prompt. Does NOT generate images or create new looks.**
 
-> ⛔ **SUBAGENT RULE — READ THIS FIRST:**
-> Frame Check MUST run in the **main session**. Do NOT delegate it to a subagent.
-> Subagents do not have access to the SKILL.md, cannot execute curl commands against the HeyGen API
-> in the right context, and cannot build a corrected prompt reliably.
-> The correct pattern:
-> 1. Run ALL Frame Check steps yourself in the main session (look resolution → dimensions → style detection → correction notes)
-> 2. Build the **complete, corrected prompt string** with any FRAMING NOTE / BACKGROUND NOTE already embedded
-> 3. THEN spawn a subagent with the finished payload — subagent only submits, polls, and delivers
-> A subagent that modifies or builds the prompt itself is a bug.
+> ⛔ **SUBAGENT RULE:** Frame Check MUST run in the **main session**. Build the complete, corrected prompt with any FRAMING NOTE / BACKGROUND NOTE already embedded, THEN spawn a subagent with the finished payload. Subagents only submit, poll, and deliver.
 
 ### Avatar ID Resolution (ALWAYS run first)
 
 **Never trust a stored `look_id` — looks are ephemeral and get deleted.** Always resolve fresh from the `group_id`:
 
 ```bash
-# Step 0: Resolve look_id from group_id at runtime
 curl -s "https://api.heygen.com/v3/avatars/looks?group_id=<group_id>&limit=20" \
   -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
 
-From the response, pick the look matching the target orientation (landscape = `image_width > image_height`, portrait = `image_height > image_width`). Use the first match. If no looks exist in the group, tell the user — do not proceed with a stale look_id.
+From the response, pick the look matching the target orientation. Use the first match. If no looks exist in the group, tell the user.
 
-**Rule:** Store only `group_id` in AVATAR files. Resolve `look_id` at runtime. If you have both, always verify the `look_id` is still valid before using it.
+**Rule:** Store only `group_id` in AVATAR files. Resolve `look_id` at runtime.
 
 ### Steps
 
-1. **Fetch avatar look metadata:** After resolving `look_id` from group above → `GET /v3/avatars/looks/<resolved_look_id>` → extract `avatar_type` and `preview_image_url`
-2. **Determine orientation AND aspect ratio:** Fetch preview image dimensions. width > height = landscape, height > width = portrait, width == height = square. Fetch fails = assume portrait. **Then compute the ratio** (larger/smaller). HeyGen requires ~1.78 (16:9). If ratio is NOT between 1.73–1.83, the avatar needs a framing correction even if orientation matches (e.g., 4:3 portrait avatar in 9:16 video = black bars).
-3. **Detect avatar visual style:** Classify as photorealistic, animated, 3D rendered, or stylized. Determines fill language.
-4. **Determine background:** `photo_avatar` → no standalone bg correction needed. `studio_avatar` → check if transparent/solid/empty. `video_avatar` → always has background.
-5. **Build correction note(s)** from the matrix. Append to prompt silently.
-6. **Submit with the ORIGINAL `avatar_id`.** Video Agent's internal AI Image tool handles corrections based on the FRAMING NOTE / BACKGROUND NOTE directives.
-
-**⚠️ Do NOT generate corrected images externally, upload new assets, or create new avatar looks for framing corrections. Video Agent's AI Image tool preserves face identity. External image generation destroys it.**
+1. **Fetch avatar look metadata:** `GET /v3/avatars/looks/<avatar_id>` → extract `avatar_type`, `preview_image_url`, `image_width`, `image_height`
+2. **Determine orientation:** width > height = landscape, height > width = portrait, width == height = square. Fetch fails = assume portrait.
+3. **Determine background:** `photo_avatar` → Video Agent handles environment. `studio_avatar` → check if transparent/solid/empty. `video_avatar` → always has background.
+4. **Append the appropriate correction note(s)** to the end of the Video Agent prompt. That's it. No image generation, no new looks.
 
 ### Correction Matrix
 
-| avatar_type | Orientation | Aspect Ratio | Corrections |
+| avatar_type | Orientation Match? | Has Background? | Corrections |
 |---|---|---|---|
-| `photo_avatar` | ✅ same | ✅ ~16:9 | None |
-| `photo_avatar` | ✅ same | ❌ not 16:9 | Ratio fix (gen fill to 16:9 or 9:16) |
-| `photo_avatar` | ❌ different | any | Framing correction |
-| `photo_avatar` | ◻ square | n/a | Framing correction (always) |
-| `studio_avatar` | ✅ same | ✅ ~16:9 | None (if bg exists) / Background (if no bg) |
-| `studio_avatar` | ✅ same | ❌ not 16:9 | Ratio fix (+Background if no bg) |
-| `studio_avatar` | ❌ different | any | Framing (+Background if no bg) |
-| `studio_avatar` | ◻ square | n/a | Framing (+Background if no bg) |
-| `video_avatar` | ✅ same | ✅ ~16:9 | None |
-| `video_avatar` | ❌ mismatched | ✅ Yes | Framing correction |
-| `video_avatar` | ◻ square | ✅ Yes | Framing correction (always) |
+| `photo_avatar` | ✅ matched | (n/a) | None |
+| `photo_avatar` | ❌ mismatched or ◻ square | (n/a) | Framing note |
+| `studio_avatar` | ✅ matched | ✅ Yes | None |
+| `studio_avatar` | ✅ matched | ❌ No | Background note |
+| `studio_avatar` | ❌ mismatched or ◻ square | ✅ Yes | Framing note |
+| `studio_avatar` | ❌ mismatched or ◻ square | ❌ No | Framing note + Background note |
+| `video_avatar` | ✅ matched | ✅ Yes | None |
+| `video_avatar` | ❌ mismatched or ◻ square | ✅ Yes | Framing note |
 
-### Avatar Visual Style Detection (CRITICAL)
+### Framing Note (append to prompt)
 
-Before building correction blocks, examine the avatar's `preview_image_url` to classify its visual style:
-- **Photorealistic** (real human photo) → fill with photorealistic environment
-- **Animated/Illustrated** (cartoon, cel-shaded, flat colors) → fill with matching illustrated environment
-- **3D Rendered** (CG character, Pixar-like) → fill with matching 3D environment
-- **Stylized** (watercolor, sketch, pixel art) → fill with matching artistic environment
-
-**The background MUST match the avatar's aesthetic.** An animated avatar gets an animated background. A photo avatar gets a photo background. Mismatched styles look terrible.
-
-📖 **Full style detection table, fill directives per style, correction templates → [../references/frame-check.md](../references/frame-check.md)**
-
-### Framing Correction (portrait↔landscape mismatch)
-
-Append to prompt — replace `{source}`, `{target}`, and `{FILL_DIRECTIVE}` (from style detection):
+For portrait/square avatar → landscape video:
 ```
-FRAMING NOTE: The avatar image is {source} but this video is {target}. YOU MUST
-generate a new variant using AI Image tool to generative fill and extend the
-canvas to {target} orientation. {FILL_DIRECTIVE}
-Correct lighting, natural shadows, consistent art style throughout.
-Do NOT use original uncropped. Do NOT add black bars or letterboxing.
-Do NOT leave transparent or missing background.
+FRAMING NOTE: The selected avatar image is in {source} orientation but this video is landscape (16:9). Frame the presenter from the chest up, centered in the landscape canvas. Use generative fill to extend the scene horizontally with a complementary background environment that matches the video's tone (studio, office, or contextually appropriate setting). Do NOT add black bars or pillarboxing. The avatar should feel natural in the 16:9 frame.
 ```
 
-### Background Correction (studio_avatar only, no background)
+For landscape/square avatar → portrait video:
+```
+FRAMING NOTE: The selected avatar image is in {source} orientation but this video is portrait (9:16). Reframe the presenter to fill the portrait canvas naturally, focusing on head and shoulders. Use generative fill to extend vertically if needed. Do NOT add letterboxing. The avatar should fill the portrait frame comfortably.
+```
 
-**Not for photo_avatar.** Append to prompt — replace `{FILL_DIRECTIVE}` (from style detection):
+### Background Note (studio_avatar only, no background)
+
 ```
-BACKGROUND NOTE: This studio avatar has no background. YOU MUST use AI Image tool
-to generate a background that MATCHES THE AVATAR'S VISUAL STYLE. {FILL_DIRECTIVE}
-Business: studio/office/podcast set. Casual: room with natural light.
-Correct lighting, natural shadows, art style consistency with the avatar.
-Do NOT leave any transparent, solid-color, or gradient background.
+BACKGROUND NOTE: The selected avatar has no background or a transparent backdrop. Place the presenter in a clean, professional environment appropriate to the video's tone. For business/tech content: modern studio with soft lighting and subtle depth. For casual content: bright, minimal space with natural light. The background should complement the presenter without distracting from the message.
 ```
+
+📖 **Full correction templates and stacking matrix → [../references/frame-check.md](../references/frame-check.md)**
 
 ---
 
 ## Generate
 
 ### Pre-Submit Gate
+
+**Frame Check:** If `avatar_id` is set, ensure Frame Check ran and any correction notes are appended to the prompt.
+
+**Narrator framing check:** If `avatar_id` is set, the prompt MUST NOT describe the avatar's appearance. Say "the selected presenter" instead.
 
 - **Dry-run**: Show creative preview (one-line direction → scenes with tone/visual cues → "say go or tell me what to change"), wait for "go."
 - **Full Producer**: User approved script. Proceed.
@@ -336,9 +309,6 @@ Do NOT leave any transparent, solid-color, or gradient background.
 
 **Step 1: Run Frame Check (if `avatar_id` set) — MAIN SESSION ONLY**
 Before calling the API, run the Frame Check steps above. Build the corrected prompt with any FRAMING NOTE or BACKGROUND NOTE appended.
-
-> ⛔ **Do NOT proceed to Step 2 until Frame Check is complete in the current (main) session.**
-> If you are inside a subagent: stop, report back to the main session with the avatar details, and let the main session run Frame Check before re-spawning you with the corrected payload.
 
 **Step 2: Build the complete payload object in main session**
 Before spawning any subagent, assemble the full request payload as a JSON object:
@@ -356,18 +326,10 @@ This payload is the handoff to any subagent. The subagent receives a finished pa
 
 **Step 3: Subagent spawn pattern (for batch or non-blocking generation)**
 
-When generating multiple videos or wanting non-blocking polling, spawn one subagent per video with the finished payload:
-```
-Spawn subagent task:
-"Submit this exact payload to POST https://api.heygen.com/v3/video-agents with headers
- X-Api-Key, User-Agent, X-HeyGen-Source. Do not modify the payload.
- Poll GET /v3/videos/<video_id> every 30s until status=completed.
- Download the MP4 and deliver via message tool.
- Payload: <paste completed JSON here>"
-```
+When generating multiple videos or wanting non-blocking polling, spawn one subagent per video with the finished payload.
 Subagents are for **submit + poll + deliver only**. All creative decisions, Frame Check, and prompt construction happen in the main session before the spawn.
 
-> ⛔ **BATCH RULE:** When generating N videos in parallel, spawn N subagents — one per video with its own finished payload. Do NOT spawn one subagent with N videos to handle. Each subagent should be a simple courier: one payload → one video → one delivery.
+> ⛔ **BATCH RULE:** When generating N videos in parallel, spawn N subagents — one per video with its own finished payload.
 
 **Step 4: Submit to `POST /v3/video-agents`**
 ```bash
@@ -375,7 +337,7 @@ curl -sX POST "https://api.heygen.com/v3/video-agents" \
   -H "X-Api-Key: $HEYGEN_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "prompt": "<corrected prompt from Frame Check>",
+    "prompt": "<corrected prompt with Frame Check notes>",
     "avatar_id": "<look_id from discovery>",
     "voice_id": "<from discovery>",
     "style_id": "<optional>",

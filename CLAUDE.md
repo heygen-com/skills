@@ -27,7 +27,7 @@ heygen-stack/
 │   ├── motion-vocabulary.md    # Prompt Craft: camera/transition vocabulary
 │   ├── prompt-craft.md         # Prompt Craft: prompt construction deep-dive
 │   ├── official-prompt-guide.md# Prompt Craft: HeyGen's own prompt research
-│   ├── frame-check.md          # Frame Check: aspect ratio correction prompts + style detection
+│   ├── frame-check.md          # Frame Check: aspect ratio correction prompts
 │   ├── api-reference.md        # Generate: endpoints, polling, interactive sessions, errors
 │   ├── troubleshooting.md      # Known issues, workarounds, duration variance
 │   ├── reviewer-prompt.md      # Deliver: self-evaluation rubric
@@ -119,8 +119,8 @@ Validated across 18 rounds of testing (80+ videos):
 3. **When avatar_id is set, omit appearance description from prompt.** Say "the selected presenter" instead.
 4. **Script-as-prompt approach.** Full scene-labeled script pasted into prompt.
 5. **Trust Video Agent for duration pacing.** No padding multipliers.
-6. **Frame Check correction prompts need explicit "Use AI Image tool" trigger.**
+6. **Frame Check appends FRAMING NOTE / BACKGROUND NOTE to prompt — no image generation.**
 7. **Dry-run before API.** Always offer.
 8. **Quick Shot mode: omit avatar_id, let Video Agent auto-select.**
 9. **video_avatar type has a known backend bug.** Document in troubleshooting.
-10. **Frame Check is prompt-only.** Corrections (frame fix, bg fill, orientation) are appended as FRAMING NOTE / BACKGROUND NOTE to the Video Agent prompt. Video Agent's internal AI Image tool handles the actual correction. Do NOT generate corrected images externally or create new avatar looks for framing — external image generation destroys face identity.
+10. **Prompt-only Frame Check.** Corrections append text notes (FRAMING NOTE / BACKGROUND NOTE) to the Video Agent prompt. Video Agent handles framing internally. No image generation, no look creation, no asset uploads.

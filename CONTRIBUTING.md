@@ -131,11 +131,11 @@ This skill was built through 20 rounds of automated evaluation, producing 80+ vi
 |---------|-------|--------|
 | SKILL.md at 57KB consumed ~15K tokens/turn | R10 | Refactored to 259 lines (78% reduction) |
 | avatar_id + appearance text in prompt conflict | R7 | Narrator framing rule: omit appearance when avatar_id set |
-| Frame Check corrections silently failed without explicit tool trigger | R3 | Added prescriptive "Use AI Image tool" language |
+| Frame Check corrections not appended to prompt | R3 | Added explicit correction note templates |
 | Timestamps per scene make delivery robotic | R8 | Switched to natural flow + tone description |
 | 365% duration overshoot on short videos | R12 | Script framing directive added |
 | Square (1:1) avatars letterboxed with black bars | R18 | Square detection + correction blocks D/E |
-| Corrections created new avatar groups instead of looks | R20 | Reverted: prompt-only corrections (FRAMING NOTE / BACKGROUND NOTE) let Video Agent's AI Image tool handle framing while preserving face identity |
+| External image gen in Frame Check degraded face identity | R20 | Reverted to prompt-only approach — Video Agent handles framing internally |
 
 ### Running Your Own Evals
 

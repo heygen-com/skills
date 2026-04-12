@@ -293,7 +293,7 @@ Generate a natural greeting in the video language (from `user_language`). Exampl
 When the user wants to refine:
 
 - **"Adjust the prompt"** → Mode 2 with existing group_id (keeps the character, adds a new look). Only Mode 1 if they say "start completely over."
-- **"Add a new look"** / **"different outfit"** / **"landscape version"** → Mode 2 with existing group_id. Add to Looks in AVATAR file.
+- **"Add a new look"** / **"different outfit"** → Mode 2 with existing group_id. Add to Looks in AVATAR file.
 - **"Try a different voice"** → back to Phase 3
 - **"Start completely over"** → Mode 1, new character. Overwrite HeyGen section.
 

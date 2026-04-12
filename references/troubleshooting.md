@@ -43,26 +43,13 @@ Without `avatar_id`: ~80% accuracy average.
 
 ---
 
-## Frame Check Correction Prompts Not Executing
+## Frame Check: Video Agent Not Applying Framing
 
-If Video Agent isn't applying aspect ratio corrections (generative fill, reframing), check:
+If the Video Agent ignores the FRAMING NOTE or BACKGROUND NOTE and produces black bars, letterboxing, or mismatched framing:
 
-1. **Correction notes must be appended to the prompt text.** If the FRAMING NOTE or BACKGROUND NOTE isn't in the prompt, Video Agent won't know to correct. The full correction text blocks (A, B, C, D, E) must be appended verbatim.
-2. The correction prompt must include the exact phrase: **"Use AI Image tool"** — without this trigger, Video Agent acknowledges the directive but doesn't execute it. This refers to Video Agent's INTERNAL AI Image tool, not our external image generation.
-3. **photo_avatar does NOT need Correction C** (background fill). Video Agent generates avatar + environment together for photo_avatars. Only apply framing corrections (A/B/D/E) for orientation mismatches. Correction C is for studio_avatars with transparent/empty backgrounds only.
-4. **Always submit with the original avatar_id.** Do NOT generate corrected images externally or create new avatar looks. Video Agent's internal AI Image tool handles framing while preserving face identity.
-
----
-
-## Generative Fill Visual Quality
-
-Video Agent's AI Image tool can sometimes produce synthetic-looking backgrounds when applying Frame Check corrections. Tips for better results:
-
-**Mitigation:**
-- Style-adaptive fill directives (Step 2.5 in frame-check.md) match the background to the avatar's visual style
-- Specific real-world details in the prompt beat generic descriptions: "visible mic stands, actual monitors with content" >> "professional studio"
-- The fill directive should request depth-of-field blur, natural lighting direction, and realistic imperfections
-- Short videos (≤30s) with corrections tend to overshoot duration (~163%)
+1. **Ensure the note is appended at the END of the prompt**, after all other content (script, style block, etc.). Video Agent processes instructions sequentially and late-prompt directives have the strongest effect.
+2. **Check that the correction note was actually appended.** Log the final prompt text and verify the FRAMING NOTE / BACKGROUND NOTE block is present.
+3. **photo_avatar does NOT need BACKGROUND NOTE.** Video Agent generates avatar + environment together for photo_avatars. Only append framing notes for orientation mismatches. Background notes are for studio_avatars with transparent/empty backgrounds only.
 
 ---
 

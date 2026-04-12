@@ -183,44 +183,49 @@ After Discovery, the producer sub-skill handles the full pipeline. Read `heygen-
 
 ---
 
-## Frame Check — Aspect Ratio & Background Pre-Check
+## Frame Check
 
-**MANDATORY for ALL modes (Full Producer, Enhanced, Quick Shot) when `avatar_id` is set. Runs before EVERY API call. Skipping this step causes black bars, letterboxing, or background artifacts.**
+**Runs automatically when `avatar_id` is set, before Generate. Appends correction notes to the Video Agent prompt. Does NOT generate images or create new looks.**
 
 ### Steps
 
 1. **Fetch avatar look metadata:** `GET /v3/avatars/looks/<avatar_id>` -> extract `avatar_type`, `preview_image_url`, `image_width`, `image_height`
-2. **Determine orientation and aspect ratio:** width > height = landscape, height > width = portrait, width == height = square. Compute ratio (larger/smaller). HeyGen requires ~1.78 (16:9). If ratio is NOT between 1.73-1.83, correction needed even if orientation matches.
-3. **Square avatar handling:** If avatar is square (1:1), it NEVER matches landscape or portrait. Always needs correction.
-4. **Detect avatar visual style:** Examine preview image -> classify as photorealistic, animated, 3D rendered, or stylized. Determines fill language in correction templates.
-5. **Determine background:** `photo_avatar` -> no standalone bg correction needed. `studio_avatar` -> check if transparent/solid/empty. `video_avatar` -> always has background.
-6. **Build correction note(s)** from the matrix below. Replace `{FILL_DIRECTIVE}` with the exact fill directive for the detected `avatar_visual_style`. Do NOT use photorealistic fill language for non-photorealistic avatars.
-7. **Submit with the ORIGINAL `avatar_id`.** Video Agent's internal AI Image tool handles the corrections based on the FRAMING NOTE and BACKGROUND NOTE directives.
-
-**Do NOT generate corrected images externally, upload new assets, or create new avatar looks for framing corrections. Video Agent's AI Image tool preserves face identity. External image generation destroys it.**
+2. **Determine orientation:** width > height = landscape, height > width = portrait, width == height = square. Fetch fails = assume portrait.
+3. **Determine background:** `photo_avatar` -> Video Agent handles environment. `studio_avatar` -> check if transparent/solid/empty. `video_avatar` -> always has background.
+4. **Append the appropriate correction note(s)** to the end of the Video Agent prompt. That's it. No image generation, no new looks.
 
 ### Correction Matrix
 
-| avatar_type | Orientation | Aspect Ratio | Has Background? | Corrections |
-|---|---|---|---|---|
-| `photo_avatar` | same | ~16:9 | (n/a) | None |
-| `photo_avatar` | same | not 16:9 | (n/a) | Ratio fix (F or G) |
-| `photo_avatar` | different | any | (n/a) | Framing correction |
-| `photo_avatar` | square | n/a | (n/a) | Framing correction (always) |
-| `studio_avatar` | same | ~16:9 | Yes | None |
-| `studio_avatar` | same | ~16:9 | No | Background correction |
-| `studio_avatar` | same | not 16:9 | Yes | Ratio fix (F or G) |
-| `studio_avatar` | same | not 16:9 | No | Ratio fix + Background |
-| `studio_avatar` | different | any | Yes | Framing correction |
-| `studio_avatar` | different | any | No | Framing + Background |
-| `studio_avatar` | square | n/a | Yes | Framing correction (always) |
-| `studio_avatar` | square | n/a | No | Framing + Background |
-| `video_avatar` | same | ~16:9 | Yes | None |
-| `video_avatar` | same | not 16:9 | Yes | Ratio fix (F or G) |
-| `video_avatar` | different | any | Yes | Framing correction |
-| `video_avatar` | square | n/a | Yes | Framing correction (always) |
+| avatar_type | Orientation Match? | Has Background? | Corrections |
+|---|---|---|---|
+| `photo_avatar` | matched | (n/a) | None |
+| `photo_avatar` | mismatched or square | (n/a) | Framing note |
+| `studio_avatar` | matched | Yes | None |
+| `studio_avatar` | matched | No | Background note |
+| `studio_avatar` | mismatched or square | Yes | Framing note |
+| `studio_avatar` | mismatched or square | No | Framing note + Background note |
+| `video_avatar` | matched | Yes | None |
+| `video_avatar` | mismatched or square | Yes | Framing note |
 
-**Full style detection table, fill directives per style, all correction templates (A-G)** -> [references/frame-check.md](references/frame-check.md)
+### Framing Note (append to prompt)
+
+For portrait/square avatar -> landscape video:
+```
+FRAMING NOTE: The selected avatar image is in {source} orientation but this video is landscape (16:9). Frame the presenter from the chest up, centered in the landscape canvas. Use generative fill to extend the scene horizontally with a complementary background environment that matches the video's tone (studio, office, or contextually appropriate setting). Do NOT add black bars or pillarboxing. The avatar should feel natural in the 16:9 frame.
+```
+
+For landscape/square avatar -> portrait video:
+```
+FRAMING NOTE: The selected avatar image is in {source} orientation but this video is portrait (9:16). Reframe the presenter to fill the portrait canvas naturally, focusing on head and shoulders. Use generative fill to extend vertically if needed. Do NOT add letterboxing. The avatar should fill the portrait frame comfortably.
+```
+
+### Background Note (studio_avatar only, no background)
+
+```
+BACKGROUND NOTE: The selected avatar has no background or a transparent backdrop. Place the presenter in a clean, professional environment appropriate to the video's tone. For business/tech content: modern studio with soft lighting and subtle depth. For casual content: bright, minimal space with natural light. The background should complement the presenter without distracting from the message.
+```
+
+**Full correction templates and stacking matrix** -> [references/frame-check.md](references/frame-check.md)
 
 ---
 
