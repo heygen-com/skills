@@ -170,7 +170,7 @@ Start by kicking off the HeyGen generation, then build the Remotion composition 
 - Generation can take 15+ minutes for longer scripts
 
 **Avatar/voice mismatch:**
-- Ensure agent used `GET /v3/avatars/looks` to find an avatar with `default_voice_id`
+- Ensure agent used `GET /v3/avatars/looks/{look_id}` to fetch the look details and `default_voice_id`
 - Check the skills are properly installed in `.claude/skills/`
 
 **Composition duration wrong:**

@@ -5,8 +5,6 @@ description: Listing avatars, avatar styles, and avatar_id selection for HeyGen
 
 # HeyGen Avatars
 
-> **Deprecated:** This reference documents the v2 avatars endpoint (`GET /v2/avatars`). The current endpoints are `GET /v3/avatars` (groups) and `GET /v3/avatars/looks` (looks with `avatar_id`) — see the `avatar-video` skill for up-to-date documentation.
-
 Avatars are the AI-generated presenters in HeyGen videos. You can use public avatars provided by HeyGen or create custom avatars.
 
 ## Previewing Avatars Before Generation

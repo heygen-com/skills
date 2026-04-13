@@ -5,8 +5,6 @@ description: Creating avatars from photos (talking photos) for HeyGen
 
 # Photo Avatars (Talking Photos)
 
-> **Note:** Code examples below use v2 endpoints. See the `avatar-video` skill's `photo-avatars.md` reference for the current v3-compatible documentation with the `type: "image"` input mode.
-
 Photo avatars allow you to animate a static photo and make it speak. This is useful for creating personalized video content from portraits, headshots, or any suitable image.
 
 ## Creating a Photo Avatar from an Uploaded Image

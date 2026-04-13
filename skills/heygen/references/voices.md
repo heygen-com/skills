@@ -5,8 +5,6 @@ description: Listing voices, locales, speed/pitch configuration for HeyGen
 
 # HeyGen Voices
 
-> **Deprecated:** This reference documents the v2 voices endpoint (`GET /v2/voices`). The current endpoint is `GET /v3/voices` — see the `avatar-video` or `text-to-speech` skill for up-to-date documentation.
-
 HeyGen provides a wide variety of AI voices for different languages, accents, and styles. Voices convert your text script into natural-sounding speech.
 
 ## Listing Available Voices
