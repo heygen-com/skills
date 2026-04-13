@@ -43,7 +43,7 @@ else
 fi
 
 # ─── Create skill symlinks ───────────────────────────────────
-SKILLS=(heygen-avatar heygen-video buddy-to-avatar)
+SKILLS=(heygen-avatar heygen-video)
 
 if [ -n "$SKILLS_DIR" ]; then
   STACK_SKILL_DIR="$SKILLS_DIR/heygen-stack"

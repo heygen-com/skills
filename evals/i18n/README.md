@@ -17,7 +17,7 @@ Run all scenarios in dry-run mode for each language and score against the rubric
 
 | File | Purpose |
 |------|---------|
-| `scenarios.json` | 10 test inputs per language (en, ja, es, ko) per skill |
+| `scenarios.json` | 8 test inputs per language (en, ja, es, ko) per skill |
 | `rubric.md` | Scoring criteria, composite formula, regression thresholds |
 | `baselines/` | Saved score snapshots for before/after comparison |
 | `README.md` | This file |
@@ -35,14 +35,12 @@ Run all scenarios in dry-run mode for each language and score against the rubric
 
 1. **routing-full-producer** — Vague video request triggers Full Producer
 2. **routing-quick-shot** — Skip questions triggers Quick Shot
-3. **routing-buddy** — Buddy pipeline trigger
-4. **discovery-interview** — Discovery questions in user's language
-5. **voice-selection-language** — Voice matches user's language
-6. **test-video-prompt** — Phase 5 test video in user's language
-7. **script-generation** — Script in user's language, directives in English
-8. **prompt-craft-mixed** — Content language + English technical directives
-9. **buddy-species-voice** — Buddy voice in user's language
-10. **error-messages** — Errors in user's language
+3. **discovery-interview** — Discovery questions in user's language
+4. **voice-selection-language** — Voice matches user's language
+5. **test-video-prompt** — Phase 5 test video in user's language
+6. **script-generation** — Script in user's language, directives in English
+7. **prompt-craft-mixed** — Content language + English technical directives
+8. **error-messages** — Errors in user's language
 
 ## When to Run
 

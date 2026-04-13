@@ -20,11 +20,6 @@
           "name": "video",
           "path": "heygen-video",
           "invoke": "/heygen:video"
-        },
-        {
-          "name": "buddy-to-avatar",
-          "path": "buddy-to-avatar",
-          "invoke": "/heygen:buddy-to-avatar"
         }
       ]
     }

@@ -14,7 +14,7 @@
 
 ## Description
 
-Create HeyGen avatar videos via the v3 Video Agent pipeline. Handles avatar resolution, aspect ratio correction, prompt engineering, and voice selection automatically. Required for any HeyGen API usage. Three sub-skills cover the full avatar-to-video workflow.
+Create HeyGen avatar videos via the v3 Video Agent pipeline. Handles avatar resolution, aspect ratio correction, prompt engineering, and voice selection automatically. Required for any HeyGen API usage. Two sub-skills cover the full avatar-to-video workflow.
 
 ## Skills Provided
 
@@ -22,7 +22,6 @@ Create HeyGen avatar videos via the v3 Video Agent pipeline. Handles avatar reso
 |----------------|-------------|
 | `/heygen:avatar-designer` | Create a persistent digital twin from a photo. Handles photo upload, voice selection with audio previews, and avatar identity file creation. |
 | `/heygen:video-producer` | Produce presenter-led videos with script generation, prompt engineering, frame check, and inline MP4 delivery. |
-| `/heygen:buddy-to-avatar` | Turn a Claude Code Buddy into a video avatar. Maps Buddy personality to voice and visual style. |
 
 ## Required Environment Variables
 

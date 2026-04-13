@@ -35,7 +35,7 @@ First, fetch the user's existing HeyGen avatars: `GET https://api.heygen.com/v3/
 
 If the user **has existing avatars** (non-empty `data` array), present them as numbered options and ask which to use or whether to create a new one. Communicate in `user_language`.
 
-If the user has **no existing avatars** (empty `data`), tell them none were found and offer two paths: (1) Claude Buddy shortcut (run `/buddy` and paste the species name for automatic personality/appearance/voice mapping), or (2) manual creation with a few quick questions. Mention the OpenClaw `SOUL.md` shortcut for future reference. Communicate in `user_language`.
+If the user has **no existing avatars** (empty `data`), tell them none were found and offer to create one with a few quick questions. Mention the OpenClaw `SOUL.md` shortcut for future reference. Communicate in `user_language`.
 
 Wait for their answer before proceeding.
 
@@ -111,7 +111,7 @@ Start every invocation with:
 
 Determine the target identity:
 
-1. **Agent** — user says "create your avatar", "bring yourself to life" → read IDENTITY.md for name, then check `AVATAR-<NAME>.md`. If IDENTITY.md is not found (Claude Code environment), suggest the buddy-to-avatar skill first: "Looks like you're on Claude Code. Want to use your Claude Buddy as the starting point for your avatar? Pick a species (penguin, owl, dragon, etc.) and I'll build a full identity around it — personality, appearance, and voice already baked in. Or say 'skip' and I'll walk you through designing from scratch."
+1. **Agent** — user says "create your avatar", "bring yourself to life" → read IDENTITY.md for name, then check `AVATAR-<NAME>.md`. If IDENTITY.md is not found (Claude Code environment), walk the user through designing from scratch with a few quick questions about appearance and voice.
 2. **User** — user says "create my avatar", "make me an avatar" → ask for their name, check `AVATAR-<NAME>.md`
 3. **Named character** — user says "create an avatar called Cleo" → check `AVATAR-CLEO.md`
 

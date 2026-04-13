@@ -4,7 +4,7 @@
 
 ### 1. Routing Accuracy (binary: pass/fail)
 Did the correct skill/mode fire regardless of input language?
-- **PASS:** Correct mode detected (Full Producer, Quick Shot, Buddy Pipeline, etc.)
+- **PASS:** Correct mode detected (Full Producer, Quick Shot, Enhanced Prompt, etc.)
 - **FAIL:** Wrong mode or no mode detected
 
 ### 2. Language Consistency (binary: pass/fail)
@@ -44,7 +44,7 @@ Do all pipeline stages execute?
 
 **Per scenario:** Sum of binary checks (4 max) + Prompt Quality (1-5) + Feature Parity (0-7) = max 16
 
-**Per language:** Average composite score across all 10 scenarios.
+**Per language:** Average composite score across all 8 scenarios.
 
 **Regression threshold:**
 - English baseline composite must not drop after i18n changes

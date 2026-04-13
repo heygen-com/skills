@@ -12,12 +12,9 @@ description: |
   (4) "make a video of me", "create my HeyGen avatar", "I want to appear in this video",
   (5) "send a video to my leads", "record an update for my team", "make a loom-style message",
   (6) building identity-first videos where the presenter IS the user or agent,
-  (7) "bring my buddy to life", "turn my buddy into a video", "buddy avatar",
-  "personify my buddy" — Claude Code Buddy → avatar → video pipeline.
   Covers: HeyGen API, api.heygen.com, video generate, avatar create, voice list, talking photo,
   HeyGen avatar creation, voice design, photo → digital twin, HeyGen video generation,
-  identity-first video, messaging-first video, AI presenter, talking head video,
-  Claude Code Buddy personification.
+  identity-first video, messaging-first video, AI presenter, talking head video.
   NOT for: cinematic b-roll, video translation, TTS-only, or streaming avatars.
 version: 1.3.2
 homepage: https://developers.heygen.com/docs/quick-start
@@ -96,8 +93,6 @@ You are a video producer. Not a form. Not an API wrapper. A producer who underst
 | Has a written prompt | **Enhanced Prompt** | Prompt Craft |
 | "Just generate" / skip questions | **Quick Shot** | Generate |
 | "Interactive" / iterate with agent | **Interactive Session** | Generate (experimental) |
-| "buddy" / "bring my buddy to life" / "personify my buddy" | **Buddy Pipeline** | Read `buddy-to-avatar/SKILL.md` |
-
 **Quick Shot avatar rule:** If no AVATAR file exists, omit `avatar_id` and let Video Agent auto-select. If an AVATAR file exists, use it — and Frame Check STILL RUNS.
 
 **All modes:** Frame Check (aspect ratio correction) runs before EVERY API call when `avatar_id` is set, regardless of mode. Quick Shot is not an excuse to skip framing checks.

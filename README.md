@@ -1,125 +1,122 @@
 # HeyGen Stack
 
-https://github.com/user-attachments/assets/ac2eef90-5356-4f45-a780-26dc44b294f9
+AI agent skills for creating avatar videos. Your agent gets a face, a voice, and the ability to send video like a message.
 
-Give your AI agent the ability to create videos featuring real people — and send them like messages.
-
-**heygen-stack** is an AI skill for identity-first and messaging-first video. Your agent can create a persistent digital avatar of you (or anyone), then produce videos where that person delivers a message — personalized outreach, team updates, announcements, pitches, explainers. One install. One API key.
+One install. One API key. Works with Claude Code, OpenClaw, Codex, and other AI coding agents.
 
 ```
-"Send a video message to my leads introducing our new feature."
+"Send a 45-second video update to my team about the launch."
+→ loads your avatar → writes the script → generates the video → delivers the share link
 ```
-→ Create your avatar → Write the message → Generate the video → Deliver the link
-
-Two angles, one category:
-- **Identity-first:** photo → avatar → voice → video. Your face, your voice, every video.
-- **Messaging-first:** video as the new message — outreach, updates, pitches, knowledge, announcements.
 
 ## Quick Start
 
-Get your API key from [app.heygen.com/settings](https://app.heygen.com/settings/api?nav=API).
+**30-second setup.** Paste this into your agent:
 
-**Option 1 — ClawHub (recommended):**
+> Clone and install HeyGen Stack:
+> ```
+> git clone https://github.com/heygen-com/heygen-stack.git ~/.claude/skills/heygen-stack && cd ~/.claude/skills/heygen-stack && ./setup
+> ```
+> My HeyGen API key is `YOUR_KEY_HERE`. Save it to your environment as `HEYGEN_API_KEY` and validate it by calling `GET https://api.heygen.com/v3/users/me` with header `X-Api-Key`.
+
+Get your API key at [app.heygen.com/settings/api](https://app.heygen.com/settings/api?nav=API).
+
+## What's Included
+
+Two skills that work standalone or chain together:
+
+| Skill | What it does | Invoke |
+|-------|-------------|--------|
+| **heygen-avatar** | Photo → persistent digital twin (face + voice). Reusable across every video. | `/heygen:avatar` |
+| **heygen-video** | Idea → script → prompt-engineered video with your avatar delivering the message. | `/heygen:video` |
+
+**heygen-avatar** creates the identity. **heygen-video** uses it. Chain them or use independently.
+
+## Install
+
+### Claude Code
+
+```bash
+git clone https://github.com/heygen-com/heygen-stack.git ~/.claude/skills/heygen-stack
+cd ~/.claude/skills/heygen-stack && ./setup
+```
+
+### OpenClaw
+
+```bash
+git clone https://github.com/heygen-com/heygen-stack.git ~/.openclaw/workspace/skills/heygen-stack
+cd ~/.openclaw/workspace/skills/heygen-stack && ./setup
+```
+
+### ClawHub
+
 ```bash
 clawhub install heygen-stack
 ```
 
-**Option 2 — Git clone:**
+### Other agents
+
+Clone the repo anywhere. Point your agent's skill/instruction loader at the `SKILL.md` files:
+- `SKILL.md` (root router)
+- `heygen-avatar/SKILL.md` (avatar creation)
+- `heygen-video/SKILL.md` (video production)
+
+## API Key Setup
+
+1. Go to [app.heygen.com/settings/api](https://app.heygen.com/settings/api?nav=API)
+2. Copy your API key
+3. Set it in your environment:
+   ```bash
+   export HEYGEN_API_KEY="your-key-here"
+   ```
+
+The `./setup` script checks your key automatically. You can also verify manually:
+
 ```bash
-# OpenClaw
-git clone https://github.com/heygen-com/heygen-stack.git ~/.openclaw/workspace/skills/heygen-stack
-
-# Claude Code
-git clone https://github.com/heygen-com/heygen-stack.git ~/.claude/skills/heygen-stack
+curl -s https://api.heygen.com/v3/users/me -H "X-Api-Key: $HEYGEN_API_KEY" | head -c 200
 ```
 
-Then copy and paste the following prompt to your agent:
+## Verify It Works
 
-> My HeyGen API key is `[HEYGEN_API_KEY]`. Save it to your persistent environment config and validate it works by calling `GET https://api.heygen.com/v3/users/me` with header `X-Api-Key`. Then use the heygen-avatar skill to create an avatar of me from this photo: [PHOTO_URL]. Once the avatar is ready, make a 30-second video of me introducing myself, casual tone.
+After setup, ask your agent:
 
-## What's Inside
+> Create my HeyGen avatar from this photo: [paste a URL or upload a file]
 
-Two skills that work standalone or chain together:
+The agent should upload the photo, create your avatar, ask about voice preferences, and save an `AVATAR-*.md` file. Then:
 
-### heygen-avatar
-Create a persistent digital identity — your face, your voice — for use across every video you make.
-
-- Reads identity files (`SOUL.md`, `IDENTITY.md`) or asks conversationally
-- Creates a HeyGen avatar with matched voice
-- Saves to `AVATAR-<NAME>.md` for automatic reuse across videos
-- Returns `avatar_id` + `voice_id` — pass directly to heygen-video
-
-```
-You: "I want to appear in videos as myself"
-Agent: [uploads your photo, creates avatar, matches voice]
-Agent: → AVATAR-YOU.md (avatar_id + voice_id, reusable forever)
-```
-
-### heygen-video
-Send a video as yourself — personalized, presenter-led, delivered like a message.
-
-Use cases: personalized outreach, team updates, product announcements, pitches, knowledge transfer, explainers.
-
-- **Discovery** — interviews you about purpose, audience, tone, duration
-- **Script** — structures content by message type (outreach, update, announcement, pitch, explainer)
-- **Prompt Craft** — transforms script into an optimized Video Agent prompt with style blocks and visual direction
-- **Frame Check** — detects avatar orientation mismatches and applies generative fill (no black bars, ever)
-- **Generate & Deliver** — submits to HeyGen API, polls, delivers share link with duration accuracy report
-
-```
-You: "Send a 45-second video update to my team about the launch"
-Agent: [loads your avatar, asks 2 smart questions]
-Agent: [writes the message, shows you for approval]
-Agent: [generates video with your face, delivers share link]
-```
-
-### buddy-to-avatar
-Bring your Claude Code Buddy to life as a HeyGen avatar and intro video.
-
-- Reads your terminal pet's species, stats, rarity, and personality
-- Maps buddy traits to avatar appearance, voice, and visual style
-- Chains through heygen-avatar and heygen-video automatically
-- Produces a personalized stat-reveal intro video
-
-```
-You: "Bring my buddy to life"
-Agent: [reads buddy card, maps species to appearance]
-Agent: [creates avatar, matches voice to personality stats]
-Agent: -> 30-second intro video with stat reveals
-```
-
-When all three skills are installed, they chain automatically: buddy-to-avatar -> heygen-avatar -> heygen-video.
+> Make a 30-second video of me introducing myself, casual tone.
 
 ## How It Works
 
 ```
-Identity Files              Avatar File              Finished Video
-(SOUL.md, IDENTITY.md)  →  AVATAR-NAME.md       →  Share link + session URL
+Photo / Description          Avatar File              Finished Video
        ↓                        ↓                        ↓
-  heygen-avatar          shared state            heygen-video
+  heygen-avatar    →    AVATAR-NAME.md       →    heygen-video
+  (identity + voice)    (reusable state)          (script + video)
 ```
 
-Each skill works independently. You don't need an avatar to make a video (stock avatars work), and you don't need to make videos to use the avatar designer.
+Skills communicate through `AVATAR-<NAME>.md` files. heygen-avatar writes them, heygen-video reads them. Human-readable and machine-readable.
 
 ## Requirements
 
 - A HeyGen API key ([get one here](https://app.heygen.com/settings/api?nav=API))
-- An AI agent that supports skills/instructions (OpenClaw, Claude Code, Codex, or similar)
-- That's it. No runtime dependencies, no packages to install, no build step.
+- An AI agent that supports skills/instructions (Claude Code, OpenClaw, Codex, or similar)
+- No runtime dependencies. No packages. No build step.
 
-## Security & Scripts
+## Security
 
-This skill includes one shell script in `scripts/`:
+One optional shell script in `scripts/`:
 
-- **`scripts/update-check.sh`** — checks `raw.githubusercontent.com/heygen-com/heygen-stack/main/VERSION` against your local VERSION file. Read-only. No data transmitted. Run manually with `bash scripts/update-check.sh` if you want a version check.
+- **`scripts/update-check.sh`** — compares your local `VERSION` against the latest on GitHub. Read-only, opt-in, no data transmitted.
 
-The script does not run automatically. The update check is opt-in only.
+Data only leaves your machine to `api.heygen.com` (video generation) and optionally `raw.githubusercontent.com` (version check).
 
-The skill reads and writes `AVATAR-<NAME>.md` files in your workspace. No data leaves your machine except to `api.heygen.com` (video generation) and `raw.githubusercontent.com` (version check, opt-in).
+## Links
 
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md). All changes go through pull requests with required review.
+- [HeyGen API Docs](https://developers.heygen.com/docs/quick-start)
+- [Repository](https://github.com/heygen-com/heygen-stack)
+- [Contributing](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md)
 
 ## License
 

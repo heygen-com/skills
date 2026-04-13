@@ -41,22 +41,6 @@
       }
     },
     {
-      "id": "routing-buddy",
-      "skill": "heygen-stack",
-      "description": "Buddy pipeline trigger",
-      "inputs": {
-        "en": "bring my buddy to life",
-        "ja": "バディに命を吹き込んで",
-        "es": "dale vida a mi buddy",
-        "ko": "내 버디를 살려줘"
-      },
-      "expected": {
-        "mode": "Buddy Pipeline",
-        "starts_at": "buddy-to-avatar/SKILL.md",
-        "user_facing_language": "{input_language}"
-      }
-    },
-    {
       "id": "discovery-interview",
       "skill": "heygen-video",
       "description": "Discovery questions asked in user's language",
@@ -136,23 +120,6 @@
         "style_block_language": "en",
         "framing_correction_language": "en",
         "motion_verbs_language": "en"
-      }
-    },
-    {
-      "id": "buddy-species-voice",
-      "skill": "buddy-to-avatar",
-      "description": "Buddy voice prompt uses user's language",
-      "inputs": {
-        "en": "bring my penguin buddy Bramble to life, CHAOS:77 WISDOM:27",
-        "ja": "ペンギンのバディBrambleに命を吹き込んで、CHAOS:77 WISDOM:27",
-        "es": "dale vida a mi buddy pingüino Bramble, CHAOS:77 WISDOM:27",
-        "ko": "펭귄 버디 Bramble을 살려줘, CHAOS:77 WISDOM:27"
-      },
-      "expected": {
-        "voice_language_filter": "{input_language_code}",
-        "intro_script_language": "{input_language}",
-        "appearance_prompt_language": "en",
-        "user_facing_language": "{input_language}"
       }
     },
     {

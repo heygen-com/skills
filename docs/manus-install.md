@@ -26,15 +26,12 @@ Trigger the skill with `/heygen-stack` or describe what you want:
 
 - "Create an avatar from this photo"
 - "Make a product demo video with my avatar"
-- "Turn my buddy into a video presenter"
-
 The skill routes to the appropriate sub-skill automatically:
 
 | Sub-Skill | What It Does |
 |-----------|-------------|
 | heygen-avatar | Create a digital twin avatar from a photo |
 | heygen-video | Produce presenter-led videos |
-| buddy-to-avatar | Turn a Claude Code Buddy into a video avatar |
 
 ## More Info
 

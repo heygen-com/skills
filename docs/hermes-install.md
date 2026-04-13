@@ -24,14 +24,12 @@ Once installed, invoke the skills via slash commands:
 |---------|-------------|
 | `/heygen:avatar-designer` | Create a digital twin avatar from a photo |
 | `/heygen:video-producer` | Produce a presenter-led video with script, prompt engineering, and delivery |
-| `/heygen:buddy-to-avatar` | Turn a Claude Code Buddy into a video avatar |
 
 ### Examples
 
 ```
 /heygen:avatar-designer Create an avatar from this photo
 /heygen:video-producer Make a 30-second product demo video
-/heygen:buddy-to-avatar Bring my buddy Sparky to life
 ```
 
 ## What Gets Installed
@@ -39,7 +37,6 @@ Once installed, invoke the skills via slash commands:
 - Root skill: HeyGen Stack (routing and shared config)
 - Sub-skill: heygen-avatar (avatar creation pipeline)
 - Sub-skill: heygen-video (video production pipeline)
-- Sub-skill: buddy-to-avatar (Buddy personification pipeline)
 
 ## Tags
 
