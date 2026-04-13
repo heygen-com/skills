@@ -13,11 +13,7 @@ One install. One API key. Works with Claude Code, OpenClaw, Codex, and other AI 
 
 **30-second setup.** Paste this into your agent:
 
-> Clone and install HeyGen Stack:
-> ```
-> git clone https://github.com/heygen-com/heygen-stack.git ~/.claude/skills/heygen-stack && cd ~/.claude/skills/heygen-stack && ./setup
-> ```
-> My HeyGen API key is `YOUR_KEY_HERE`. Save it to your environment as `HEYGEN_API_KEY` and validate it by calling `GET https://api.heygen.com/v3/users/me` with header `X-Api-Key`.
+> Install HeyGen Stack: run `git clone --single-branch --depth 1 https://github.com/heygen-com/heygen-stack.git ~/.claude/skills/heygen-stack && cd ~/.claude/skills/heygen-stack && ./setup` — the setup script will prompt for your API key and save it to `~/.heygen/config`. After setup, use the heygen-avatar skill to create an avatar from my photo, and heygen-video to make a 30-60 second intro video, casual tone.
 
 Get your API key at [app.heygen.com/settings/api](https://app.heygen.com/settings/api?nav=API).
 
@@ -63,14 +59,17 @@ Clone the repo anywhere. Point your agent's skill/instruction loader at the `SKI
 
 ## API Key Setup
 
+The `./setup` script handles everything: it prompts for your key, validates it, and saves it to `~/.heygen/config` so it persists across terminal sessions.
+
 1. Go to [app.heygen.com/settings/api](https://app.heygen.com/settings/api?nav=API)
 2. Copy your API key
-3. Set it in your environment:
-   ```bash
-   export HEYGEN_API_KEY="your-key-here"
-   ```
+3. Run `./setup` — it will ask for the key and save it automatically
 
-The `./setup` script checks your key automatically. You can also verify manually:
+**Already have a key saved?** The setup script and all skills check `~/.heygen/config` automatically. No need to `export` every session.
+
+**Manual override:** You can still use `export HEYGEN_API_KEY="your-key-here"` — the env var takes precedence over the config file. This is useful for temporary key switching but won't persist.
+
+Verify your key anytime:
 
 ```bash
 curl -s https://api.heygen.com/v3/users/me -H "X-Api-Key: $HEYGEN_API_KEY" | head -c 200

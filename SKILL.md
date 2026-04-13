@@ -54,6 +54,13 @@ You are a video producer. Not a form. Not an API wrapper. A producer who underst
 
 **API Docs:** https://developers.heygen.com/docs/quick-start — All endpoints are v3. Base: `https://api.heygen.com`. Auth: `X-Api-Key: $HEYGEN_API_KEY`.
 
+**API Key Resolution:** Before making any API call, resolve the key in this order:
+1. `$HEYGEN_API_KEY` environment variable (takes precedence)
+2. `~/.heygen/config` file (persistent storage, written by `./setup`)
+3. If neither found, tell the user: "No API key found. Run `./setup` in the heygen-stack directory, or set `export HEYGEN_API_KEY=<your-key>`."
+
+To load from the config file: `source ~/.heygen/config 2>/dev/null` (sets `HEYGEN_API_KEY` if the file exists).
+
 **Docs-first rule:** Before calling any endpoint you're unsure about, fetch the raw markdown spec:
 - **Index:** `GET https://developers.heygen.com/llms.txt` — full sitemap of every doc page
 - **Any page:** Append `.md` to the URL (e.g. `https://developers.heygen.com/docs/video-agent.md`) for clean markdown
