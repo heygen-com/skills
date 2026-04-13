@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# heygen-stack setup — first-time installation for Claude Code and OpenClaw users.
+# Idempotent: safe to run multiple times.
+set -euo pipefail
+
+# ─── Colors (degrade gracefully) ─────────────────────────────
+if [ -t 1 ] && command -v tput &>/dev/null && [ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]; then
+  GREEN=$(tput setaf 2) YELLOW=$(tput setaf 3) RED=$(tput setaf 1) BOLD=$(tput bold) RESET=$(tput sgr0)
+else
+  GREEN="" YELLOW="" RED="" BOLD="" RESET=""
+fi
+
+ok()   { echo "${GREEN}✓${RESET} $1"; }
+warn() { echo "${YELLOW}!${RESET} $1"; }
+err()  { echo "${RED}✗${RESET} $1"; }
+
+# ─── Locate repo root ────────────────────────────────────────
+STACK_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [ ! -f "$STACK_DIR/SKILL.md" ]; then
+  err "Cannot find SKILL.md — run this script from the heygen-stack repo root."
+  exit 1
+fi
+
+# ─── Detect host agent ───────────────────────────────────────
+AGENT="unknown"
+SKILLS_DIR=""
+
+if [ -d "$HOME/.claude" ]; then
+  AGENT="claude-code"
+  SKILLS_DIR="$HOME/.claude/skills"
+elif [ -d "$HOME/.openclaw" ]; then
+  AGENT="openclaw"
+  SKILLS_DIR="$HOME/.openclaw/workspace/skills"
+fi
+
+echo ""
+echo "${BOLD}HeyGen Stack Setup${RESET}"
+echo "─────────────────────────────"
+if [ "$AGENT" = "unknown" ]; then
+  warn "Could not detect Claude Code or OpenClaw. See INSTALL.md for manual setup."
+else
+  ok "Detected host agent: ${BOLD}${AGENT}${RESET}"
+fi
+
+# ─── Create skill symlinks ───────────────────────────────────
+SKILLS=(heygen-avatar heygen-video buddy-to-avatar)
+
+if [ -n "$SKILLS_DIR" ]; then
+  STACK_SKILL_DIR="$SKILLS_DIR/heygen-stack"
+  mkdir -p "$STACK_SKILL_DIR"
+  for skill in "${SKILLS[@]}"; do
+    src="$STACK_DIR/$skill/SKILL.md"
+    [ ! -f "$src" ] && { warn "Skipping $skill — SKILL.md not found"; continue; }
+    mkdir -p "$STACK_SKILL_DIR/$skill" "$SKILLS_DIR/$skill"
+    ln -sf "$src" "$STACK_SKILL_DIR/$skill/SKILL.md"
+    ln -sf "$src" "$SKILLS_DIR/$skill/SKILL.md"
+  done
+  ln -sf "$STACK_DIR/SKILL.md" "$STACK_SKILL_DIR/SKILL.md"
+  [ -d "$STACK_DIR/references" ] && ln -sfn "$STACK_DIR/references" "$STACK_SKILL_DIR/references"
+  ok "Skill symlinks created in ${SKILLS_DIR}"
+  for skill in "${SKILLS[@]}"; do echo "    ${skill}/SKILL.md"; done
+fi
+
+# ─── Check HEYGEN_API_KEY ────────────────────────────────────
+echo ""
+if [ -z "${HEYGEN_API_KEY:-}" ]; then
+  warn "HEYGEN_API_KEY is not set."
+  echo "  Get your key: https://app.heygen.com/settings/api"
+  echo "  Then run:  export HEYGEN_API_KEY=<your-key>"
+else
+  echo -n "Validating API key... "
+  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://api.heygen.com/v3/users/me" \
+    -H "X-Api-Key: $HEYGEN_API_KEY" 2>/dev/null || echo "000")
+  if [ "$HTTP_CODE" = "200" ]; then
+    ok "API key is valid."
+  else
+    err "API key validation failed (HTTP $HTTP_CODE)."
+    echo "  Check your key: https://app.heygen.com/settings/api"
+  fi
+fi
+
+# ─── Summary ─────────────────────────────────────────────────
+echo ""
+echo "${BOLD}Installed skills:${RESET}"
+for skill in "${SKILLS[@]}"; do
+  echo "  - $skill"
+done
+
+echo ""
+echo "${BOLD}Next steps:${RESET}"
+if [ -z "${HEYGEN_API_KEY:-}" ]; then
+  echo "  1. Set your API key:  export HEYGEN_API_KEY=<your-key>"
+  echo "  2. Ask your agent:    \"Create my HeyGen avatar\""
+else
+  echo "  Ask your agent: \"Create my HeyGen avatar\""
+fi
+echo ""
