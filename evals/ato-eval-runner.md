@@ -26,9 +26,9 @@ For each scenario message, decide:
 
 | Decision | Meaning |
 |---|---|
-| `AVATAR` | Route to heygen-avatar-designer |
-| `VIDEO` | Route to heygen-video-producer |
-| `CHAIN` | Run heygen-avatar-designer first, then heygen-video-producer |
+| `AVATAR` | Route to heygen-avatar |
+| `VIDEO` | Route to heygen-video |
+| `CHAIN` | Run heygen-avatar first, then heygen-video |
 | `NONE` | Neither skill applies |
 | `ASK` | Ambiguous — you would ask a clarifying question before routing |
 
@@ -98,7 +98,7 @@ List specific description changes that would fix misroutes (quote the exact text
 ### Categories A, B, C, E, F — Hard Correct/Incorrect
 - Exact match to expected routing = ✅ correct
 - Any other decision = ❌ incorrect (no partial credit)
-- Exception: Category F `CHAIN` — credit if agent routes to `AVATAR` first with explicit mention of heygen-video-producer as next step
+- Exception: Category F `CHAIN` — credit if agent routes to `AVATAR` first with explicit mention of heygen-video as next step
 
 ### Category D — Ambiguous (judgment scoring)
 Award full credit (✅) for any of:

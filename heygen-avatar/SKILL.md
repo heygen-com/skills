@@ -1,5 +1,5 @@
 ---
-name: heygen-avatar-designer
+name: heygen-avatar
 description: |
   Create a persistent HeyGen avatar that looks and sounds like a specific person — the user,
   the agent, or any named character — powered by HeyGen Avatar V technology.
@@ -12,9 +12,9 @@ description: |
   "get started with HeyGen", "help me get started with AI video".
   Chain signal: when the user says both an identity/avatar action AND a video action in the same
   request ("design an avatar AND make a video", "set up my identity THEN create a video",
-  "design a presenter AND immediately record"), run heygen-avatar-designer first, then heygen-video-producer.
-  Returns avatar_id + voice_id — pass directly to heygen-video-producer to create HeyGen videos.
-  NOT for: generating videos (use heygen-video-producer), translating videos, or TTS-only tasks.
+  "design a presenter AND immediately record"), run heygen-avatar first, then heygen-video.
+  Returns avatar_id + voice_id — pass directly to heygen-video to create HeyGen videos.
+  NOT for: generating videos (use heygen-video), translating videos, or TTS-only tasks.
 argument-hint: "[photo_url_or_description]"
 ---
 
@@ -103,7 +103,7 @@ Format:
 
 Start every invocation with:
 
-> 🎭 **Using: heygen-avatar-designer** — creating an avatar for [name]
+> 🎭 **Using: heygen-avatar** — creating an avatar for [name]
 
 ## Workflow
 
@@ -271,7 +271,7 @@ Update the HeyGen section of `AVATAR-<NAME>.md`:
 - Last Synced: <ISO timestamp>
 ```
 
-Confirm the avatar is saved and that other skills (like heygen-video-producer) will pick it up automatically. Communicate in `user_language`.
+Confirm the avatar is saved and that other skills (like heygen-video) will pick it up automatically. Communicate in `user_language`.
 
 ### Phase 5 — Test (Optional)
 
@@ -311,7 +311,7 @@ Each iteration updates the AVATAR file. The file is always the source of truth.
 
 ## Video Producer Integration
 
-`heygen-video-producer` reads AVATAR files for avatar_id and voice_id:
+`heygen-video` reads AVATAR files for avatar_id and voice_id:
 - "Make a video with Eve" → reads `AVATAR-EVE.md` → gets Avatar ID + Voice ID
 - "Make a video with Ken" → reads `AVATAR-KEN.md`
 - No AVATAR file found → falls back to stock avatars or asks user

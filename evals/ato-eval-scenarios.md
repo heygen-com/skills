@@ -1,5 +1,5 @@
 # ATO Eval — 100 Scenarios
-# Tool Selection Accuracy Test for heygen-avatar-designer + heygen-video-producer
+# Tool Selection Accuracy Test for heygen-avatar + heygen-video
 # Version: 1.0.0 | Apr 7, 2026
 
 ## Purpose
@@ -7,9 +7,9 @@ Measure how accurately agents route user requests to the correct skill based on 
 No actual API calls are made. This is a routing decision test only.
 
 ## Expected Routing Key
-- `AVATAR` → heygen-avatar-designer
-- `VIDEO` → heygen-video-producer
-- `CHAIN` → heygen-avatar-designer first, then heygen-video-producer (chained)
+- `AVATAR` → heygen-avatar
+- `VIDEO` → heygen-video
+- `CHAIN` → heygen-avatar first, then heygen-video (chained)
 - `NONE` → neither skill (should NOT trigger)
 
 ---
@@ -145,7 +145,7 @@ Expected: `VIDEO`
 ---
 
 ## Category C — Generic / Vague (20 scenarios)
-Expected: `VIDEO` (heygen-video-producer handles vague requests, avatar is optional)
+Expected: `VIDEO` (heygen-video handles vague requests, avatar is optional)
 
 ### C1
 "Make me a video about our new product"
@@ -330,7 +330,7 @@ Expected: `NONE` — should NOT trigger either HeyGen skill
 ---
 
 ## Category F — Chained (10 scenarios)
-Expected: `CHAIN` — heygen-avatar-designer runs first, then heygen-video-producer
+Expected: `CHAIN` — heygen-avatar runs first, then heygen-video
 
 ### F1
 "Create an avatar of me and then make a welcome video using it"

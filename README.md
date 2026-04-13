@@ -35,19 +35,19 @@ git clone https://github.com/heygen-com/heygen-stack.git ~/.claude/skills/heygen
 
 Then copy and paste the following prompt to your agent:
 
-> My HeyGen API key is `[HEYGEN_API_KEY]`. Save it to your persistent environment config and validate it works by calling `GET https://api.heygen.com/v3/users/me` with header `X-Api-Key`. Then use the heygen-avatar-designer skill to create an avatar of me from this photo: [PHOTO_URL]. Once the avatar is ready, make a 30-second video of me introducing myself, casual tone.
+> My HeyGen API key is `[HEYGEN_API_KEY]`. Save it to your persistent environment config and validate it works by calling `GET https://api.heygen.com/v3/users/me` with header `X-Api-Key`. Then use the heygen-avatar skill to create an avatar of me from this photo: [PHOTO_URL]. Once the avatar is ready, make a 30-second video of me introducing myself, casual tone.
 
 ## What's Inside
 
 Two skills that work standalone or chain together:
 
-### heygen-avatar-designer
+### heygen-avatar
 Create a persistent digital identity — your face, your voice — for use across every video you make.
 
 - Reads identity files (`SOUL.md`, `IDENTITY.md`) or asks conversationally
 - Creates a HeyGen avatar with matched voice
 - Saves to `AVATAR-<NAME>.md` for automatic reuse across videos
-- Returns `avatar_id` + `voice_id` — pass directly to heygen-video-producer
+- Returns `avatar_id` + `voice_id` — pass directly to heygen-video
 
 ```
 You: "I want to appear in videos as myself"
@@ -55,7 +55,7 @@ Agent: [uploads your photo, creates avatar, matches voice]
 Agent: → AVATAR-YOU.md (avatar_id + voice_id, reusable forever)
 ```
 
-### heygen-video-producer
+### heygen-video
 Send a video as yourself — personalized, presenter-led, delivered like a message.
 
 Use cases: personalized outreach, team updates, product announcements, pitches, knowledge transfer, explainers.
@@ -78,7 +78,7 @@ Bring your Claude Code Buddy to life as a HeyGen avatar and intro video.
 
 - Reads your terminal pet's species, stats, rarity, and personality
 - Maps buddy traits to avatar appearance, voice, and visual style
-- Chains through heygen-avatar-designer and heygen-video-producer automatically
+- Chains through heygen-avatar and heygen-video automatically
 - Produces a personalized stat-reveal intro video
 
 ```
@@ -88,7 +88,7 @@ Agent: [creates avatar, matches voice to personality stats]
 Agent: -> 30-second intro video with stat reveals
 ```
 
-When all three skills are installed, they chain automatically: buddy-to-avatar -> heygen-avatar-designer -> heygen-video-producer.
+When all three skills are installed, they chain automatically: buddy-to-avatar -> heygen-avatar -> heygen-video.
 
 ## How It Works
 
@@ -96,7 +96,7 @@ When all three skills are installed, they chain automatically: buddy-to-avatar -
 Identity Files              Avatar File              Finished Video
 (SOUL.md, IDENTITY.md)  →  AVATAR-NAME.md       →  Share link + session URL
        ↓                        ↓                        ↓
-  heygen-avatar-designer          shared state            heygen-video-producer
+  heygen-avatar          shared state            heygen-video
 ```
 
 Each skill works independently. You don't need an avatar to make a video (stock avatars work), and you don't need to make videos to use the avatar designer.

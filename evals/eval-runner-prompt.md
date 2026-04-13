@@ -1,6 +1,6 @@
-# Eval Runner Prompt — heygen-video-producer
+# Eval Runner Prompt — heygen-video
 
-You are an evaluator running a fresh-install test of the `heygen-video-producer` skill.
+You are an evaluator running a fresh-install test of the `heygen-video` skill.
 
 ## Setup (CRITICAL — simulate fresh install)
 

@@ -8,18 +8,18 @@
     {
       "name": "heygen",
       "source": "./",
-      "description": "HeyGen skills for avatar creation, identity-first video, and personalized video messages. Invoke as /heygen:avatar-designer or /heygen:video-producer.",
+      "description": "HeyGen skills for avatar creation, identity-first video, and personalized video messages. Invoke as /heygen:avatar or /heygen:video.",
       "version": "1.3.2",
       "skills": [
         {
-          "name": "avatar-designer",
-          "path": "heygen-avatar-designer",
-          "invoke": "/heygen:avatar-designer"
+          "name": "avatar",
+          "path": "heygen-avatar",
+          "invoke": "/heygen:avatar"
         },
         {
-          "name": "video-producer",
-          "path": "heygen-video-producer",
-          "invoke": "/heygen:video-producer"
+          "name": "video",
+          "path": "heygen-video",
+          "invoke": "/heygen:video"
         },
         {
           "name": "buddy-to-avatar",

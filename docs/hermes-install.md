@@ -37,8 +37,8 @@ Once installed, invoke the skills via slash commands:
 ## What Gets Installed
 
 - Root skill: HeyGen Stack (routing and shared config)
-- Sub-skill: heygen-avatar-designer (avatar creation pipeline)
-- Sub-skill: heygen-video-producer (video production pipeline)
+- Sub-skill: heygen-avatar (avatar creation pipeline)
+- Sub-skill: heygen-video (video production pipeline)
 - Sub-skill: buddy-to-avatar (Buddy personification pipeline)
 
 ## Tags

@@ -32,8 +32,8 @@ The skill routes to the appropriate sub-skill automatically:
 
 | Sub-Skill | What It Does |
 |-----------|-------------|
-| heygen-avatar-designer | Create a digital twin avatar from a photo |
-| heygen-video-producer | Produce presenter-led videos |
+| heygen-avatar | Create a digital twin avatar from a photo |
+| heygen-video | Produce presenter-led videos |
 | buddy-to-avatar | Turn a Claude Code Buddy into a video avatar |
 
 ## More Info

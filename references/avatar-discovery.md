@@ -30,7 +30,7 @@ Avatar types: `studio_avatar`, `video_avatar`, `photo_avatar`. Photo avatars sup
 
 ### A2: Check last-used avatar
 
-Check `heygen-video-producer-log.jsonl` for last used avatar_id. If found:
+Check `heygen-video-log.jsonl` for last used avatar_id. If found:
 ```bash
 curl -s "https://api.heygen.com/v3/avatars/looks/<look_id>" \
   -H "X-Api-Key: $HEYGEN_API_KEY"

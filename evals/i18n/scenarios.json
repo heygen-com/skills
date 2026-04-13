@@ -58,7 +58,7 @@
     },
     {
       "id": "discovery-interview",
-      "skill": "heygen-video-producer",
+      "skill": "heygen-video",
       "description": "Discovery questions asked in user's language",
       "inputs": {
         "en": "I want to make a product demo video",
@@ -74,7 +74,7 @@
     },
     {
       "id": "voice-selection-language",
-      "skill": "heygen-avatar-designer",
+      "skill": "heygen-avatar",
       "description": "Voice selected matches user's language",
       "inputs": {
         "en": "create my avatar, I speak English",
@@ -90,7 +90,7 @@
     },
     {
       "id": "test-video-prompt",
-      "skill": "heygen-avatar-designer",
+      "skill": "heygen-avatar",
       "description": "Phase 5 test video uses user's language",
       "inputs": {
         "en": "test the avatar",
@@ -105,7 +105,7 @@
     },
     {
       "id": "script-generation",
-      "skill": "heygen-video-producer",
+      "skill": "heygen-video",
       "description": "Script generated in user's language, directives in English",
       "inputs": {
         "en": "make a 30 second video about AI trends",
@@ -122,7 +122,7 @@
     },
     {
       "id": "prompt-craft-mixed",
-      "skill": "heygen-video-producer",
+      "skill": "heygen-video",
       "description": "Final prompt has content in user language + English technical directives",
       "inputs": {
         "en": "product launch video, cinematic style, 60 seconds",
@@ -157,7 +157,7 @@
     },
     {
       "id": "error-messages",
-      "skill": "heygen-avatar-designer",
+      "skill": "heygen-avatar",
       "description": "Error messages in user's language",
       "inputs": {
         "en": "create an avatar (API key missing scenario)",

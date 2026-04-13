@@ -41,9 +41,9 @@ This skill reads and writes the following. No other files are accessed without e
 | Operation | Path | Purpose |
 |-----------|------|---------|
 | Read | `AVATAR-<NAME>.md` | Load saved avatar identity (group_id, voice_id) |
-| Read | `SOUL.md`, `IDENTITY.md` | Extract identity details when creating a new avatar (heygen-avatar-designer only) |
+| Read | `SOUL.md`, `IDENTITY.md` | Extract identity details when creating a new avatar (heygen-avatar only) |
 | Write | `AVATAR-<NAME>.md` | Save new avatar identity after creation |
-| Write | `heygen-video-producer-log.jsonl` | Append one JSON line per video generated (local learning log) |
+| Write | `heygen-video-log.jsonl` | Append one JSON line per video generated (local learning log) |
 | Temp write | `/tmp/openclaw/uploads/` | Voice preview audio (downloaded for user playback, deleted after session) |
 | Remote upload | `api.heygen.com/v3/assets` | User-provided images/files uploaded to HeyGen for use in video |
 
@@ -115,9 +115,9 @@ Default to Full Producer. Better to ask one smart question than generate a medio
 Check for any `AVATAR-*.md` files in the workspace root.
 
 - **Found:** Read the file, extract `Avatar ID` and `Voice ID` from the HeyGen section. Pre-load as defaults for Discovery.
-- **Not found:** The user (or agent) has no avatar yet. Before proceeding to video creation, run the **heygen-avatar-designer** skill (`heygen-avatar-designer/SKILL.md` in this repo) to create one. Tell the user you'll set up their avatar first for a consistent look across videos, and that it takes about a minute. Communicate in `user_language`.
+- **Not found:** The user (or agent) has no avatar yet. Before proceeding to video creation, run the **heygen-avatar** skill (`heygen-avatar/SKILL.md` in this repo) to create one. Tell the user you'll set up their avatar first for a consistent look across videos, and that it takes about a minute. Communicate in `user_language`.
   
-  After heygen-avatar-designer completes and writes the AVATAR file, return here and continue to Discovery with the new avatar pre-loaded.
+  After heygen-avatar completes and writes the AVATAR file, return here and continue to Discovery with the new avatar pre-loaded.
 
 - **Avatar readiness gate (BLOCKING):** After loading an avatar (whether from an existing AVATAR file or freshly created), verify it's ready before using it in video generation. Call `GET /v3/avatars/looks?group_id=<group_id>` and confirm `preview_image_url` is non-null. If null, poll every 10s up to 5 min. **Do NOT proceed to Discovery until this check passes.** Videos submitted with an unready avatar WILL fail silently.
 
@@ -171,7 +171,7 @@ Two approaches — use one or combine both:
 
 ## Pipeline: Script -> Prompt Craft -> Frame Check -> Generate -> Deliver
 
-After Discovery, the producer sub-skill handles the full pipeline. Read `heygen-video-producer/SKILL.md` for detailed stage instructions.
+After Discovery, the producer sub-skill handles the full pipeline. Read `heygen-video/SKILL.md` for detailed stage instructions.
 
 **Key rules that apply at every stage:**
 
@@ -180,9 +180,9 @@ After Discovery, the producer sub-skill handles the full pipeline. Read `heygen-
 - **Prompt Craft:** Narrator framing (say "the selected presenter" when avatar_id is set), duration signal, asset anchoring, tone calibration, one topic, style block at the end.
 - **Frame Check:** MANDATORY when avatar_id is set. See matrix below.
 - **Generate:** Run Frame Check before EVERY API call. Capture `session_id` immediately. Poll silently.
-- **Deliver:** Report `video_page_url`, session URL, and duration accuracy. Log to `heygen-video-producer-log.jsonl`.
+- **Deliver:** Report `video_page_url`, session URL, and duration accuracy. Log to `heygen-video-log.jsonl`.
 
-**Full prompt construction rules, media type selection, visual style blocks, API schemas** -> `heygen-video-producer/SKILL.md`
+**Full prompt construction rules, media type selection, visual style blocks, API schemas** -> `heygen-video/SKILL.md`
 
 ---
 

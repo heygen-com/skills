@@ -83,7 +83,7 @@ At the group level (`GET /v3/avatars`), an unready avatar will have no `preview_
 
 **Fix:** Poll every 10 seconds after creation, wait for preview URL to appear. Typical: 30-90s for photo avatars, 1-3 min for prompt avatars. Timeout at 5 min.
 
-**The heygen-avatar-designer skill handles this automatically.** If you bypass the skill and call the API directly, you must implement this polling yourself.
+**The heygen-avatar skill handles this automatically.** If you bypass the skill and call the API directly, you must implement this polling yourself.
 
 ---
 

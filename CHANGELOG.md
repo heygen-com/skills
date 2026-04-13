@@ -42,14 +42,14 @@
 
 ### Bug Fixes
 - Synced version numbers across all files (SKILL.md frontmatter, User-Agent headers, plugin.json, marketplace.json) to match VERSION file
-- Fixed Quick Shot avatar_id rule in heygen-video-producer to use AVATAR file when available instead of always omitting
+- Fixed Quick Shot avatar_id rule in heygen-video to use AVATAR file when available instead of always omitting
 - Completed Frame Check correction matrix with Aspect Ratio column and ratio-fix corrections (F, G) across root SKILL.md and frame-check.md
 - Fixed frame-check.md correction stacking matrix: removed stale 4-column header, corrected intro sentence (photo_avatar never gets background correction C)
-- Replaced macOS-incompatible `readlink -f` in heygen-video-producer preamble with POSIX-compatible path resolution
+- Replaced macOS-incompatible `readlink -f` in heygen-video preamble with POSIX-compatible path resolution
 
 ### Architecture
 - Trimmed root SKILL.md from 399 to ~215 lines by extracting duplicated Script, Prompt Craft, and Generate content into the producer sub-skill where it belongs
-- Fixed stale path reference: `identity/SKILL.md` -> `heygen-avatar-designer/SKILL.md`
+- Fixed stale path reference: `identity/SKILL.md` -> `heygen-avatar/SKILL.md`
 - Registered buddy-to-avatar skill in marketplace.json
 
 ### Documentation
@@ -57,7 +57,7 @@
 
 ## v1.1.0 (2026-04-06)
 
-### heygen-video-producer
+### heygen-video
 - Prompt-only Frame Check architecture (no external image generation, preserves face identity)
 - submit-video.sh wrapper enforces aspect ratio checks before every API call
 - Phase naming overhaul: action verbs replace numbered phases (Discovery, Script, Prompt Craft, Frame Check, Generate, Deliver)
@@ -67,7 +67,7 @@
 - Inline MP4 delivery (downloads video, sends as media attachment)
 - Hard gates at all user decision points
 
-### heygen-avatar-designer
+### heygen-avatar
 - Voice Design endpoint (POST /v3/voices) with semantic search, seed pagination
 - Reference photo nudge on first-time avatar creation
 - Inline audio previews for voice selection

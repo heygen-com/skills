@@ -3,12 +3,12 @@ name: buddy-to-avatar
 description: |
   Bring your Claude Code Buddy to life as a HeyGen avatar video. Reads your terminal pet's
   species, stats, rarity, and personality, then creates a personified avatar and intro video.
-  Chains: buddy-to-avatar → heygen-avatar-designer → heygen-video-producer.
+  Chains: buddy-to-avatar → heygen-avatar → heygen-video.
   Use when: (1) "bring my buddy to life", "turn my buddy into a video", "buddy avatar",
   (2) "personify my buddy", "make a video of my buddy", "create an avatar from my buddy",
   (3) "give my buddy a face", "animate my terminal pet", "buddy intro video",
   (4) any mention of Claude Code Buddy + avatar or video in the same request.
-  NOT for: general avatar creation (use heygen-avatar-designer), general video (use heygen-video-producer).
+  NOT for: general avatar creation (use heygen-avatar), general video (use heygen-video).
 argument-hint: "[paste /buddy card output or screenshot]"
 ---
 
@@ -17,7 +17,7 @@ argument-hint: "[paste /buddy card output or screenshot]"
 Turn a Claude Code Buddy into a personified HeyGen avatar and intro video.
 
 **Required:** `HEYGEN_API_KEY` env var.
-**Chain:** This skill produces an AVATAR file, then hands off to heygen-video-producer.
+**Chain:** This skill produces an AVATAR file, then hands off to heygen-video.
 
 ## Skill Announcement
 
@@ -97,7 +97,7 @@ Combine the top 2 stat influences for the voice design prompt.
 
 ## Phase 3 — Create Avatar
 
-Write `AVATAR-<NAME>.md` with all sections filled, then hand off to **heygen-avatar-designer**.
+Write `AVATAR-<NAME>.md` with all sections filled, then hand off to **heygen-avatar**.
 
 The handoff is pre-filled — skip the avatar designer's interview phases:
 - Phase 0 (who): Already known — the buddy character
@@ -119,7 +119,7 @@ The handoff is pre-filled — skip the avatar designer's interview phases:
 
 **Script language:** Generate the intro video script in `user_language`. Appearance prompts to the avatar creation API stay in English (image generation works best with English prompts). But the video narration script — including the hook, stat brag, speed-round, personality quote, and sign-off — should all be in the video language.
 
-After avatar + voice are confirmed, hand off to **heygen-video-producer** with a pre-built brief:
+After avatar + voice are confirmed, hand off to **heygen-video** with a pre-built brief:
 
 **Auto-generated script template (stat-reveal intro):**
 
@@ -136,7 +136,7 @@ After avatar + voice are confirmed, hand off to **heygen-video-producer** with a
 - Tone calibrated to stat balance
 - Target duration: 30-45 seconds
 
-Present the script for approval, then hand off to heygen-video-producer's Prompt Craft stage.
+Present the script for approval, then hand off to heygen-video's Prompt Craft stage.
 
 ## Phase 5 — Deliver
 
@@ -144,7 +144,7 @@ After video completes:
 
 1. Share video link + session URL
 2. Confirm AVATAR file is saved
-3. Tell user: "Your buddy is now a HeyGen character. Use heygen-video-producer anytime to make more videos with [name]."
+3. Tell user: "Your buddy is now a HeyGen character. Use heygen-video anytime to make more videos with [name]."
 
 ## Error Handling
 

@@ -1,5 +1,5 @@
 ---
-name: heygen-video-producer
+name: heygen-video
 description: |
   Generate HeyGen presenter videos via the v3 Video Agent pipeline — handles Frame Check
   (aspect ratio correction), prompt engineering, avatar resolution, and voice selection.
@@ -10,13 +10,13 @@ description: |
   (4) "make a video of me saying...", "send a video to my leads", "record an update for my team",
   "create a video pitch", "make a loom-style message", "I want to appear in this video",
   "generate a HeyGen video", "make a talking head video".
-  Accepts avatar_id from heygen-avatar-designer for identity-first HeyGen videos, or uses a stock presenter.
+  Accepts avatar_id from heygen-avatar for identity-first HeyGen videos, or uses a stock presenter.
   Returns video share URL + HeyGen session URL for iteration.
   Chain signal: when the user wants to create/design an avatar AND make a video in the same request,
-  run heygen-avatar-designer first, then return here. Conjunctions to watch: "and then", "and immediately",
+  run heygen-avatar first, then return here. Conjunctions to watch: "and then", "and immediately",
   "first...then", "X and make a video", "design [presenter] and record" = always CHAIN.
-  If the user provides a photo AND wants a video, route to heygen-avatar-designer first.
-  NOT for: avatar creation or identity setup (use heygen-avatar-designer first), cinematic footage
+  If the user provides a photo AND wants a video, route to heygen-avatar first.
+  NOT for: avatar creation or identity setup (use heygen-avatar first), cinematic footage
   or b-roll without a presenter, translating videos, TTS-only, or streaming avatars.
 argument-hint: "[topic_or_script] [--avatar avatar_id]"
 homepage: https://developers.heygen.com/docs/quick-start
@@ -530,7 +530,7 @@ Always report duration accuracy. Clean up /tmp files after sending.
 
 ### Self-Evaluation Log
 
-After EVERY generation, append to `heygen-video-producer-log.jsonl`:
+After EVERY generation, append to `heygen-video-log.jsonl`:
 
 ```json
 {"timestamp":"ISO-8601","video_id":"...","session_id":"...","prompt_type":"full_producer|enhanced|quick_shot","target_duration":60,"actual_duration":58,"duration_ratio":0.97,"avatar_id":"...","voice_id":"...","style_id":"...","orientation":"landscape","aspect_correction":"none|framing|background|both","avatar_type":"photo_avatar|studio_avatar|video_avatar","files_attached":2,"status":"DONE","concerns":[],"topic":"..."}
