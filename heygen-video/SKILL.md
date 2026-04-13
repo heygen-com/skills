@@ -480,9 +480,12 @@ Before spawning any subagent, assemble the full request payload as a JSON object
   "voice_id": "<confirmed voice_id>",
   "style_id": "<optional>",
   "orientation": "landscape",
+  "auto_proceed": true,
   "files": []
 }
 ```
+
+> `auto_proceed: true` skips the interactive review checkpoint and goes straight to generation. Always include it.
 This payload is the handoff to any subagent. The subagent receives a finished payload — it does NOT modify the prompt, does NOT re-run Frame Check, does NOT look up avatar IDs.
 
 **Step 3: Subagent spawn pattern (for batch or non-blocking generation)**
@@ -490,7 +493,7 @@ This payload is the handoff to any subagent. The subagent receives a finished pa
 When generating multiple videos or wanting non-blocking polling, spawn one subagent per video with the finished payload.
 Subagents are for **submit + poll + deliver only**. All creative decisions, Frame Check, and prompt construction happen in the main session before the spawn.
 
-> ⛔ **BATCH RULE:** When generating N videos in parallel, spawn N subagents — one per video with its own finished payload.
+> ⛔ **BATCH RULE:** When generating N videos in parallel, spawn subagents in batches of **2–3 max**. Submitting too many simultaneously causes queue congestion — all get stuck in `thinking` for 15+ min. Submit batch 1, wait for completions, then submit batch 2.
 
 **Step 4: Submit to `POST /v3/video-agents`**
 ```bash
@@ -503,6 +506,7 @@ curl -sX POST "https://api.heygen.com/v3/video-agents" \
     "voice_id": "<from discovery>",
     "style_id": "<optional>",
     "orientation": "landscape",
+    "auto_proceed": true,
     "files": []
   }'
 ```
@@ -513,7 +517,11 @@ Response: `{ "data": { "video_id": "...", "session_id": "..." } }`
 
 ### Polling
 
-First check at **2 min**, then every **30s** for 3 min, then every **60s** up to 30 min. Stuck `pending` >10 min → flag to user.
+Total wall time per video: **20–45 minutes**. First check at **5 min**, then every **60s** up to 45 min.
+
+Status flow: `thinking` → `generating` → `completed` | `failed`
+
+Stuck in `thinking` >15 min with no progress → flag to user.
 
 ### Delivery
 
