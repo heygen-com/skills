@@ -5,6 +5,8 @@ description: One-shot prompt video generation with HeyGen Video Agent API
 
 # Video Agent API
 
+> **Deprecated:** This reference documents the v1 Video Agent endpoint (`POST /v1/video_agent/generate`). The current endpoint is `POST /v3/video-agents` — see the `create-video` skill for up-to-date documentation.
+
 The Video Agent API generates complete videos from a single text prompt. Unlike the standard video generation API which requires detailed scene-by-scene configuration, Video Agent automatically handles script writing, avatar selection, visuals, voiceover, pacing, and captions.
 
 ## MCP Tool (Preferred)

@@ -5,6 +5,8 @@ description: API key setup, X-Api-Key header, and authentication patterns for He
 
 # HeyGen Authentication
 
+> **Note:** Code examples below use v2 endpoints. The current API version is v3 — see the `create-video` or `avatar-video` skill for up-to-date endpoint URLs. The authentication mechanism (`X-Api-Key` header) is unchanged across versions.
+
 All HeyGen API requests require authentication using an API key passed in the `X-Api-Key` header.
 
 ## Getting Your API Key

@@ -7,7 +7,7 @@ A collection of skills for working with the HeyGen AI video creation API, design
 | Skill | Description |
 |-------|-------------|
 | [create-video](skills/create-video) | Create videos from a text prompt — describe what you want and AI handles the rest (Video Agent API) |
-| [avatar-video](skills/avatar-video) | Build videos with precise control over avatars, voices, scripts, scenes, and backgrounds (v2 API) |
+| [avatar-video](skills/avatar-video) | Build videos with precise control over avatars, voices, scripts, scenes, and backgrounds (v3 API) |
 | [ai-video-gen](skills/ai-video-gen) | Generate AI videos from text prompts with multiple provider options (VEO, Kling, Sora, Runway) via the Workflow Gateway |
 | [faceswap](skills/faceswap) | Swap a face from a source image into a target video using GPU-accelerated AI via the Workflow Gateway |
 | [text-to-speech](skills/text-to-speech) | Generate standalone speech audio from text using HeyGen's Starfish TTS model with voice, speed, pitch, and emotion control |
@@ -16,7 +16,7 @@ A collection of skills for working with the HeyGen AI video creation API, design
 | [video-download](skills/video-download) | Download video and audio from YouTube and 1000+ sites using yt-dlp |
 | [video-edit](skills/video-edit) | Edit videos locally using ffmpeg — trim, concat, resize, speed, overlay, extract audio, compress, and convert |
 | [video-understand](skills/video-understand) | Understand video content locally using ffmpeg frame extraction and Whisper transcription — no API keys needed |
-| [heygen](skills/heygen) | *(Deprecated)* Legacy combined skill — use `create-video` or `avatar-video` instead |
+| [heygen](skills/heygen) | *(Deprecated — uses v1/v2 endpoints)* Legacy combined skill — use `create-video` or `avatar-video` (v3 API) instead |
 
 ## Installation
 
@@ -122,21 +122,21 @@ The skills should appear when Claude Code loads. You can verify by asking Claude
 All skills use the HeyGen API:
 - Base URL: `https://api.heygen.com`
 - Authentication: `X-Api-Key` header
-- API Versions: v1, v2 (varies by endpoint)
+- Primary API Version: v3 (core video, avatar, voice, and TTS endpoints)
 
 ### Key Endpoints
 
 | Endpoint | Skill | Purpose |
 |----------|-------|---------|
-| `POST /v1/video_agent/generate` | create-video | One-shot prompt-to-video |
-| `POST /v2/video/generate` | avatar-video | Precise multi-scene video generation |
-| `GET /v2/videos/{video_id}` | create-video, avatar-video | Get video details and status |
-| `GET /v2/videos` | create-video, avatar-video | List account videos |
-| `DELETE /v2/videos/{video_id}` | create-video, avatar-video | Delete a video |
-| `GET /v2/avatars` | avatar-video | List available avatars |
-| `GET /v2/voices` | avatar-video | List available voices |
-| `POST /v1/audio/text_to_speech` | text-to-speech | Generate speech audio |
-| `GET /v1/audio/voices` | text-to-speech | List TTS-compatible voices |
+| `POST /v3/video-agents` | create-video | One-shot prompt-to-video |
+| `POST /v3/videos` | avatar-video | Precise multi-scene video generation |
+| `GET /v3/videos/{video_id}` | create-video, avatar-video | Get video details and status |
+| `GET /v3/videos` | create-video, avatar-video | List account videos |
+| `DELETE /v3/videos/{video_id}` | create-video, avatar-video | Delete a video |
+| `GET /v3/avatars` | avatar-video | List available avatar groups |
+| `GET /v3/avatars/looks` | avatar-video | List avatar looks (get `avatar_id`) |
+| `GET /v3/voices` | avatar-video, text-to-speech | List available voices |
+| `POST /v3/voices/speech` | text-to-speech | Generate speech audio |
 | `POST /v2/video_translate` | video-translate | Start video translation |
 | `POST /v1/workflows/executions` | ai-video-gen, faceswap | Execute a workflow (video generation, face swap) |
 | `GET /v1/workflows/executions/{id}` | ai-video-gen, faceswap | Check workflow execution status |

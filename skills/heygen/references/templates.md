@@ -5,6 +5,8 @@ description: Template listing and variable replacement for HeyGen videos
 
 # Video Templates
 
+> **Note:** Code examples below use v2 template endpoints. The template API remains at v2; no v3 replacement exists yet.
+
 HeyGen templates allow you to create reusable video structures with variable placeholders, enabling personalized video generation at scale.
 
 ## Listing Templates

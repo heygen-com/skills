@@ -254,7 +254,7 @@ export const AvatarComposition: React.FC<AvatarCompositionProps> = ({
 
 ### WebM with Transparent Background (Recommended)
 
-Using WebM from `/v1/video.webm` - no chroma keying needed:
+Using WebM from `/v1/video.webm` (this endpoint remains at v1 — no v3 equivalent yet) - no chroma keying needed:
 
 ```tsx
 import { OffthreadVideo, AbsoluteFill, Sequence } from "remotion";
@@ -300,7 +300,7 @@ import { OffthreadVideo, AbsoluteFill } from "remotion";
 
 export const LoomStyleComposition: React.FC<{
   screenRecordingUrl: string;
-  avatarWebmUrl: string; // Generated with avatar_style: "closeUp" via /v1/video.webm
+  avatarWebmUrl: string; // Generated with avatar_style: "closeUp" via /v1/video.webm (still v1)
 }> = ({ screenRecordingUrl, avatarWebmUrl }) => {
   return (
     <AbsoluteFill>

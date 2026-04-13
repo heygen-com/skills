@@ -10,7 +10,7 @@ heygen-skills/
 │   ├── create-video/                # Prompt-based video creation (Video Agent)
 │   │   ├── SKILL.md                 # Skill manifest + workflow
 │   │   └── references/              # Prompt optimizer, visual styles, etc.
-│   ├── avatar-video/                # Precise avatar/scene video creation (v2 API)
+│   ├── avatar-video/                # Precise avatar/scene video creation (v3 API)
 │   │   ├── SKILL.md                 # Skill manifest + workflow
 │   │   └── references/              # Avatars, voices, video-generation, etc.
 │   ├── visual-style/                # Portable visual design systems
@@ -19,10 +19,23 @@ heygen-skills/
 │   ├── heygen/                      # [DEPRECATED] Legacy combined skill
 │   │   ├── SKILL.md                 # Deprecation notice + original content
 │   │   └── references/              # Original reference docs
-│   ├── text-to-speech/              # Standalone TTS audio
+│   ├── ai-video-gen/                # AI video generation (VEO, Kling, Sora, etc.)
+│   │   └── SKILL.md                 # Self-contained (Workflow Gateway v1 API)
+│   ├── faceswap/                    # Face swap in videos
+│   │   └── SKILL.md                 # Self-contained (Workflow Gateway v1 API)
+│   ├── text-to-speech/              # Standalone TTS audio (v3 API)
 │   │   └── SKILL.md                 # Self-contained (no references/)
-│   └── video-translate/             # Video translation & dubbing
-│       └── SKILL.md                 # Self-contained (no references/)
+│   ├── video-translate/             # Video translation & dubbing
+│   │   └── SKILL.md                 # Self-contained (no references/)
+│   ├── video-download/              # Download video/audio from URLs (yt-dlp)
+│   │   └── SKILL.md                 # Self-contained, no API key needed
+│   ├── video-edit/                  # Local video editing (ffmpeg)
+│   │   ├── SKILL.md                 # Skill manifest + quick reference
+│   │   └── references/              # Detailed operation recipes
+│   └── video-understand/            # Local video understanding (ffmpeg + Whisper)
+│       ├── SKILL.md                 # Skill manifest + CLI usage
+│       ├── references/              # Output format docs
+│       └── scripts/                 # Python script for extraction
 ├── .claude-plugin/
 │   ├── plugin.json                  # Claude Code plugin manifest
 │   └── marketplace.json             # Marketplace listing
@@ -38,7 +51,7 @@ heygen-skills/
 
 1. **Each skill is self-contained.** No cross-skill dependencies. Skills must not reference files in sibling skill directories.
 2. **Split by distinct user intent and output type.** A new skill is warranted when it has a different output type (audio vs video), different API surface, and can stand alone.
-3. **Video creation is split by intent.** `create-video` covers prompt-based generation (Video Agent API). `avatar-video` covers precise avatar/scene control (v2 API). The legacy `heygen` skill is deprecated.
+3. **Video creation is split by intent.** `create-video` covers prompt-based generation (Video Agent API, `POST /v3/video-agents`). `avatar-video` covers precise avatar/scene control (v3 API, `POST /v3/videos`). The legacy `heygen` skill is deprecated.
 4. **`visual-style` is a design system skill.** It creates, extracts, and applies portable `visual-style.md` files. It does not require a HeyGen API key — it's a format/workflow skill with connectors for HeyGen, HTML slides, Figma, and paper.design.
 5. **Smaller skills inline everything.** `text-to-speech` and `video-translate` have no `references/` directory — all content is in SKILL.md. Only split into references when SKILL.md would exceed ~500 lines.
 6. **Auth is inlined per skill.** Each skill includes a brief authentication section rather than referencing a shared auth file.
@@ -109,7 +122,7 @@ Generate speech audio from text using HeyGen's Starfish TTS model. Use when: (1)
 ## Updating Existing Skills
 
 - **API changes**: Update the affected SKILL.md and/or reference files. If a change affects auth or shared patterns, update it in EVERY skill that inlines it.
-- **Adding a reference file**: Only for the `heygen` skill. Add the file to `references/`, then add a link in the SKILL.md Reference Files section.
+- **Adding a reference file**: For skills that already have a `references/` directory (`create-video`, `avatar-video`, `visual-style`, `video-edit`, `video-understand`). Add the file to `references/`, then add a link in the SKILL.md Reference Files section. The `heygen` skill is deprecated — do not add new reference files to it.
 - **Smaller skills** (`text-to-speech`, `video-translate`): Edit SKILL.md directly. Only create a `references/` directory if SKILL.md would exceed ~500 lines.
 
 ## Distribution
@@ -126,6 +139,6 @@ Three channels, one repo:
 
 - Base URL: `https://api.heygen.com`
 - Auth header: `X-Api-Key: $HEYGEN_API_KEY`
-- Response format: `{ "error": null | string, "data": T }`
-- Video generation is async: generate returns `video_id`, poll `GET /v2/videos/{video_id}` for completion
+- Response format: v3 uses `{ "data": T }` on success and `{ "error": { "code": string, "message": string } }` on error
+- Video generation is async: generate returns `video_id`, poll `GET /v3/videos/{video_id}` for completion
 - MCP tools (`mcp__heygen__*`) are preferred over direct API calls when available

@@ -5,6 +5,8 @@ description: POST /v2/video/generate workflow and multi-scene videos for HeyGen
 
 # Video Generation
 
+> **Deprecated:** This reference documents the v2 video generation endpoint (`POST /v2/video/generate`). The current endpoint is `POST /v3/videos` — see the `avatar-video` skill for up-to-date documentation.
+
 ## Table of Contents
 - [Video Output Formats](#video-output-formats)
 - [Basic Video Generation](#basic-video-generation)

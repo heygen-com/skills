@@ -5,6 +5,8 @@ description: Polling patterns, status types, and retrieving download URLs for He
 
 # Video Status and Polling
 
+> **Deprecated:** This reference documents the v2 video status endpoint (`GET /v2/videos/{id}`). The current endpoint is `GET /v3/videos/{id}` — see the `create-video` or `avatar-video` skill for up-to-date documentation.
+
 After generating a video, you need to poll for status until the video is complete. HeyGen processes videos asynchronously.
 
 ## MCP Tool (Preferred)

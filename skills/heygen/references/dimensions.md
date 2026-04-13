@@ -5,6 +5,8 @@ description: Resolution options (720p/1080p) and aspect ratios for HeyGen videos
 
 # Video Dimensions and Resolution
 
+> **Note:** Code examples below use the v2 endpoint (`/v2/video/generate`). The current endpoint is `POST /v3/videos` — see the `avatar-video` skill. The dimension/resolution options are the same across versions.
+
 HeyGen supports various video dimensions and aspect ratios to fit different platforms and use cases.
 
 ## Standard Resolutions

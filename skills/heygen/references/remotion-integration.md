@@ -5,6 +5,8 @@ description: Using HeyGen avatar videos in Remotion compositions
 
 # HeyGen + Remotion Integration
 
+> **Note:** Code examples below use v2 endpoints (`/v2/video/generate`, `/v1/video.webm`). The current API version is v3 (`POST /v3/videos`) — see the `avatar-video` skill for up-to-date endpoint documentation. The Remotion integration patterns remain the same.
+
 This guide covers workflows for generating HeyGen avatar videos and using them in Remotion compositions.
 
 ## Quick Start

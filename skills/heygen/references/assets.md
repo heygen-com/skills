@@ -5,6 +5,8 @@ description: Uploading images, videos, and audio for use in HeyGen video generat
 
 # Asset Upload and Management
 
+> **Note:** The asset upload endpoint (`POST upload.heygen.com/v1/asset`) remains at v1. However, code examples in this file that reference `/v2/video/generate` should use `POST /v3/videos` instead — see the `avatar-video` skill.
+
 HeyGen allows you to upload custom assets (images, videos, audio) for use in video generation, such as backgrounds, talking photo sources, and custom audio.
 
 ## Upload Flow
