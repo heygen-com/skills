@@ -9,7 +9,7 @@
       "name": "heygen",
       "source": "./",
       "description": "HeyGen skills for avatar creation, identity-first video, and personalized video messages. Invoke as /heygen:avatar-designer or /heygen:video-producer.",
-      "version": "1.2.7",
+      "version": "1.3.2",
       "skills": [
         {
           "name": "avatar-designer",

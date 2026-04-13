@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.3.2 (2026-04-11) — Multi-Platform Distribution
+
+### Added
+- **Claude Code Marketplace** — Submission docs with plugin metadata, skill listing, and install instructions (`docs/claude-code-submission.md`)
+- **Hermes Agent support** — `hermes` metadata block in root SKILL.md frontmatter (tags + category) and install guide (`docs/hermes-install.md`)
+- **Manus support** — Import workflow docs (`docs/manus-install.md`)
+- **NanoClaw container skill** — Compact 112-line SKILL.md at `platforms/nanoclaw/heygen/SKILL.md` covering avatar discovery, voice selection, script writing, v3 video generation, polling, and delivery
+- **NanoClaw install guide** — `docs/nanoclaw-install.md`
+
+### Fixed
+- Synced `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` version from 1.2.7 → 1.3.2
+
+---
+
 ## v1.3.0 (2026-04-10) — i18n Support
 
 ### Added
