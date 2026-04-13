@@ -21,17 +21,72 @@ if [ ! -f "$STACK_DIR/SKILL.md" ]; then
   exit 1
 fi
 
+# ─── Parse flags ────────────────────────────────────────────
+HOST_OVERRIDE=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --host)
+      shift
+      if [ $# -eq 0 ]; then
+        err "--host requires a value: claude or openclaw"
+        exit 1
+      fi
+      case "$1" in
+        claude|claude-code) HOST_OVERRIDE="claude-code" ;;
+        openclaw)           HOST_OVERRIDE="openclaw" ;;
+        *)
+          err "Unknown host agent: $1 (expected: claude or openclaw)"
+          exit 1
+          ;;
+      esac
+      shift
+      ;;
+    --host=*)
+      val="${1#--host=}"
+      case "$val" in
+        claude|claude-code) HOST_OVERRIDE="claude-code" ;;
+        openclaw)           HOST_OVERRIDE="openclaw" ;;
+        *)
+          err "Unknown host agent: $val (expected: claude or openclaw)"
+          exit 1
+          ;;
+      esac
+      shift
+      ;;
+    *)
+      warn "Unknown flag: $1"
+      shift
+      ;;
+  esac
+done
+
 # ─── Detect host agent ───────────────────────────────────────
+# Priority: 1) --host flag, 2) script path, 3) directory existence fallback
 AGENT="unknown"
 SKILLS_DIR=""
 
-if [ -d "$HOME/.claude" ]; then
+if [ -n "$HOST_OVERRIDE" ]; then
+  # Explicit --host flag takes highest priority
+  AGENT="$HOST_OVERRIDE"
+elif [[ "$STACK_DIR" == *"/.openclaw/workspace/skills/"* ]]; then
+  AGENT="openclaw"
+elif [[ "$STACK_DIR" == *"/.claude/skills/"* ]]; then
   AGENT="claude-code"
-  SKILLS_DIR="$HOME/.claude/skills"
+elif [ -d "$HOME/.openclaw" ] && [ -d "$HOME/.claude" ]; then
+  # Both installed — path was ambiguous, warn and ask for --host
+  warn "Both Claude Code and OpenClaw detected. Cannot auto-detect host agent."
+  warn "Re-run with: ./setup --host claude  OR  ./setup --host openclaw"
+elif [ -d "$HOME/.claude" ]; then
+  AGENT="claude-code"
 elif [ -d "$HOME/.openclaw" ]; then
   AGENT="openclaw"
-  SKILLS_DIR="$HOME/.openclaw/workspace/skills"
 fi
+
+# Set skills directory based on detected agent
+case "$AGENT" in
+  claude-code) SKILLS_DIR="$HOME/.claude/skills" ;;
+  openclaw)    SKILLS_DIR="$HOME/.openclaw/workspace/skills" ;;
+esac
 
 echo ""
 echo "${BOLD}HeyGen Stack Setup${RESET}"
