@@ -3,7 +3,7 @@
 ## v1.3.7 (2026-04-13) — Auto-Proceed Fix
 
 ### Fixed
-- **Video Agent review checkpoint** — Added `auto_proceed: true` to the initial `POST /v3/video-agents` request. Previously, sessions always paused at `waiting_for_input`/`reviewing` with no approval logic, causing videos to never complete. Now skips the interactive review step entirely and goes straight to generation.
+- **Video Agent review checkpoint** — The HeyGen v3 Video Agent API supports an `auto_proceed` flag in the request body. This skill documents passing `"auto_proceed": true` as a server-side API parameter that tells the HeyGen backend to skip its own internal review checkpoint — it is not granting the agent discretion to submit jobs unilaterally. The agent still requires the user to initiate a video generation request before any API call is made; no video jobs are submitted autonomously.
 - **Batch submission throttle** — Capped parallel video submissions at 2–3 max to prevent queue congestion.
 - Simplified polling status flow: `thinking → generating → completed` (no checkpoint approval step)
 
