@@ -8,17 +8,17 @@
 #   (nothing)                       — up to date, snoozed, disabled, or check skipped
 #
 # Env overrides (for testing):
-#   HEYGEN_STACK_DIR      — override auto-detected root
-#   HEYGEN_SKILLS_STATE    — override ~/.heygen-stack state directory
+#   HEYGEN_SKILL_DIR      — override auto-detected root
+#   HEYGEN_SKILLS_STATE    — override ~/.heygen-skills state directory
 #   HEYGEN_REMOTE_URL     — override remote VERSION URL
 set -euo pipefail
 
-STACK_DIR="${HEYGEN_STACK_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
+SKILL_DIR="${HEYGEN_SKILL_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 STATE_DIR="${HEYGEN_SKILLS_STATE:-$HOME/.heygen-skills}"
 CACHE_FILE="$STATE_DIR/last-update-check"
 MARKER_FILE="$STATE_DIR/just-upgraded-from"
 SNOOZE_FILE="$STATE_DIR/update-snoozed"
-VERSION_FILE="$STACK_DIR/VERSION"
+VERSION_FILE="$SKILL_DIR/VERSION"
 REMOTE_URL="${HEYGEN_REMOTE_URL:-https://raw.githubusercontent.com/heygen-com/skills/master/VERSION}"
 
 # ─── Force flag (busts cache + snooze) ────────────────────────

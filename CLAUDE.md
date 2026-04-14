@@ -2,7 +2,7 @@
 
 ## What This Is
 
-The HeyGen Skill Stack. Two skills that chain together: **heygen-avatar** (identity → avatar → voice) and **heygen-video** (idea → script → video). SKILL.md at root routes between them.
+The HeyGen Skills. Two skills that chain together: **heygen-avatar** (identity → avatar → voice) and **heygen-video** (idea → script → video). SKILL.md at root routes between them.
 
 ## Architecture
 

@@ -15,8 +15,8 @@ warn() { echo "${YELLOW}!${RESET} $1"; }
 err()  { echo "${RED}✗${RESET} $1"; }
 
 # ─── Locate repo root ────────────────────────────────────────
-STACK_DIR="$(cd "$(dirname "$0")" && pwd)"
-if [ ! -f "$STACK_DIR/SKILL.md" ]; then
+SKILL_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [ ! -f "$SKILL_DIR/SKILL.md" ]; then
   err "Cannot find SKILL.md — run this script from the heygen-skills repo root."
   exit 1
 fi
@@ -68,9 +68,9 @@ SKILLS_DIR=""
 if [ -n "$HOST_OVERRIDE" ]; then
   # Explicit --host flag takes highest priority
   AGENT="$HOST_OVERRIDE"
-elif [[ "$STACK_DIR" == *"/.openclaw/workspace/skills/"* ]]; then
+elif [[ "$SKILL_DIR" == *"/.openclaw/workspace/skills/"* ]]; then
   AGENT="openclaw"
-elif [[ "$STACK_DIR" == *"/.claude/skills/"* ]]; then
+elif [[ "$SKILL_DIR" == *"/.claude/skills/"* ]]; then
   AGENT="claude-code"
 elif [ -d "$HOME/.openclaw" ] && [ -d "$HOME/.claude" ]; then
   # Both installed — path was ambiguous, warn and ask for --host
@@ -89,7 +89,7 @@ case "$AGENT" in
 esac
 
 echo ""
-echo "${BOLD}HeyGen Stack Setup${RESET}"
+echo "${BOLD}HeyGen Skills Setup${RESET}"
 echo "─────────────────────────────"
 if [ "$AGENT" = "unknown" ]; then
   warn "Could not detect Claude Code or OpenClaw. See INSTALL.md for manual setup."
@@ -101,17 +101,17 @@ fi
 SKILLS=(heygen-avatar heygen-video)
 
 if [ -n "$SKILLS_DIR" ]; then
-  STACK_SKILL_DIR="$SKILLS_DIR/heygen-skills"
-  mkdir -p "$STACK_SKILL_DIR"
+  INSTALL_DIR="$SKILLS_DIR/heygen-skills"
+  mkdir -p "$INSTALL_DIR"
   for skill in "${SKILLS[@]}"; do
-    src="$STACK_DIR/$skill/SKILL.md"
+    src="$SKILL_DIR/$skill/SKILL.md"
     [ ! -f "$src" ] && { warn "Skipping $skill — SKILL.md not found"; continue; }
-    mkdir -p "$STACK_SKILL_DIR/$skill" "$SKILLS_DIR/$skill"
-    ln -sf "$src" "$STACK_SKILL_DIR/$skill/SKILL.md"
+    mkdir -p "$INSTALL_DIR/$skill" "$SKILLS_DIR/$skill"
+    ln -sf "$src" "$INSTALL_DIR/$skill/SKILL.md"
     ln -sf "$src" "$SKILLS_DIR/$skill/SKILL.md"
   done
-  ln -sf "$STACK_DIR/SKILL.md" "$STACK_SKILL_DIR/SKILL.md"
-  [ -d "$STACK_DIR/references" ] && ln -sfn "$STACK_DIR/references" "$STACK_SKILL_DIR/references"
+  ln -sf "$SKILL_DIR/SKILL.md" "$INSTALL_DIR/SKILL.md"
+  [ -d "$SKILL_DIR/references" ] && ln -sfn "$SKILL_DIR/references" "$INSTALL_DIR/references"
   ok "Skill symlinks created in ${SKILLS_DIR}"
   for skill in "${SKILLS[@]}"; do echo "    ${skill}/SKILL.md"; done
 fi

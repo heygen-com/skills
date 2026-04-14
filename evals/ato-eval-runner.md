@@ -141,4 +141,4 @@ The ATO research (toolrank.dev, Apr 2026) found:
 - Tools with quality descriptions get **3.6x higher selection probability**
 - Action verbs, explicit enums, "Use when" / "NOT for" patterns, and return value descriptions are the key factors
 
-This eval measures whether heygen-stack's current descriptions achieve correct routing. Misroutes = description gaps = lost agent selection = fewer videos generated = lower GTM impact.
+This eval measures whether the current skill descriptions achieve correct routing. Misroutes = description gaps = lost agent selection = fewer videos generated = lower GTM impact.

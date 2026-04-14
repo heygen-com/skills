@@ -10,7 +10,7 @@
   "scenarios": [
     {
       "id": "routing-full-producer",
-      "skill": "heygen-stack",
+      "skill": "heygen-skills",
       "description": "Vague video request triggers Full Producer mode",
       "inputs": {
         "en": "make a video about our new product launch",
@@ -26,7 +26,7 @@
     },
     {
       "id": "routing-quick-shot",
-      "skill": "heygen-stack",
+      "skill": "heygen-skills",
       "description": "Quick shot / skip questions request",
       "inputs": {
         "en": "just generate a video, skip the questions",

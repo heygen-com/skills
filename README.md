@@ -1,4 +1,4 @@
-# HeyGen Stack
+# HeyGen Skills
 
 AI agent skills for creating avatar videos. Your agent gets a face, a voice, and the ability to send video like a message.
 
@@ -15,7 +15,7 @@ Works with Claude Code, OpenClaw, Codex, Cursor, and other AI coding agents.
 **If you're a human:** paste this into your agent and it will do the rest:
 
 ```
-Follow the instructions at https://github.com/heygen-com/skills and install HeyGen Stack skills following the README. Then use heygen-avatar and heygen-video to create an avatar of me and make a short cinematic intro video — ask me what you need before starting.
+Follow the instructions at https://github.com/heygen-com/skills and install HeyGen Skills following the README. Then use heygen-avatar and heygen-video to create an avatar of me and make a short cinematic intro video — ask me what you need before starting.
 ```
 
 ### Step 1 — Clone into your skills directory

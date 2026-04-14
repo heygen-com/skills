@@ -1,4 +1,4 @@
-# HeyGen Stack — Manus Install
+# HeyGen Skills — Manus Install
 
 ## Install
 

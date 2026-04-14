@@ -1,6 +1,6 @@
 ---
 name: heygen-skills
-display_name: HeyGen Stack
+display_name: HeyGen Skills
 description: |
   Create HeyGen avatar videos via the v3 Video Agent pipeline — handles avatar resolution,
   aspect ratio correction, prompt engineering, and voice selection automatically.
@@ -29,7 +29,7 @@ metadata:
     category: media
 ---
 
-# HeyGen Stack
+# HeyGen Skills
 
 ## Files & Paths
 

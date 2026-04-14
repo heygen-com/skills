@@ -5,7 +5,7 @@
 | Field | Value |
 |-------|-------|
 | **Name** | heygen |
-| **Display Name** | HeyGen Stack |
+| **Display Name** | HeyGen Skills |
 | **Category** | media |
 | **Version** | 1.3.1 |
 | **License** | MIT |

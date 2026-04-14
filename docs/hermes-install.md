@@ -1,4 +1,4 @@
-# HeyGen Stack — Hermes Agent Install
+# HeyGen Skills — Hermes Agent Install
 
 ## Install
 
@@ -34,7 +34,7 @@ Once installed, invoke the skills via slash commands:
 
 ## What Gets Installed
 
-- Root skill: HeyGen Stack (routing and shared config)
+- Root skill: HeyGen Skills (routing and shared config)
 - Sub-skill: heygen-avatar (avatar creation pipeline)
 - Sub-skill: heygen-video (video production pipeline)
 

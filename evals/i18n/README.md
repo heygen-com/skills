@@ -1,6 +1,6 @@
 # i18n Evaluation Suite
 
-Tests that heygen-stack skills work correctly for non-English users without regressing English quality.
+Tests that HeyGen skills work correctly for non-English users without regressing English quality.
 
 ## Quick Start
 

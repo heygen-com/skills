@@ -1,4 +1,4 @@
-# Install HeyGen Stack
+# Install HeyGen Skills
 
 Get your API key from [app.heygen.com/settings](https://app.heygen.com/settings/api?nav=API).
 
@@ -30,4 +30,4 @@ git clone https://github.com/heygen-com/skills.git ~/.claude/skills/heygen-skill
 
 Paste this prompt to your agent — it will find the right paths automatically:
 
-> My HeyGen API key is `[YOUR_API_KEY_HERE]`. Install the HeyGen Stack skill from https://github.com/heygen-com/skills.git — clone it into your skills directory (find it with your config or ask if unsure). Save the API key as `HEYGEN_API_KEY` in your environment config. Validate by calling `GET https://api.heygen.com/v3/users/me` with header `X-Api-Key`. Then use the heygen-avatar skill to create an avatar for yourself, and heygen-video to make a 30-60 second intro video, casual tone.
+> My HeyGen API key is `[YOUR_API_KEY_HERE]`. Install the HeyGen Skills from https://github.com/heygen-com/skills.git — clone it into your skills directory (find it with your config or ask if unsure). Save the API key as `HEYGEN_API_KEY` in your environment config. Validate by calling `GET https://api.heygen.com/v3/users/me` with header `X-Api-Key`. Then use the heygen-avatar skill to create an avatar for yourself, and heygen-video to make a 30-60 second intro video, casual tone.

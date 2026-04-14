@@ -1,4 +1,4 @@
-# HeyGen Stack — NanoClaw Install
+# HeyGen Skills — NanoClaw Install
 
 ## Install
 

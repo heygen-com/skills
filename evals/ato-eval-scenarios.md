@@ -178,7 +178,7 @@ Expected: `VIDEO` (heygen-video handles vague requests, avatar is optional)
 "I need a video for my course — intro module"
 
 ### C11
-"Create a video about the heygen-stack skill"
+"Create a video about the HeyGen skill"
 
 ### C12
 "Make a 60-second video on AI agents for non-technical audiences"
