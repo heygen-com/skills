@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# heygen-stack update-check — periodic version check for all skills.
+# heygen-skills update-check — periodic version check for all skills.
 # Inspired by gstack's update-check pattern (MIT license).
 #
 # Output (one line, or nothing):
@@ -9,17 +9,17 @@
 #
 # Env overrides (for testing):
 #   HEYGEN_STACK_DIR      — override auto-detected root
-#   HEYGEN_STACK_STATE    — override ~/.heygen-stack state directory
+#   HEYGEN_SKILLS_STATE    — override ~/.heygen-stack state directory
 #   HEYGEN_REMOTE_URL     — override remote VERSION URL
 set -euo pipefail
 
 STACK_DIR="${HEYGEN_STACK_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
-STATE_DIR="${HEYGEN_STACK_STATE:-$HOME/.heygen-stack}"
+STATE_DIR="${HEYGEN_SKILLS_STATE:-$HOME/.heygen-skills}"
 CACHE_FILE="$STATE_DIR/last-update-check"
 MARKER_FILE="$STATE_DIR/just-upgraded-from"
 SNOOZE_FILE="$STATE_DIR/update-snoozed"
 VERSION_FILE="$STACK_DIR/VERSION"
-REMOTE_URL="${HEYGEN_REMOTE_URL:-https://raw.githubusercontent.com/heygen-com/heygen-stack/main/VERSION}"
+REMOTE_URL="${HEYGEN_REMOTE_URL:-https://raw.githubusercontent.com/heygen-com/skills/master/VERSION}"
 
 # ─── Force flag (busts cache + snooze) ────────────────────────
 if [ "${1:-}" = "--force" ]; then

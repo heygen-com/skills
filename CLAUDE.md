@@ -1,4 +1,4 @@
-# CLAUDE.md — heygen-stack
+# CLAUDE.md — HeyGen Skills
 
 ## What This Is
 
@@ -7,7 +7,7 @@ The HeyGen Skill Stack. Two skills that chain together: **heygen-avatar** (ident
 ## Architecture
 
 ```
-heygen-stack/
+heygen-skills/
 ├── SKILL.md                    # Router: detects intent, dispatches to sub-skill
 ├── CLAUDE.md                   # This file. Structure, rules, conventions.
 ├── INSTALL.md                  # Installation instructions

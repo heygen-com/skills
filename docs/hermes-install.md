@@ -3,7 +3,7 @@
 ## Install
 
 ```bash
-hermes skills install heygen-com/heygen-stack
+hermes skills install heygen-com/skills
 ```
 
 ## Required Environment
@@ -45,4 +45,4 @@ Once installed, invoke the skills via slash commands:
 ## More Info
 
 - HeyGen API docs: https://developers.heygen.com/docs/quick-start
-- Repository: https://github.com/heygen-com/heygen-stack
+- Repository: https://github.com/heygen-com/skills

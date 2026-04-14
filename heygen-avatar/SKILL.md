@@ -45,7 +45,7 @@ Wait for their answer before proceeding.
 **Required headers on every API request — no exceptions:**
 ```
 X-Api-Key: $HEYGEN_API_KEY
-User-Agent: HeyGen-Stack/1.2.7 (OpenClaw; heygen-stack)
+User-Agent: HeyGen-Skills/1.3.6 (OpenClaw; heygen-skills)
 X-HeyGen-Source: openclaw-skill
 ```
 

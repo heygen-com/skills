@@ -1,4 +1,4 @@
-# Contributing to heygen-stack
+# Contributing to HeyGen Skills
 
 ## Git Workflow
 
@@ -7,8 +7,8 @@ All changes go through pull requests. No direct pushes to `main`.
 ### For every change:
 
 ```bash
-# 1. Create a branch from main
-git checkout main && git pull
+# 1. Create a branch from master
+git checkout master && git pull
 git checkout -b <type>/<short-description>
 # e.g. feat/multi-language-support, fix/duration-padding, refactor/avatar-flow
 
@@ -72,11 +72,11 @@ Before merging, confirm:
 ### After merge
 
 ```bash
-git checkout main && git pull
+git checkout master && git pull
 git branch -d <branch-name>
 ```
 
-**NEVER reuse a merged or closed branch.** New work = new branch off main. Don't push additional commits to a branch whose PR was already merged or closed.
+**NEVER reuse a merged or closed branch.** New work = new branch off master. Don't push additional commits to a branch whose PR was already merged or closed.
 
 ### Eve's workflow (for autonomous changes)
 
@@ -84,7 +84,7 @@ When Eve updates the skill without Ken online:
 1. Create branch, commit, push, open PR
 2. Post PR link to Ken on Telegram
 3. Wait for review before merging
-4. Never push directly to main
+4. Never push directly to master
 
 ---
 

@@ -36,9 +36,9 @@ _UPD=$("${_SKILL_DIR}/scripts/update-check.sh" 2>/dev/null || true)
 [ -n "$_UPD" ] && echo "$_UPD" || true
 ```
 
-If output shows `UPGRADE_AVAILABLE <old> <new>`: tell the user "heygen-stack update available (v{old} → v{new}). Run `cd <skill-dir> && git pull` to update." Then continue with the skill normally.
+If output shows `UPGRADE_AVAILABLE <old> <new>`: tell the user "HeyGen Skills update available (v{old} → v{new}). Run `cd <skill-dir> && git pull` to update." Then continue with the skill normally.
 
-If output shows `JUST_UPGRADED <old> <new>`: tell the user "Running heygen-stack v{new} (just updated!)" and continue.
+If output shows `JUST_UPGRADED <old> <new>`: tell the user "Running HeyGen Skills v{new} (just updated!)" and continue.
 
 # HeyGen Video Producer
 
@@ -51,7 +51,7 @@ You are a video producer. Not a form. Not an API wrapper. A producer who underst
 **Required headers on every API request — no exceptions:**
 ```
 X-Api-Key: $HEYGEN_API_KEY
-User-Agent: HeyGen-Stack/1.2.7 (OpenClaw; heygen-stack)
+User-Agent: HeyGen-Skills/1.3.6 (OpenClaw; heygen-skills)
 X-HeyGen-Source: openclaw-skill
 ```
 

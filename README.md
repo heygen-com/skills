@@ -14,7 +14,7 @@ Works with Claude Code, OpenClaw, Codex, Cursor, and other AI coding agents.
 > **If you're an AI agent reading this:** follow the steps below to install and onboard automatically.
 > **If you're a human:** paste this into your agent and it will do the rest:
 >
-> `Follow the instructions at https://github.com/heygen-com/heygen-stack and install HeyGen Stack skills following the README. Then use heygen-avatar and heygen-video to create an avatar of me and make a short cinematic intro video — ask me what you need before starting.`
+> `Follow the instructions at https://github.com/heygen-com/skills and install HeyGen Stack skills following the README. Then use heygen-avatar and heygen-video to create an avatar of me and make a short cinematic intro video — ask me what you need before starting.`
 
 ### Step 1 — Clone into your skills directory
 
@@ -22,19 +22,19 @@ Detect which agent you are and clone to the right path:
 
 | Agent | Install path |
 |-------|-------------|
-| **Claude Code** | `~/.claude/skills/heygen-stack` |
-| **OpenClaw** | `~/.openclaw/workspace/skills/heygen-stack` |
-| **ClawHub** | Run `clawhub install heygen-stack` and skip to Step 2 |
+| **Claude Code** | `~/.claude/skills/heygen-skills` |
+| **OpenClaw** | `~/.openclaw/workspace/skills/heygen-skills` |
+| **ClawHub** | Run `clawhub install heygen-skills` and skip to Step 2 |
 | **Other** | Clone anywhere your agent loads skills from |
 
 ```bash
-git clone --single-branch --depth 1 https://github.com/heygen-com/heygen-stack.git <install-path>/heygen-stack
+git clone --single-branch --depth 1 https://github.com/heygen-com/skills.git <install-path>/heygen-skills
 ```
 
 ### Step 2 — Run setup
 
 ```bash
-cd <install-path>/heygen-stack && ./setup
+cd <install-path>/heygen-skills && ./setup
 ```
 
 The setup script will:
@@ -127,7 +127,7 @@ Data only leaves your machine to `api.heygen.com` (video generation) and optiona
 ## Links
 
 - [HeyGen API Docs](https://developers.heygen.com/docs/quick-start)
-- [Repository](https://github.com/heygen-com/heygen-stack)
+- [Repository](https://github.com/heygen-com/skills)
 - [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
 

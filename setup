@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# heygen-stack setup — first-time installation for Claude Code and OpenClaw users.
+# heygen-skills setup — first-time installation for Claude Code and OpenClaw users.
 # Idempotent: safe to run multiple times.
 set -euo pipefail
 
@@ -17,7 +17,7 @@ err()  { echo "${RED}✗${RESET} $1"; }
 # ─── Locate repo root ────────────────────────────────────────
 STACK_DIR="$(cd "$(dirname "$0")" && pwd)"
 if [ ! -f "$STACK_DIR/SKILL.md" ]; then
-  err "Cannot find SKILL.md — run this script from the heygen-stack repo root."
+  err "Cannot find SKILL.md — run this script from the heygen-skills repo root."
   exit 1
 fi
 
@@ -101,7 +101,7 @@ fi
 SKILLS=(heygen-avatar heygen-video)
 
 if [ -n "$SKILLS_DIR" ]; then
-  STACK_SKILL_DIR="$SKILLS_DIR/heygen-stack"
+  STACK_SKILL_DIR="$SKILLS_DIR/heygen-skills"
   mkdir -p "$STACK_SKILL_DIR"
   for skill in "${SKILLS[@]}"; do
     src="$STACK_DIR/$skill/SKILL.md"

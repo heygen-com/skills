@@ -10,7 +10,7 @@
 | **Version** | 1.3.1 |
 | **License** | MIT |
 | **Homepage** | https://developers.heygen.com/docs/quick-start |
-| **Repository** | https://github.com/heygen-com/heygen-stack |
+| **Repository** | https://github.com/heygen-com/skills |
 
 ## Description
 

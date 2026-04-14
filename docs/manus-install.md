@@ -6,7 +6,7 @@
 2. Go to **Skills → Import**
 3. Paste the repository URL:
    ```
-   https://github.com/heygen-com/heygen-stack
+   https://github.com/heygen-com/skills
    ```
 4. Click Import
 
@@ -22,7 +22,7 @@ Get your key from [app.heygen.com/settings/api](https://app.heygen.com/settings?
 
 ## Usage
 
-Trigger the skill with `/heygen-stack` or describe what you want:
+Trigger the skill with `/heygen-skills` or describe what you want:
 
 - "Create an avatar from this photo"
 - "Make a product demo video with my avatar"
@@ -36,4 +36,4 @@ The skill routes to the appropriate sub-skill automatically:
 ## More Info
 
 - HeyGen API docs: https://developers.heygen.com/docs/quick-start
-- Repository: https://github.com/heygen-com/heygen-stack
+- Repository: https://github.com/heygen-com/skills

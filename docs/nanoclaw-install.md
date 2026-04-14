@@ -5,15 +5,15 @@
 Copy the NanoClaw container skill into your NanoClaw fork:
 
 ```bash
-# From the heygen-stack repo root
+# From the heygen-skills repo root
 cp -r platforms/nanoclaw/heygen/ /path/to/your-nanoclaw-fork/container/skills/heygen/
 ```
 
 Or clone and copy:
 
 ```bash
-git clone https://github.com/heygen-com/heygen-stack.git
-cp -r heygen-stack/platforms/nanoclaw/heygen/ /path/to/your-nanoclaw-fork/container/skills/heygen/
+git clone https://github.com/heygen-com/skills.git
+cp -r skills/platforms/nanoclaw/heygen/ /path/to/your-nanoclaw-fork/container/skills/heygen/
 ```
 
 ## Required Environment
@@ -47,4 +47,4 @@ The container agent will automatically pick up the skill. Ask it to:
 ## More Info
 
 - HeyGen API docs: https://developers.heygen.com/docs/quick-start
-- Full skill repo: https://github.com/heygen-com/heygen-stack
+- Full skill repo: https://github.com/heygen-com/skills

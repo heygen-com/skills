@@ -4,9 +4,9 @@ You are an evaluator running a fresh-install test of the `heygen-video` skill.
 
 ## Setup (CRITICAL — simulate fresh install)
 
-1. **Delete** your local copy of the skill: `rm -rf <your_workspace>/skills/heygen-stack`
-2. **Clone fresh** from GitHub: `cd <your_workspace>/skills && git clone git@github.com:heygen-com/heygen-stack.git`
-3. **Read ONLY** `heygen-stack/video-message/SKILL.md` — this is your sole source of truth
+1. **Delete** your local copy of the skill: `rm -rf <your_workspace>/skills/heygen-skills`
+2. **Clone fresh** from GitHub: `cd <your_workspace>/skills && git clone git@github.com:heygen-com/skills.git heygen-skills`
+3. **Read ONLY** `heygen-skills/video-message/SKILL.md` — this is your sole source of truth
 4. You have NO prior knowledge of how this skill works. Follow SKILL.md exactly as written.
 
 ## For Each Scenario

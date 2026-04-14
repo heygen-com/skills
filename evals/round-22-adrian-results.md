@@ -4,7 +4,7 @@
 **Focus:** Fresh install validation — wrapper script + framing correction across avatar types
 
 ## Fresh Install Experience
-- ✅ Cloned fresh from `git@github.com:heygen-com/heygen-stack.git` into workspace-adrian/skills
+- ✅ Cloned fresh from `git@github.com:heygen-com/skills.git` into workspace-adrian/skills
 - ✅ Read only `video-message/SKILL.md` as sole source of truth
 - ✅ Wrapper script `submit-video.sh` used for all submissions (mandated in Generate phase)
 - ⚠️ **SKILL.md is clear and unambiguous** — the ⛔ stop gate and wrapper mandate were found without confusion

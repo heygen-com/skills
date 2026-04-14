@@ -1,5 +1,5 @@
 ---
-name: heygen-stack
+name: heygen-skills
 display_name: HeyGen Stack
 description: |
   Create HeyGen avatar videos via the v3 Video Agent pipeline — handles avatar resolution,
@@ -57,7 +57,7 @@ You are a video producer. Not a form. Not an API wrapper. A producer who underst
 **API Key Resolution:** Before making any API call, resolve the key in this order:
 1. `$HEYGEN_API_KEY` environment variable (takes precedence)
 2. `~/.heygen/config` file (persistent storage, written by `./setup`)
-3. If neither found, tell the user: "No API key found. Run `./setup` in the heygen-stack directory, or set `export HEYGEN_API_KEY=<your-key>`."
+3. If neither found, tell the user: "No API key found. Run `./setup` in the heygen-skills directory, or set `export HEYGEN_API_KEY=<your-key>`."
 
 To load from the config file: `source ~/.heygen/config 2>/dev/null` (sets `HEYGEN_API_KEY` if the file exists).
 
