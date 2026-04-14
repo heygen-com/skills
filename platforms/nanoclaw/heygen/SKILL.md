@@ -17,8 +17,8 @@ NOT for: image generation, audio-only TTS, video translation, or cinematic b-rol
 ### Step 1: Discover Available Avatars
 
 ```bash
-curl -s -X GET "https://api.heygen.com/v2/avatars" \
-  -H "X-Api-Key: $HEYGEN_API_KEY" | jq '.data.avatars[:5] | .[] | {avatar_id, avatar_name}'
+curl -s -X GET "https://api.heygen.com/v3/avatars" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" | jq '.data.avatar_list[:5] | .[] | {avatar_id: .avatar_group_id, avatar_name}'
 ```
 
 Pick an avatar_id. If the user has a specific avatar, use that ID.
@@ -26,7 +26,7 @@ Pick an avatar_id. If the user has a specific avatar, use that ID.
 ### Step 2: Find a Voice
 
 ```bash
-curl -s -X GET "https://api.heygen.com/v2/voices" \
+curl -s -X GET "https://api.heygen.com/v3/voices" \
   -H "X-Api-Key: $HEYGEN_API_KEY" | jq '.data.voices[:10] | .[] | {voice_id, display_name, language}'
 ```
 
