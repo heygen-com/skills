@@ -2,6 +2,8 @@
 
 Get your API key from [app.heygen.com/settings](https://app.heygen.com/settings/api?nav=API).
 
+> **Security note:** The `./setup` script is included in the repository root (`setup`, 182 lines, bash). It is idempotent and safe to inspect before running. It writes your API key to `~/.heygen/config` using `echo 'HEYGEN_API_KEY=...' > ~/.heygen/config` (not sourced). The skill reads this file with `grep/cut`, never with `source`.
+
 ## Option 1 — ClawHub (recommended)
 
 ```bash

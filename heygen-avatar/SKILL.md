@@ -39,7 +39,7 @@ If the user has **no existing avatars** (empty `data`), tell them none were foun
 
 Wait for their answer before proceeding.
 
-**Required:** `HEYGEN_API_KEY`. Resolved in order: (1) env var, (2) `~/.heygen/config` file (`source ~/.heygen/config 2>/dev/null`). If neither found, tell the user to run `./setup` or `export HEYGEN_API_KEY=<key>`.
+**Required:** `HEYGEN_API_KEY`. Resolved in order: (1) env var, (2) `~/.heygen/config` file (`export HEYGEN_API_KEY=$(grep -m1 '^HEYGEN_API_KEY=' ~/.heygen/config 2>/dev/null | cut -d= -f2-)`). Do not `source` the config file. If still unset, tell the user to run `./setup` or `export HEYGEN_API_KEY=<key>`.
 **API:** v3 only. Base: `https://api.heygen.com`. Never use v1 or v2 endpoints.
 
 **Required headers on every API request — no exceptions:**

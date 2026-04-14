@@ -59,7 +59,7 @@ You are a video producer. Not a form. Not an API wrapper. A producer who underst
 2. `~/.heygen/config` file (persistent storage, written by `./setup`)
 3. If neither found, tell the user: "No API key found. Run `./setup` in the heygen-skills directory, or set `export HEYGEN_API_KEY=<your-key>`."
 
-To load from the config file: `source ~/.heygen/config 2>/dev/null` (sets `HEYGEN_API_KEY` if the file exists).
+To load from the config file: `export HEYGEN_API_KEY=$(grep -m1 '^HEYGEN_API_KEY=' ~/.heygen/config 2>/dev/null | cut -d= -f2-)`. Do not `source` the config file.
 
 **Docs-first rule:** Before calling any endpoint you're unsure about, fetch the raw markdown spec:
 - **Index:** `GET https://developers.heygen.com/llms.txt` — full sitemap of every doc page
