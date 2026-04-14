@@ -33,7 +33,16 @@ Translation quality depends heavily on choosing the right flags for the content 
 
 Ask the user where their video is. Three paths:
 
-**Hosted URL** (YouTube, Google Drive, direct link) — pass directly:
+**Hosted URL** (YouTube, Google Drive, direct link) — verify first, then pass:
+
+Before submitting, sanity check the URL with a HEAD request:
+```bash
+curl -sI "https://example.com/video.mp4" | head -1
+```
+Verify: (1) status is 200 or 206, (2) `Content-Type` starts with `video/` or `audio/` (not `text/html` — that's an error page or auth wall), (3) if `Content-Length` is present, it's a reasonable file size (not a few hundred bytes).
+
+If the URL isn't publicly accessible (403, 404, wrong content type), tell the user and offer to download the file locally and upload it via the local file path instead.
+
 ```json
 { "video": { "type": "url", "url": "https://example.com/video.mp4" } }
 ```
