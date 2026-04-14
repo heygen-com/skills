@@ -4,6 +4,5 @@
 node_modules/
 *.jsonl
 
-# Eval baselines are dev-only (generated output), but scenarios and rubric are tracked
-evals/baselines/
+evals/
 scripts/release.sh
