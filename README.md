@@ -126,6 +126,10 @@ One optional shell script:
 
 Data only leaves your machine to `api.heygen.com` (video generation) and optionally `raw.githubusercontent.com` (version check).
 
+## Looking for the v1 skills?
+
+The previous version of this repo had individual skills for TTS, video translation, faceswap, video editing, and more. Those skills are preserved at [heygen-com/skills-legacy](https://github.com/heygen-com/skills-legacy).
+
 ## Links
 
 - [HeyGen API Docs](https://developers.heygen.com/docs/quick-start)
