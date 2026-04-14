@@ -29,6 +29,32 @@ curl -X GET "https://api.heygen.com/v3/video-translations/languages" \
 
 Translation quality depends heavily on choosing the right flags for the content type. Don't present users with a wall of boolean options — identify what kind of video they have and set flags accordingly.
 
+### Step 0: Determine the video source
+
+Ask the user where their video is. Three paths:
+
+**Hosted URL** (YouTube, Google Drive, direct link) — pass directly:
+```json
+{ "video": { "type": "url", "url": "https://example.com/video.mp4" } }
+```
+
+**Local file** — upload to HeyGen first, then reference by asset ID:
+```bash
+curl -X POST "https://api.heygen.com/v3/assets" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  -F "file=@/path/to/local-video.mp4"
+```
+Response returns `asset_id`. Then:
+```json
+{ "video": { "type": "asset_id", "asset_id": "<returned asset_id>" } }
+```
+Note: max upload size is 32 MB via this endpoint.
+
+**Existing HeyGen asset** — use the asset ID directly:
+```json
+{ "video": { "type": "asset_id", "asset_id": "existing_asset_id" } }
+```
+
 ### Step 1: Validate the target language
 
 Call the languages endpoint to confirm the target language is supported before doing anything else. This avoids wasted time on unsupported language pairs.
@@ -168,9 +194,8 @@ def get_supported_languages() -> list:
 
 | Field | Type | Req | Description |
 |-------|------|:---:|-------------|
-| `video_url` | string | Y* | URL of video to translate (*or `video_id`) |
-| `video_id` | string | Y* | HeyGen video ID (*or `video_url`) |
-| `output_language` | string | Y | Target language code from the languages endpoint |
+| `video` | object | Y | Source video: `{ "type": "url", "url": "..." }` or `{ "type": "asset_id", "asset_id": "..." }` |
+| `output_languages` | string[] | Y | Target language names from the languages endpoint. Array — supports multiple languages in one call |
 | `mode` | string | | `"precision"` (recommended) or `"speed"`. Always use precision |
 | `speaker_num` | number | | Number of speakers in the video. Always ask the user |
 | `title` | string | | Name for the translated video |
@@ -185,7 +210,7 @@ def get_supported_languages() -> list:
 | `callback_url` | string | | Webhook URL for completion notification |
 | `callback_id` | string | | Custom ID for webhook tracking |
 
-**Either** `video_url` **or** `video_id` must be provided. Input language is auto-detected — don't require the user to specify it.
+Input language is auto-detected — don't require the user to specify it.
 
 ### curl
 
@@ -194,8 +219,8 @@ curl -X POST "https://api.heygen.com/v3/video-translations" \
   -H "X-Api-Key: $HEYGEN_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "video_url": "https://example.com/presenter-video.mp4",
-    "output_language": "es-ES",
+    "video": { "type": "url", "url": "https://example.com/presenter-video.mp4" },
+    "output_languages": ["Spanish"],
     "mode": "precision",
     "speaker_num": 1,
     "enable_speech_enhancement": true,
@@ -209,10 +234,13 @@ curl -X POST "https://api.heygen.com/v3/video-translations" \
 ### TypeScript
 
 ```typescript
+type VideoSource =
+  | { type: "url"; url: string }
+  | { type: "asset_id"; asset_id: string };
+
 interface VideoTranslateRequest {
-  video_url?: string;
-  video_id?: string;
-  output_language: string;
+  video: VideoSource;
+  output_languages: string[];
   mode?: "precision" | "speed";
   speaker_num?: number;
   title?: string;
@@ -230,11 +258,11 @@ interface VideoTranslateRequest {
 
 interface VideoTranslateResponse {
   data: {
-    video_translate_id: string;
+    video_translation_ids: string[];
   };
 }
 
-async function createTranslation(config: VideoTranslateRequest): Promise<string> {
+async function createTranslation(config: VideoTranslateRequest): Promise<string[]> {
   const response = await fetch(
     "https://api.heygen.com/v3/video-translations",
     {
@@ -248,13 +276,13 @@ async function createTranslation(config: VideoTranslateRequest): Promise<string>
   );
 
   const json: VideoTranslateResponse = await response.json();
-  return json.data.video_translate_id;
+  return json.data.video_translation_ids;
 }
 
 // Talking head / presenter (the common case)
-const id = await createTranslation({
-  video_url: "https://example.com/presenter.mp4",
-  output_language: "es-ES",
+const ids = await createTranslation({
+  video: { type: "url", url: "https://example.com/presenter.mp4" },
+  output_languages: ["Spanish"],
   mode: "precision",
   speaker_num: 1,
   enable_speech_enhancement: true,
@@ -270,7 +298,7 @@ const id = await createTranslation({
 import requests
 import os
 
-def create_translation(config: dict) -> str:
+def create_translation(config: dict) -> list[str]:
     response = requests.post(
         "https://api.heygen.com/v3/video-translations",
         headers={
@@ -281,13 +309,13 @@ def create_translation(config: dict) -> str:
     )
 
     data = response.json()
-    return data["data"]["video_translate_id"]
+    return data["data"]["video_translation_ids"]
 
 
 # Talking head / presenter (the common case)
-translate_id = create_translation({
-    "video_url": "https://example.com/presenter.mp4",
-    "output_language": "es-ES",
+translation_ids = create_translation({
+    "video": {"type": "url", "url": "https://example.com/presenter.mp4"},
+    "output_languages": ["Spanish"],
     "mode": "precision",
     "speaker_num": 1,
     "enable_speech_enhancement": True,
@@ -299,10 +327,12 @@ translate_id = create_translation({
 
 ### Response Format
 
+Returns one translation ID per target language:
+
 ```json
 {
   "data": {
-    "video_translate_id": "vt_abc123def456"
+    "video_translation_ids": ["vt_abc123def456"]
   }
 }
 ```
@@ -370,7 +400,14 @@ def get_translation_status(translate_id: str) -> dict:
   "data": {
     "id": "vt_abc123def456",
     "status": "completed",
-    "video_url": "https://resource.heygen.ai/video_translate/..."
+    "title": "Spanish Version",
+    "output_language": "Spanish",
+    "input_language": "English",
+    "duration": 65.4,
+    "video_url": "https://resource.heygen.ai/video_translate/...",
+    "audio_url": "https://resource.heygen.ai/video_translate/.../audio.mp3",
+    "srt_caption_url": "https://resource.heygen.ai/.../captions.srt",
+    "vtt_caption_url": "https://resource.heygen.ai/.../captions.vtt"
   }
 }
 ```
@@ -382,7 +419,7 @@ def get_translation_status(translate_id: str) -> dict:
   "data": {
     "id": "vt_abc123def456",
     "status": "failed",
-    "message": "Insufficient audio quality for translation"
+    "failure_message": "Insufficient audio quality for translation"
   }
 }
 ```
