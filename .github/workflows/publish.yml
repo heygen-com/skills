@@ -1,0 +1,34 @@
+name: Publish to ClawHub
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install ClawHub CLI
+        run: npm install -g clawhub
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Publish heygen-skills
+        env:
+          CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_TOKEN }}
+        run: |
+          clawhub publish . \
+            --slug heygen-skills \
+            --version ${{ steps.version.outputs.version }} \
+            --name "HeyGen Skills" \
+            --changelog "$(git tag -l --format='%(contents)' ${{ github.ref_name }})"
