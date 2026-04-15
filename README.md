@@ -11,12 +11,13 @@ Works with Claude Code, OpenClaw, Codex, Cursor, and other AI coding agents.
 
 ## Install
 
-**If you're an AI agent reading this:** follow the steps below to install and onboard automatically.
-**If you're a human:** paste this into your agent and it will do the rest:
+Paste this into your agent to get started:
 
 ```
-Follow the instructions at https://github.com/heygen-com/skills and install HeyGen Skills following the README. Then use heygen-avatar and heygen-video to create an avatar of me and make a short cinematic intro video — ask me what you need before starting.
+Install HeyGen Skills from https://github.com/heygen-com/skills — clone the repo into your skills directory and run ./setup. Then use heygen-avatar and heygen-video to create an avatar of me and make a short cinematic intro video. Ask me what you need before starting.
 ```
+
+Or follow the steps below manually.
 
 ### Step 1 — Clone into your skills directory
 
