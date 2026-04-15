@@ -2,7 +2,7 @@
 
 ## What This Is
 
-The HeyGen Skills. Two skills that chain together: **heygen-avatar** (identity → avatar → voice) and **heygen-video** (idea → script → video). SKILL.md at root routes between them.
+The HeyGen Skills. Three skills that chain together: **heygen-avatar** (identity → avatar → voice), **heygen-video** (idea → script → video), and **heygen-hyperframes** (HTML → composition → rendered MP4). SKILL.md at root routes between them.
 
 ## Architecture
 
@@ -18,6 +18,8 @@ heygen-skills/
 │   └── SKILL.md                # Avatar creation workflow (identity → avatar → voice → AVATAR file)
 ├── heygen-video/
 │   └── SKILL.md                # Video production workflow (7-stage pipeline)
+├── heygen-hyperframes/
+│   └── SKILL.md                # HTML video composition (scaffold → compose → render)
 ├── references/                 # Shared. Loaded on-demand by phase (NOT every turn)
 │   ├── avatar-discovery.md     # Discovery: avatar lookup, voice selection, curl examples
 │   ├── asset-routing.md        # Discovery: asset classification engine, upload flows
@@ -28,7 +30,11 @@ heygen-skills/
 │   ├── frame-check.md          # Frame Check: aspect ratio correction prompts
 │   ├── api-reference.md        # Generate: endpoints, polling, interactive sessions, errors
 │   ├── troubleshooting.md      # Known issues, workarounds, duration variance
-│   └── reviewer-prompt.md      # Deliver: self-evaluation rubric
+│   ├── reviewer-prompt.md      # Deliver: self-evaluation rubric
+│   ├── hyperframes-authoring.md# HyperFrames: composition structure, data attributes, rules
+│   ├── hyperframes-cli.md      # HyperFrames: CLI commands (init, lint, preview, render)
+│   ├── hyperframes-registry.md # HyperFrames: registry blocks and components
+│   └── hyperframes-gsap.md     # HyperFrames: GSAP animation patterns
 └── evals/                      # Dev-only test infrastructure (not shipped to users)
     ├── eval-runner-prompt.md   # Instructions for eval subagent
     ├── autoresearch-loop.md    # Loop methodology docs
@@ -60,7 +66,10 @@ Each SKILL.md must stay under 300 lines. Skill files are injected into EVERY pro
 Skills communicate through `AVATAR-<NAME>.md` files at the workspace root:
 - heygen-avatar writes them (avatar_id, group_id, voice_id)
 - heygen-video reads them (picks up avatar + voice automatically)
+- heygen-hyperframes can reference them when integrating avatar clips into compositions
 - One file per character. Human-readable AND machine-readable.
+
+**HyperFrames note:** heygen-hyperframes does NOT require a HeyGen API key. It renders locally via Node.js + FFmpeg. It can integrate with heygen-video output (avatar MP4s) as media sources in compositions.
 
 ## API Conventions
 

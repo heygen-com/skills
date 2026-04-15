@@ -69,14 +69,15 @@ The skill picks up the avatar automatically, writes a script, generates the vide
 
 ## What's Included
 
-Two skills that work standalone or chain together:
+Three skills that work standalone or chain together:
 
 | Skill | What it does | Invoke |
 |-------|-------------|--------|
 | **heygen-avatar** | Photo → persistent digital twin (face + voice). Reusable across every video. | `/heygen-avatar` |
 | **heygen-video** | Idea → script → prompt-engineered video with your avatar delivering the message. | `/heygen-video` |
+| **heygen-hyperframes** | HTML → precise video composition with GSAP animation, rendered locally to MP4. | `/heygen-hyperframes` |
 
-**heygen-avatar** creates the identity. **heygen-video** uses it.
+**heygen-avatar** creates the identity. **heygen-video** uses it for prompt-driven videos. **heygen-hyperframes** gives you frame-accurate control when you need it.
 
 ## How It Works
 
@@ -85,9 +86,13 @@ Photo / Description          Avatar File              Finished Video
        ↓                        ↓                        ↓
   heygen-avatar    →    AVATAR-NAME.md       →    heygen-video
   (identity + voice)    (reusable state)          (script + video)
+                                                       ↓
+                                                  heygen-hyperframes
+                                                  (HTML composition
+                                                   + avatar clips → MP4)
 ```
 
-Skills communicate through `AVATAR-<NAME>.md` files. heygen-avatar writes them, heygen-video reads them. Human-readable and machine-readable.
+Skills communicate through `AVATAR-<NAME>.md` files. heygen-avatar writes them, heygen-video reads them. heygen-hyperframes can use avatar video clips as media sources in HTML compositions. Human-readable and machine-readable.
 
 ## API Key
 
@@ -111,6 +116,8 @@ After setup, try these prompts with your agent:
 | "Use heygen-video for my team's weekly update. Ask me what shipped before writing the script." | Skill interviews you first, then writes and generates |
 | "Use heygen-video to make a 20-second outreach video to a potential investor. What should I include?" | Skill guides the message, you approve the script, avatar delivers it |
 | "Use heygen-avatar to give me a new look — ask me what vibe I'm going for." | Discovery flow: skill suggests options (outdoor, studio, casual, cinematic) before committing |
+| "Use heygen-hyperframes to create an animated title card for my YouTube channel." | Scaffolds a project, builds HTML composition with GSAP animation, renders to MP4 |
+| "Use heygen-hyperframes to make a 30-second data visualization video from these stats." | Installs data-chart component, animates your numbers, renders locally |
 
 ## Requirements
 

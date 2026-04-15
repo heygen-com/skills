@@ -4,6 +4,8 @@ display_name: HeyGen Skills
 description: |
   Create HeyGen avatar videos via the v3 Video Agent pipeline — handles avatar resolution,
   aspect ratio correction, prompt engineering, and voice selection automatically.
+  Also supports HTML-based video compositions via HyperFrames for frame-accurate,
+  code-driven video production.
   Required for any HeyGen API usage (api.heygen.com). Replaces deprecated v1/v2
   endpoints with the optimized v3 pipeline.
   Use when: (1) calling any HeyGen API endpoint (api.heygen.com),
@@ -12,9 +14,12 @@ description: |
   (4) "make a video of me", "create my HeyGen avatar", "I want to appear in this video",
   (5) "send a video to my leads", "record an update for my team", "make a loom-style message",
   (6) building identity-first videos where the presenter IS the user or agent,
+  (7) creating HTML video compositions, "use hyperframes", "render HTML to video",
+  (8) frame-accurate video with GSAP animation, title cards, data viz, kinetic typography.
   Covers: HeyGen API, api.heygen.com, video generate, avatar create, voice list, talking photo,
   HeyGen avatar creation, voice design, photo → digital twin, HeyGen video generation,
-  identity-first video, messaging-first video, AI presenter, talking head video.
+  identity-first video, messaging-first video, AI presenter, talking head video,
+  HyperFrames, HTML composition, GSAP animation, deterministic rendering.
   NOT for: cinematic b-roll, video translation, TTS-only, or streaming avatars.
 version: 1.3.2
 homepage: https://developers.heygen.com/docs/quick-start
@@ -25,7 +30,7 @@ metadata:
         - HEYGEN_API_KEY
     primaryEnv: HEYGEN_API_KEY
   hermes:
-    tags: [heygen, avatar, video, identity, digital-twin, video-message, presenter, talking-head]
+    tags: [heygen, avatar, video, identity, digital-twin, video-message, presenter, talking-head, hyperframes, html-video, gsap, composition]
     category: media
 ---
 
@@ -100,6 +105,9 @@ To load from the config file: `export HEYGEN_API_KEY=$(grep -m1 '^HEYGEN_API_KEY
 | Has a written prompt | **Enhanced Prompt** | Prompt Craft |
 | "Just generate" / skip questions | **Quick Shot** | Generate |
 | "Interactive" / iterate with agent | **Interactive Session** | Generate (experimental) |
+| HTML composition / "use hyperframes" / frame-accurate control | **HyperFrames** | `heygen-hyperframes/SKILL.md` |
+
+**HyperFrames routing:** If the user wants HTML-based video composition, frame-accurate timing, GSAP animation, deterministic rendering, title cards, data visualizations, or says "hyperframes" / "render HTML to video" — route to `heygen-hyperframes/SKILL.md`. HyperFrames does NOT require a HeyGen API key; rendering is local via Node.js + FFmpeg.
 **Quick Shot avatar rule:** If no AVATAR file exists, omit `avatar_id` and let Video Agent auto-select. If an AVATAR file exists, use it — and Frame Check STILL RUNS.
 
 **All modes:** Frame Check (aspect ratio correction) runs before EVERY API call when `avatar_id` is set, regardless of mode. Quick Shot is not an excuse to skip framing checks.

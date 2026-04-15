@@ -1,7 +1,7 @@
 {
   "name": "heygen",
   "version": "1.3.2",
-  "description": "Create HeyGen avatar videos and personalized video messages. Build a persistent digital identity from a photo, then generate presenter-led videos with your digital twin.",
+  "description": "Create HeyGen avatar videos, personalized video messages, and HTML video compositions. Build a persistent digital identity from a photo, generate presenter-led videos with your digital twin, or compose frame-accurate video from HTML with HyperFrames.",
   "author": {
     "name": "HeyGen",
     "url": "https://heygen.com"
@@ -18,6 +18,10 @@
     "presenter",
     "talking-head",
     "ai-avatar",
-    "avatar-video"
+    "avatar-video",
+    "hyperframes",
+    "html-video",
+    "gsap",
+    "composition"
   ]
 }
