@@ -98,7 +98,7 @@ else
 fi
 
 # ─── Create skill symlinks ───────────────────────────────────
-SKILLS=(heygen-avatar heygen-video)
+SKILLS=(heygen-avatar heygen-video video-translate)
 
 if [ -n "$SKILLS_DIR" ]; then
   INSTALL_DIR="$SKILLS_DIR/heygen-skills"

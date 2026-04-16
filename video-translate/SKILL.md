@@ -18,10 +18,53 @@ Translate and dub existing videos into 40+ languages. HeyGen clones the speaker'
 
 ## Authentication
 
-All requests require the `X-Api-Key` header. Set the `HEYGEN_API_KEY` environment variable.
+All requests require the `X-Api-Key` header.
+
+**Before claiming the key is missing, resolve it in this order:**
+
+1. `$HEYGEN_API_KEY` environment variable (takes precedence)
+2. `~/.heygen/config` file — persistent storage written by `./setup`. Load it with:
+   ```bash
+   export HEYGEN_API_KEY=$(grep '^HEYGEN_API_KEY=' ~/.heygen/config | cut -d= -f2-)
+   ```
+   Or source in-process (no `source` — the file isn't a full shell script):
+   ```bash
+   HEYGEN_API_KEY=$(awk -F= '/^HEYGEN_API_KEY=/{print $2}' ~/.heygen/config)
+   ```
+3. Only if both are empty: tell the user "No API key found. Run `./setup` in the heygen-skills directory, or `export HEYGEN_API_KEY=<your-key>`."
+
+Do NOT stop and ask the user to re-export if `~/.heygen/config` exists — load it and proceed.
+
+### Shell hygiene (read this before your first curl)
+
+These bite every time and look like API failures when they aren't:
+
+1. **Env vars do NOT persist across `Bash` tool calls.** Claude Code spawns a fresh shell for each call. An `export` from one call is gone by the next. **Inline the auth load in every curl call**, like this:
+
+   ```bash
+   [ -z "$HEYGEN_API_KEY" ] && [ -f ~/.heygen/config ] && \
+     export HEYGEN_API_KEY=$(grep '^HEYGEN_API_KEY=' ~/.heygen/config | cut -d= -f2-)
+   curl -sS "https://api.heygen.com/v3/video-translations/languages" \
+     -H "X-Api-Key: $HEYGEN_API_KEY"
+   ```
+
+   If you skip the prefix, you get HTTP 401 unauthorized — which looks like a key problem but is actually a shell-state problem.
+
+2. **zsh "no matches found" = a glob char wasn't quoted.** zsh expands `?`, `*`, `[…]` in unquoted arguments and aborts when no file matches. URLs with query strings (`?foo=bar`) and jq filters (`.[]`) both trip this. Always single-quote URLs and jq expressions:
+
+   ```bash
+   # bad — zsh tries to glob the URL
+   curl -sS https://api.heygen.com/v3/videos/abc?lang=es
+
+   # good
+   curl -sS 'https://api.heygen.com/v3/videos/abc?lang=es'
+   curl -sS "$URL" | jq -r '.languages[]'   # jq filter in single quotes
+   ```
+
+3. **Don't burn approvals on diagnostics.** If a curl fails, do not run a second curl just to confirm the env var is empty. Read the error: 401 = no/bad key, jq error = wrong response shape, "no matches" = unquoted glob.
 
 ```bash
-curl -X GET "https://api.heygen.com/v3/video-translations/languages" \
+curl -sS "https://api.heygen.com/v3/video-translations/languages" \
   -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
 
@@ -29,9 +72,41 @@ curl -X GET "https://api.heygen.com/v3/video-translations/languages" \
 
 Translation quality depends heavily on choosing the right flags for the content type. Don't present users with a wall of boolean options — identify what kind of video they have and set flags accordingly.
 
+### Intake rules (how to ask, not just what)
+
+**Ask one question at a time. Wait for the answer. Then ask the next.** Do not present a numbered list of 3+ questions in a single message — that's a form, not a conversation, and users bounce off it.
+
+**Extract before asking.** If the user's first message already answers a question (e.g. "translate https://youtu.be/xyz into Spanish"), skip that question. Only ask what's still missing.
+
+**Validate inline.** When you get a URL, run the HEAD check before moving to the next question — don't defer it. If the language is unsupported, surface that immediately.
+
+**Offer sensible defaults.** For content type and speaker count, suggest the most likely answer based on context and let the user confirm or correct. Example: "Looks like a talking-head video — single speaker? (yes / no / other)".
+
+Turn order (each turn = one question + one answer):
+
+1. **Source** — "Where's the video? URL, local file path, or HeyGen asset ID?" → immediately sanity-check URLs with `curl -sI`; offer local-upload fallback if the URL fails.
+2. **Target language** — "What language should I translate it to?" → validate against `/v3/video-translations/languages` before proceeding.
+3. **Content type** — propose the likely profile based on what you know. "This looks like a talking-head video — that right?" Accept a short confirmation. Only fall back to the full menu if the user says "no" or "other".
+4. **Speaker count** — "How many speakers are in the video?" Ask even for experienced users; wrong speaker count degrades voice separation.
+
+If everything above was supplied in the first message, skip straight to the dry-run confirmation ("Ready to translate <title> into <lang> with <profile>, <N> speakers — go?") and submit on yes.
+
+### Narrate before each Bash call
+
+Before running any `Bash` / `curl` call (URL sanity check, asset upload, language list, translation submit, background poll, status check), state in **one short sentence** what you're trying to achieve. The user only sees the command name and a truncated argument list in the tool-call header — they need a one-liner from you to know *why* it's running and what to expect from the result.
+
+Examples:
+- "Sanity-checking the URL with a HEAD request before submission."
+- "Uploading the local file to HeyGen — this returns an asset_id."
+- "Validating that Spanish and Mandarin are in the supported languages list."
+- "Submitting the translation request — should return 2 translation IDs."
+- "Spawning 2 background poll loops — you'll see 2 approval prompts, one per language."
+
+This applies to background `Bash` calls too — don't dump three `run_in_background` approvals on the user without a single sentence explaining what each one is for.
+
 ### Step 0: Determine the video source
 
-Ask the user where their video is. Three paths:
+Three paths:
 
 **Hosted URL** (YouTube, Google Drive, direct link) — verify first, then pass:
 
@@ -70,7 +145,7 @@ Call the languages endpoint to confirm the target language is supported before d
 
 ### Step 2: Identify content type and set flags
 
-Ask the user how many speakers are in the video, then map their content to one of these profiles:
+Map the user's content to one of these profiles. Propose the most likely profile first rather than listing all four — only surface the menu if the user declines your guess.
 
 **Talking head / presenter video** (the common case):
 ```json
@@ -119,13 +194,77 @@ Ask the user how many speakers are in the video, then map their content to one o
 
 `POST /v3/video-translations` with the video source and flags from the content profile above.
 
-### Step 4: Poll for completion
+### Step 4: Poll for completion (backgrounded bash)
 
-Check `GET /v3/video-translations/{id}` every ~30 seconds. Terminal states are `completed` and `failed`. Translations take longer than standard video generation — expect 5-30 minutes depending on video length.
+> ⛔ **POLLING RULE:** The main session MUST NOT poll in the foreground. After `POST /v3/video-translations` returns translation IDs, run **one backgrounded `Bash` call per translation ID**. Each call contains the entire soak + poll loop in a single shell script, so the user approves once per language, not once per curl.
+
+> 🚫 **Do NOT use `Agent` subagents for polling.** Tried and rejected — subagents in Claude Code can't inherit the parent session's Bash approvals, so every curl inside them fails on permission denial. Backgrounded bash works because it runs in the main session's permission scope.
+
+**Step 4a: Set expectations BEFORE submitting any background polls.** Tell the user upfront:
+
+> "I need an approval for each submitted translation — that's N prompts coming up, one per language. After you approve them, polling runs silently in the background and I'll surface results as each one finishes (5–30 min)."
+
+Don't surprise the user with a wall of approval prompts. One sentence of warning is enough.
+
+**Step 4b: Main session submits the translation request** — one `POST /v3/video-translations` with `output_languages` array. Response returns `video_translation_ids[]`, one ID per target language.
+
+**Step 4c: Launch one backgrounded bash poll per translation ID.** Send a single message with N `Bash` tool calls, each with `run_in_background: true`. The user gets N approval prompts (one per language) at this moment — that's the cost we accept. After approval, each loop runs unattended.
+
+Script template (substitute `<TRANSLATION_ID>` and `<LANG>`):
+
+```bash
+# Load API key (env wins, else ~/.heygen/config)
+[ -z "$HEYGEN_API_KEY" ] && [ -f ~/.heygen/config ] && \
+  export HEYGEN_API_KEY=$(grep '^HEYGEN_API_KEY=' ~/.heygen/config | cut -d= -f2-)
+
+ID="<TRANSLATION_ID>"
+LANG="<LANG>"
+
+# Soak: translations almost never finish under 5 min
+sleep 300
+
+# Tight poll until terminal.
+# NOTE: use `st`, not `status`. In zsh, $status is read-only (mirrors $?) and
+# assignment aborts the script silently. Rename here propagates to bash too.
+START=$(date +%s)
+while :; do
+  resp=$(curl -sS "https://api.heygen.com/v3/video-translations/$ID" \
+    -H "X-Api-Key: $HEYGEN_API_KEY")
+  st=$(printf '%s' "$resp" | jq -r '.data.status')
+  case "$st" in
+    completed|failed)
+      printf '=== %s (%s) ===\n%s\n' "$LANG" "$st" "$resp" | jq .
+      exit 0
+      ;;
+  esac
+  # 30s polls for the first 30 min, then 2-min intervals
+  elapsed=$(( $(date +%s) - START ))
+  [ $elapsed -lt 1800 ] && sleep 30 || sleep 120
+done
+```
+
+**Step 4d: Wait for completion notifications.** The main session is notified when each background task exits. Do NOT poll the background tasks yourself. As each completes, render its per-language deliverable (Step 5) from the JSON in stdout.
+
+**Parallel by default.** N translation IDs = N concurrent background polls. HeyGen pre-queues translations at submit, so concurrent polling causes no contention — no batching needed (unlike `heygen-video`'s batch-of-2-3 rule for video generation).
 
 ### Step 5: Deliver the result
 
-Return the translated video URL from the completed response.
+For each completed translation, render this exact block. **Wrap signed URLs in markdown link syntax** — raw signed URLs are 200+ characters of query-string noise that ruins the output. Show only the short, stable dashboard URL as plain text.
+
+```markdown
+🇪🇸 <Language Name> — <title>
+
+- **View online:** https://app.heygen.com/videos/<translation_id>
+- **Direct video:** [Download .mp4](<video_url>)
+- **Captions:** [SRT](<srt_caption_url>) · [VTT](<vtt_caption_url>)
+- Duration: <duration>s
+```
+
+Rules:
+- Lead with the View online link — it's the most useful output for most users (preview, share, re-download from the dashboard).
+- Use a flag emoji for the language header (🇪🇸 Spanish, 🇨🇳 Mandarin, 🇰🇷 Korean, 🇯🇵 Japanese, etc.).
+- Combine SRT and VTT on one line separated by `·` — they're two formats of the same captions.
+- Mention caption-URL expiration ("signed URLs expire in ~7 days") **once per session, after the last block** — not on every translation.
 
 ## First-Time User Detection
 
@@ -154,26 +293,37 @@ curl -X GET "https://api.heygen.com/v3/video-translations/languages" \
   -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
 
+### Response shape
+
+```json
+{
+  "languages": [
+    "Afrikaans (South Africa)",
+    "Spanish",
+    "Spanish (Mexico)",
+    "Japanese",
+    "..."
+  ]
+}
+```
+
+Top-level `languages` array of human-readable strings. **No** `data` wrapper, **no** `{ code, name }` objects. Pass these strings verbatim as `output_languages` when creating a translation.
+
 ### TypeScript
 
 ```typescript
-interface Language {
-  code: string;
-  name: string;
-}
-
 interface LanguagesResponse {
-  data: Language[];
+  languages: string[];
 }
 
-async function getSupportedLanguages(): Promise<Language[]> {
+async function getSupportedLanguages(): Promise<string[]> {
   const response = await fetch(
     "https://api.heygen.com/v3/video-translations/languages",
     { headers: { "X-Api-Key": process.env.HEYGEN_API_KEY! } }
   );
 
   const json: LanguagesResponse = await response.json();
-  return json.data;
+  return json.languages;
 }
 ```
 
@@ -183,14 +333,26 @@ async function getSupportedLanguages(): Promise<Language[]> {
 import requests
 import os
 
-def get_supported_languages() -> list:
+def get_supported_languages() -> list[str]:
     response = requests.get(
         "https://api.heygen.com/v3/video-translations/languages",
         headers={"X-Api-Key": os.environ["HEYGEN_API_KEY"]},
     )
 
-    data = response.json()
-    return data["data"]
+    return response.json()["languages"]
+```
+
+### jq quick-checks
+
+```bash
+# all languages
+curl -sS "https://api.heygen.com/v3/video-translations/languages" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" | jq -r '.languages[]'
+
+# filter for a specific name (case-insensitive)
+curl -sS "https://api.heygen.com/v3/video-translations/languages" \
+  -H "X-Api-Key: $HEYGEN_API_KEY" \
+  | jq -r '.languages[] | select(test("spanish"; "i"))'
 ```
 
 ## Create Translation
