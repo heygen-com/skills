@@ -96,3 +96,56 @@ Interactive sessions (created without `--wait` and iterated via `heygen video-ag
 - Stop command may not trigger video generation
 
 **Recommendation:** Use one-shot mode for production. Interactive sessions documented for future use once HeyGen stabilizes the API.
+
+---
+
+## Error Code → Action
+
+Stable CLI exit codes tell you what to do without parsing messages:
+
+| Exit | Class | Action |
+|------|-------|--------|
+| `0` | ok | Continue |
+| `1` | API / network | Retry with backoff. If persistent, check `--verbose` or contact HeyGen support. |
+| `2` | usage | You passed a bad flag. Run `--help` on the command, fix the args, retry. |
+| `3` | auth | Re-auth: `heygen auth login` or set `HEYGEN_API_KEY`. Verify with `heygen auth status`. |
+| `4` | timeout under `--wait` | Operation still running server-side. stdout contains the partial resource (with `session_id` or `video_id`) — resume polling with `heygen video-agent get <id>` or `heygen video get <id>`. Do NOT re-submit. |
+
+Common API-error hints (surfaced in stderr envelope `{error:{code,message,hint}}`):
+
+- `402` / insufficient credits → tell the user their HeyGen plan is out of credits.
+- `403` / forbidden → the resource is not owned by the caller (wrong `group_id`, private avatar).
+- `404` / not found → ID is stale. Re-fetch via `heygen avatar list`, `heygen video-agent get`, etc.
+
+---
+
+## Polling Cadence
+
+When `--wait` isn't an option (e.g., you want to return control to the user between polls), use a back-off schedule rather than a fixed interval:
+
+| Age of job | Poll interval |
+|------------|---------------|
+| 0–2 min | every 10s |
+| 2–5 min | every 30s |
+| 5–10 min | every 60s |
+| > 10 min | surface "taking longer than usual" once, keep polling at 60s, give up at 15 min |
+
+If a job is stuck at the same status for >5 min, that's a signal to surface a status update or check the dashboard.
+
+**Prefer `--wait`** on creation commands. It handles the polling internally and returns the final resource or exits `4` with a resumable `session_id` / `video_id` on timeout.
+
+---
+
+## Direct Video vs Video Agent — Which Endpoint?
+
+Two ways to generate a video. Different pricing, different trade-offs.
+
+| | **Direct Video** | **Video Agent** |
+|---|-------------------|-----------------|
+| Command / Tool | `heygen video create` / no MCP tool yet | `heygen video-agent create` / `create_video_agent` |
+| Input | Full script + avatar + voice + scene JSON | Prompt + optional avatar/voice/style |
+| Control | You author every scene | Video Agent plans scenes, pacing, motion |
+| Pricing | ~$0.0333/sec | ~$0.10/sec |
+| When to use | Deterministic multi-scene videos, tight control, bulk generation | Creative intros, messages, "make a video about X" requests |
+
+The default in this skill is **Video Agent** — it's what `heygen-video` is built around. Drop to Direct Video only for batch or highly scripted workflows where Agent's autonomy is overhead.
