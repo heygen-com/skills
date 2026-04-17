@@ -7,9 +7,9 @@ description: |
   optional for real-person digital twins.
   Use when: (1) giving the agent a face + voice so it can present videos
   ("bring yourself to life", "create your avatar", "give yourself an avatar",
-  "design a presenter", "set up an avatar", "let's make an avatar", any ambiguous
-  avatar setup request defaults here), (2) a human wants to appear in videos as themselves
-  ("create my avatar", "I want my face in a video", "digital twin of me", "build me an avatar"),
+  "design a presenter", "set up an avatar", "let's make an avatar"),
+  (2) the user wants to appear in videos as themselves ("create my avatar",
+  "I want my face in a video", "digital twin of me", "build me an avatar"),
   (3) building a named character presenter ("create an avatar called Cleo",
   "design a character named X"), (4) establishing HeyGen identity before making videos —
   the correct FIRST step when no avatar exists yet.
