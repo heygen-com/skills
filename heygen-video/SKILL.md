@@ -82,6 +82,8 @@ Default to Full Producer. Better to ask one smart question than generate a medio
 
 Interview the user. Be conversational, skip anything already answered.
 
+**DO NOT batch-ask all of these at once.** Ask one or two items at a time. Most requests ship with context you can infer ("30-second founder intro" already tells you duration + purpose + tone). Only ask what's genuinely missing. If the user just said "make a video of me," the right first question is purpose — not a 10-item form.
+
 **Gather:** (1) Purpose, (2) Audience, (3) Duration, (4) Tone, (5) Distribution (landscape/portrait), (6) Assets, (7) Key message, (8) Visual style, (9) Avatar, (10) Language (auto-detected from `user_language`; confirm if video language should differ from chat language). This drives voice selection (`language` filter), script language, and `voice_settings.locale`.
 
 ### Assets

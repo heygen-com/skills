@@ -23,6 +23,14 @@ allowed-tools: Bash, WebFetch, Read, Write, mcp__heygen__*
 
 Create and manage HeyGen avatars for anyone: the agent, the user, or named characters. Handles identity extraction, avatar generation, voice selection, and saves everything to `AVATAR-<NAME>.md` for consistent reuse.
 
+## Start Here (Critical)
+
+**Do NOT batch-ask questions.** Do not fire "give me a photo, voice preference, duration, target platform, tone, key message" all at once. Walk phases in order. Each phase asks at most one or two things at a time.
+
+**When creating for the agent itself** ("create your avatar", "bring yourself to life"), do NOT ask the user for a photo or appearance details first. Read `SOUL.md` and `IDENTITY.md` from the workspace root. The agent's identity lives there. Only ask the user for traits that are genuinely missing from those files.
+
+**Photo is a nudge, not a gate.** Prompt-based avatars work. Offer photo as an optional upgrade for face consistency across videos, not as a required input.
+
 ## Before You Start (Claude Code only)
 
 Try to read `SOUL.md` from the workspace root.
@@ -112,40 +120,50 @@ Start every invocation with:
 
 ## Workflow
 
+**DO NOT batch-ask questions upfront.** Walk phases in order. Each phase asks at most one thing at a time, and only if needed.
+
 ### Phase 0 — Who Are We Creating?
 
-Determine the target identity:
+Determine the target identity from the request. Do NOT ask the user "whose avatar?" if it's clear from phrasing:
 
-1. **Agent** — user says "create your avatar", "bring yourself to life" → read IDENTITY.md for name, then check `AVATAR-<NAME>.md`. If IDENTITY.md is not found (Claude Code environment), walk the user through designing from scratch with a few quick questions about appearance and voice.
-2. **User** — user says "create my avatar", "make me an avatar" → ask for their name, check `AVATAR-<NAME>.md`
-3. **Named character** — user says "create an avatar called Cleo" → check `AVATAR-CLEO.md`
+1. **Agent** — "create your avatar", "bring yourself to life", "design an avatar for you" → this is for the agent (Adam, Eve, Claude, etc.). Read `IDENTITY.md` for name.
+2. **User** — "create my avatar", "make me an avatar", "I want my face in a video" → for the user. Ask for their name if not obvious.
+3. **Named character** — "create an avatar called Cleo", "design a character named X" → use the given name.
 
-If the AVATAR file exists and has a HeyGen section filled in:
-> "You already have an avatar set up. Want to add a new look, update it, or start fresh?"
+Then check `AVATAR-<NAME>.md` at the workspace root:
 
-If the AVATAR file exists but HeyGen section is empty: proceed to Reference Photo Nudge.
-If no AVATAR file exists: proceed to Phase 1.
-
-### Reference Photo Nudge (First-Time Only)
-
-Before generating anything, ask if they have a reference image. Photo avatars produce significantly better face consistency across videos than prompt-generated ones.
-
-Ask if they have a reference photo, explaining that a headshot or clear face photo gives much better results than text-only generation. Offer to skip for prompt-based creation. Communicate in `user_language`.
-
-This applies to ALL targets (agent, user, named character). For agents, check if a reference photo path already exists in the AVATAR file's Appearance section or in IDENTITY.md before asking.
-
-- **Photo provided** → upload via `heygen asset create --file <path>` (or MCP equivalent), then use Type B (photo) creation in Phase 2
-- **Skip** → use Type A (prompt) creation in Phase 2
+- **AVATAR file exists + HeyGen section filled in** → "You already have an avatar set up. Want to add a new look, update it, or start fresh?" Wait for answer.
+- **AVATAR file exists but HeyGen section empty** → skip to Phase 2.
+- **No AVATAR file** → proceed to Phase 1.
 
 ### Phase 1 — Identity Extraction
 
-**For the agent:** Try to read `SOUL.md`, `IDENTITY.md`, and existing `AVATAR-<NAME>.md` from the workspace. If found, extract appearance and voice traits automatically. If not found (e.g. Claude Code environment), skip to conversational onboarding — ask the user to describe the agent's appearance and voice instead.
+**Order matters. Files first, questions second.**
 
-**For users/named characters:** Conversational onboarding. Ask naturally about their appearance (age, hair, general vibe) and voice (calm, energetic, accent). Not as a form — be conversational. Communicate in `user_language`.
+**For the agent** (Phase 0 target = agent):
+1. Read `SOUL.md`, `IDENTITY.md`, and any existing `AVATAR-<NAME>.md` from the workspace root.
+2. If SOUL.md or IDENTITY.md is found → extract appearance and voice traits silently. Do NOT ask the user "describe your appearance" — the agent IS the subject, and its identity lives in those files. **If the files describe only personality / values with no physical description, do NOT hallucinate traits.** Ask the user conversationally for the missing appearance traits only.
+3. If neither file is found (e.g., Claude Code environment with no workspace identity) → ask the user to describe the agent's appearance and voice conversationally.
 
-Write `AVATAR-<NAME>.md` with the Appearance and Voice sections filled in. Leave HeyGen section empty.
+**For users/named characters** (Phase 0 target = user or named):
+- Conversational onboarding. Ask naturally about appearance (age, hair, general vibe) and voice (calm/energetic, accent). Not as a form — one or two questions at a time. Communicate in `user_language`.
 
-Then proceed to the **Reference Photo Nudge** before Phase 2.
+Write `AVATAR-<NAME>.md` with the Appearance and Voice sections filled in. Leave the HeyGen section empty until Phase 2 succeeds.
+
+Then proceed to Phase 2 via the Reference Photo Nudge.
+
+### Reference Photo Nudge (Phase 2 entry)
+
+Ask if they have a reference photo. A photo produces better face consistency across videos, but prompt-based avatars work well when no photo is available. **This is a nudge, not a gate — offer to skip.**
+
+Check first:
+- **For agents:** look at the AVATAR file's Appearance → Reference field, or IDENTITY.md for a photo path. If found, skip asking and use it.
+- **For users:** ask. Keep it one sentence: "Got a headshot? It gives better face consistency, but I can also generate from your description — just say 'skip.'"
+
+Branch:
+- **Photo provided** → upload via MCP `upload_asset` or `heygen asset create --file <path>`, then Type B (photo) creation in Phase 2.
+- **Skip** → Type A (prompt) creation in Phase 2.
+
 
 ### Phase 2 — Avatar Creation
 
