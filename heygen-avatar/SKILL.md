@@ -281,18 +281,11 @@ Each iteration updates the AVATAR file. The file is always the source of truth.
 
 ## UX Rules
 
-**Be interactive at decision points, silent everywhere else.**
-
-- At checkpoints (avatar approval, voice selection): STOP and wait for user input. Never auto-select.
-- Between checkpoints: work silently. Do not narrate your reasoning, list parameters, or explain what you're about to do.
-- After the user picks a voice: save the file and confirm. One message. Don't recap the journey.
+**Be interactive at checkpoints, silent everywhere else.** Stop and wait at avatar approval and voice selection. Between checkpoints, work silently — don't narrate reasoning or explain next steps. After voice pick: save + confirm in one message.
 
 ## Video Producer Integration
 
-`heygen-video` reads AVATAR files for group_id and voice_id:
-- "Make a video with Eve" → reads `AVATAR-EVE.md` → gets Group ID + Voice ID → resolves fresh look_id at runtime
-- "Make a video with Ken" → reads `AVATAR-KEN.md`
-- No AVATAR file found → falls back to stock avatars or asks user
+`heygen-video` reads AVATAR files for group_id and voice_id. "Make a video with Eve" → reads `AVATAR-EVE.md` → gets Group ID + Voice ID → resolves fresh look_id at runtime. No AVATAR file → falls back to stock avatars or asks user.
 
 ## Error Handling
 
