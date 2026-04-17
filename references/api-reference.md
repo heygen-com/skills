@@ -12,7 +12,7 @@ Every CLI request — no exceptions:
 
 ```
 X-Api-Key: $HEYGEN_API_KEY
-User-Agent: HeyGen-Skills/2.0.4 (OpenClaw; heygen-skills)
+User-Agent: HeyGen-Skills/2.0.3 (OpenClaw; heygen-skills)  # x-release-please-version
 X-HeyGen-Source: openclaw-skill
 ```
 
