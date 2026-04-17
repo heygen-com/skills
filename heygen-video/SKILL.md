@@ -20,6 +20,7 @@ description: |
   or b-roll without a presenter, translating videos, TTS-only, or streaming avatars.
 argument-hint: "[topic_or_script] [--avatar avatar_id]"
 homepage: https://developers.heygen.com/docs/quick-start
+allowed-tools: mcp__heygen__*
 metadata:
   openclaw:
     requires:
@@ -40,20 +41,17 @@ This script is opt-in only. Do not execute it automatically on skill invocation.
 
 You are a video producer. Not a form. Not an API wrapper. A producer who understands what makes video work and guides the user from idea to finished cut.
 
-**API Docs:** https://developers.heygen.com/docs/quick-start — All endpoints are v3. Base: `https://api.heygen.com`.
+**API Docs:** https://developers.heygen.com/docs/quick-start — All endpoints are v3.
 
-**API Key Resolution:** Check `$HEYGEN_API_KEY` env var first. If not set, read it safely:
-```bash
-export HEYGEN_API_KEY=$(grep -m1 '^HEYGEN_API_KEY=' ~/.heygen/config 2>/dev/null | cut -d= -f2-)
-```
-Do not `source` the config file. If still unset, tell the user to run `./setup` or `export HEYGEN_API_KEY=<key>`.
+## API Mode Detection
 
-**Required headers on every API request — no exceptions:**
-```
-X-Api-Key: $HEYGEN_API_KEY
-User-Agent: HeyGen-Skills/1.3.6 (OpenClaw; heygen-skills)
-X-HeyGen-Source: openclaw-skill
-```
+Detect which API mode is available, in order of preference:
+
+**MCP (preferred):** If HeyGen MCP tools are available (tools matching `mcp__heygen__*` or `mcp_heygen_*`), use them. MCP handles authentication via OAuth — no API key needed. MCP uses the user's existing HeyGen plan credits with no separate API charges.
+
+**CLI fallback:** If MCP tools are not available, use curl with `X-Api-Key: $HEYGEN_API_KEY`. Resolve the key from: (1) `$HEYGEN_API_KEY` env var, (2) `~/.heygen/config` file. If neither found, tell the user to run `./setup` or `export HEYGEN_API_KEY=<key>`.
+
+**Throughout this skill:** Each API operation shows the MCP tool name first. If MCP is unavailable, use the curl equivalent from [../references/api-reference.md](../references/api-reference.md).
 
 ---
 
@@ -104,11 +102,10 @@ Two paths for every asset:
 Two approaches — use one or combine both:
 
 **1. API Styles (`style_id`)** — Curated visual templates. One parameter replaces all visual direction.
-```bash
-curl -s "https://api.heygen.com/v3/video-agents/styles?tag=cinematic&limit=10" \
-  -H "X-Api-Key: $HEYGEN_API_KEY"
-```
-Tags: `cinematic`, `retro-tech`, `iconic-artist`, `pop-culture`, `handmade`, `print`. Each style returns `style_id`, `name`, `thumbnail_url`, `preview_video_url`, `aspect_ratio`. Pass `style_id` to `POST /v3/video-agents`.
+
+Browse styles by tag. Tags: `cinematic`, `retro-tech`, `iconic-artist`, `pop-culture`, `handmade`, `print`. Each style returns `style_id`, `name`, `thumbnail_url`, `preview_video_url`, `aspect_ratio`. Pass `style_id` to `create_video_agent`.
+
+**CLI:** `curl -s "https://api.heygen.com/v3/video-agents/styles?tag=cinematic&limit=10" -H "X-Api-Key: $HEYGEN_API_KEY"`
 
 **Show users thumbnails + preview videos before choosing.** Browse by tag, show 3-5 options with previews, let user pick. If a style has a fixed `aspect_ratio`, match orientation to it.
 
@@ -401,10 +398,8 @@ YouTube/web/LinkedIn → `"landscape"` | TikTok/Reels/Shorts → `"portrait"` | 
 
 **Never trust a stored `look_id` — looks are ephemeral and get deleted.** Always resolve fresh from the `group_id`:
 
-```bash
-curl -s "https://api.heygen.com/v3/avatars/looks?group_id=<group_id>&limit=20" \
-  -H "X-Api-Key: $HEYGEN_API_KEY"
-```
+**MCP:** `list_avatar_looks(group_id=<group_id>)` — returns all looks for the group.
+**CLI:** `curl -s "https://api.heygen.com/v3/avatars/looks?group_id=<group_id>&limit=20" -H "X-Api-Key: $HEYGEN_API_KEY"`
 
 From the response, pick the look matching the target orientation. Use the first match. If no looks exist in the group, tell the user.
 
@@ -412,7 +407,7 @@ From the response, pick the look matching the target orientation. Use the first 
 
 ### Steps
 
-1. **Fetch avatar look metadata:** `GET /v3/avatars/looks/<avatar_id>` → extract `avatar_type`, `preview_image_url`, `image_width`, `image_height`
+1. **Fetch avatar look metadata:** `get_avatar_look(look_id=<avatar_id>)` (CLI: `GET /v3/avatars/looks/<avatar_id>`) → extract `avatar_type`, `preview_image_url`, `image_width`, `image_height`
 2. **Determine orientation:** width > height = landscape, height > width = portrait, width == height = square. Fetch fails = assume portrait.
 3. **Determine background:** `photo_avatar` → Video Agent handles environment. `studio_avatar` → check if transparent/solid/empty. `video_avatar` → always has background.
 4. **Append the appropriate correction note(s)** to the end of the Video Agent prompt. That's it. No image generation, no new looks.
@@ -472,7 +467,7 @@ BACKGROUND NOTE: The selected avatar has no background or a transparent backdrop
 Before calling the API, run the Frame Check steps above. Build the corrected prompt with any FRAMING NOTE or BACKGROUND NOTE appended.
 
 **Step 2: Build the complete payload object in main session**
-Before spawning any subagent, assemble the full request payload as a JSON object:
+Before spawning any subagent, assemble the full request payload:
 ```json
 {
   "prompt": "<corrected prompt — Frame Check notes already embedded>",
@@ -480,12 +475,9 @@ Before spawning any subagent, assemble the full request payload as a JSON object
   "voice_id": "<confirmed voice_id>",
   "style_id": "<optional>",
   "orientation": "landscape",
-  "auto_proceed": true,
   "files": []
 }
 ```
-
-> **`auto_proceed: true` is intentional.** The HeyGen Video Agent API pauses at an interactive review checkpoint by default; without this flag, videos never complete. This is a known API behavior, not a security bypass — generation still requires explicit user request and a valid API key. No content is generated without user-initiated invocation of this skill.
 This payload is the handoff to any subagent. The subagent receives a finished payload — it does NOT modify the prompt, does NOT re-run Frame Check, does NOT look up avatar IDs.
 
 **Step 3: Subagent spawn pattern (for batch or non-blocking generation)**
@@ -495,20 +487,16 @@ Subagents are for **submit + poll + deliver only**. All creative decisions, Fram
 
 > ⛔ **BATCH RULE:** When generating N videos in parallel, spawn subagents in batches of **2–3 max**. Submitting too many simultaneously causes queue congestion — all get stuck in `thinking` for 15+ min. Submit batch 1, wait for completions, then submit batch 2.
 
-**Step 4: Submit to `POST /v3/video-agents`**
+**Step 4: Submit**
+
+**MCP:** `create_video_agent(prompt=<prompt>, avatar_id=<look_id>, voice_id=<voice_id>, style_id=<optional>, orientation=<orientation>)`
+
+**CLI:** `POST /v3/video-agents` with `auto_proceed: true` (skips HeyGen's internal review checkpoint — no approval UI exists in the API flow).
 ```bash
 curl -sX POST "https://api.heygen.com/v3/video-agents" \
   -H "X-Api-Key: $HEYGEN_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
-    "prompt": "<corrected prompt with Frame Check notes>",
-    "avatar_id": "<look_id from discovery>",
-    "voice_id": "<from discovery>",
-    "style_id": "<optional>",
-    "orientation": "landscape",
-    "auto_proceed": true,
-    "files": []
-  }'
+  -d '{ "prompt": "...", "avatar_id": "...", "voice_id": "...", "orientation": "landscape", "auto_proceed": true }'
 ```
 
 Response: `{ "data": { "video_id": "...", "session_id": "..." } }`
@@ -516,6 +504,9 @@ Response: `{ "data": { "video_id": "...", "session_id": "..." } }`
 **⚠️ Always capture `session_id` immediately.** Session URL: `https://app.heygen.com/video-agent/{session_id}`. Cannot be recovered later.
 
 ### Polling
+
+**MCP:** `get_video_agent_session(session_id=<session_id>)` — returns status, progress, video_id.
+**CLI:** `GET /v3/videos/<video_id>` with polling.
 
 Total wall time per video: **20–45 minutes**. First check at **5 min**, then every **60s** up to 45 min.
 

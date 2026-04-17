@@ -5,19 +5,26 @@
 ### A1: Check for private avatars first
 
 **If user specifies an avatar by name** (e.g. "use Eve's Podcast look"), take the fast path:
+
+**MCP:** `list_avatar_looks(ownership=private)` — filter client-side by name match.
+**CLI:**
 ```bash
 curl -s "https://api.heygen.com/v3/avatars/looks?ownership=private&limit=50" \
   -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
-Filter client-side by name match. Avoids the 2-call group→looks pattern.
+Avoids the 2-call group→looks pattern.
 
 **If user wants to browse**, use the group-first flow:
+
+**MCP:**
+1. `list_avatar_groups(ownership=private)` — list groups (each group = one person)
+2. `list_avatar_looks(group_id=<group_id>)` — show looks for chosen group
+
+**CLI:**
 ```bash
-# List avatar groups (each group = one person)
 curl -s "https://api.heygen.com/v3/avatars?ownership=private&limit=50" \
   -H "X-Api-Key: $HEYGEN_API_KEY"
 
-# Show looks for chosen group
 curl -s "https://api.heygen.com/v3/avatars/looks?group_id=<group_id>&limit=50" \
   -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
@@ -31,10 +38,10 @@ Avatar types: `studio_avatar`, `video_avatar`, `photo_avatar`. Photo avatars sup
 ### A2: Check last-used avatar
 
 Check `heygen-video-log.jsonl` for last used avatar_id. If found:
-```bash
-curl -s "https://api.heygen.com/v3/avatars/looks/<look_id>" \
-  -H "X-Api-Key: $HEYGEN_API_KEY"
-```
+
+**MCP:** `get_avatar_look(look_id=<look_id>)`
+**CLI:** `curl -s "https://api.heygen.com/v3/avatars/looks/<look_id>" -H "X-Api-Key: $HEYGEN_API_KEY"`
+
 Show preview image: "Last time you used [Avatar Name]. Use her again?"
 
 ### A3: Avatar conversation
@@ -45,16 +52,18 @@ If voice-over only → no `avatar_id`. State in prompt: "Voice-over narration on
 
 If presenter wanted, present private avatars first. For public/stock avatars, browse by group:
 
+**MCP:** `list_avatar_groups(ownership=public)`
+**CLI:**
 ```bash
-# Step 1: List avatar groups
 curl -s "https://api.heygen.com/v3/avatars?ownership=public&limit=20" \
   -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
 
 Show group names + one representative image. Let the user pick a person.
 
+**MCP:** `list_avatar_looks(group_id=<group_id>)`
+**CLI:**
 ```bash
-# Step 2: Show looks for the chosen group
 curl -s "https://api.heygen.com/v3/avatars/looks?group_id=<group_id>&limit=10" \
   -H "X-Api-Key: $HEYGEN_API_KEY"
 ```
@@ -67,13 +76,13 @@ After avatar is settled, confirm voice preferences (accent, delivery style, lang
 
 **ALWAYS show a playable voice preview.** Each voice response includes `preview_audio_url` — share it.
 
-**Handling missing/broken previews:** Some voices return bare `s3://` paths or `null`. When this happens: note "(no preview available)" and offer to generate a short TTS sample via `POST /v3/voices/speech`.
+**Handling missing/broken previews:** Some voices return bare `s3://` paths or `null`. When this happens: note "(no preview available)" and offer to generate a short TTS sample via `create_speech` (MCP) or `POST /v3/voices/speech` (CLI).
 
 ---
 
 ## Path B: Create a New Avatar
 
-Use `POST /v3/avatars`. Supports two modes:
+Two modes:
 
 **Mode 1 — New character** (omit `avatar_group_id`): Creates a new person with their own group.
 **Mode 2 — New look** (include `avatar_group_id`): Adds a variation to an existing character.
@@ -83,44 +92,38 @@ Always use Mode 2 when the avatar already exists and you're creating a variant (
 Three creation types:
 
 **Photo avatar (from user's photo):**
+
+**MCP:** `create_photo_avatar(name=<name>, file=<file_object>, avatar_group_id=<optional>)`
+**CLI:**
 ```bash
 curl -X POST "https://api.heygen.com/v3/avatars" \
   -H "X-Api-Key: $HEYGEN_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
-    "type": "photo",
-    "name": "My Avatar",
-    "file": {"type": "url", "url": "https://example.com/headshot.jpg"},
-    "avatar_group_id": "<optional — include to add look to existing character>"
-  }'
+  -d '{"type": "photo", "name": "My Avatar", "file": {"type": "url", "url": "https://example.com/headshot.jpg"}, "avatar_group_id": "<optional>"}'
 ```
 Photo requirements: JPEG or PNG, min 512x512, clear front-facing face, good lighting.
 
 **AI-generated avatar (from text prompt):**
+
+**MCP:** `create_prompt_avatar(name=<name>, prompt=<appearance>, avatar_group_id=<optional>)`
+**CLI:**
 ```bash
 curl -X POST "https://api.heygen.com/v3/avatars" \
   -H "X-Api-Key: $HEYGEN_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
-    "type": "prompt",
-    "name": "Tech Presenter",
-    "prompt": "Young professional woman, modern workspace, confident smile",
-    "avatar_group_id": "<optional — include to add look to existing character>"
-  }'
+  -d '{"type": "prompt", "name": "Tech Presenter", "prompt": "Young professional woman, modern workspace, confident smile", "avatar_group_id": "<optional>"}'
 ```
 Prompt max: 1000 characters. Optional: up to 3 `reference_images`.
 
 **Video avatar (from user's video recording):**
+
+**MCP:** `create_digital_twin(name=<name>, file=<file_object>, avatar_group_id=<optional>)`
+**CLI:**
 ```bash
 curl -X POST "https://api.heygen.com/v3/avatars" \
   -H "X-Api-Key: $HEYGEN_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
-    "type": "video",
-    "name": "My Video Avatar",
-    "file": {"type": "asset_id", "asset_id": "<uploaded_asset_id>"},
-    "avatar_group_id": "<optional — include to add look to existing character>"
-  }'
+  -d '{"type": "video", "name": "My Video Avatar", "file": {"type": "asset_id", "asset_id": "<uploaded_asset_id>"}, "avatar_group_id": "<optional>"}'
 ```
 
 All three return `avatar_item` with `id` (look_id) and `group_id` — use `id` as `avatar_id` for videos.
@@ -131,19 +134,15 @@ Files: `{"type": "url", "url": "..."}`, `{"type": "asset_id", "asset_id": "..."}
 
 ## Path C: Direct Image (Simplest for One-Off)
 
-Skip avatar creation. Pass `image_url` directly to `POST /v3/videos`:
+Skip avatar creation. Pass `image_url` directly:
 
+**MCP:** `create_video_from_image(image_url=<url>, script=<script>, voice_id=<voice_id>, aspect_ratio="16:9")`
+**CLI:**
 ```bash
 curl -X POST "https://api.heygen.com/v3/videos" \
   -H "X-Api-Key: $HEYGEN_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
-    "image_url": "https://example.com/headshot.jpg",
-    "script": "<narrator script>",
-    "voice_id": "<voice_id>",
-    "aspect_ratio": "16:9",
-    "title": "My Video"
-  }'
+  -d '{"image_url": "https://example.com/headshot.jpg", "script": "<script>", "voice_id": "<voice_id>", "aspect_ratio": "16:9"}'
 ```
 Also accepts `image_asset_id`. Fastest path for one-off talking-head video.
 
@@ -151,6 +150,8 @@ Also accepts `image_asset_id`. Fastest path for one-off talking-head video.
 
 ## Voice Selection
 
+**MCP:** `list_voices(type=private)` then `list_voices(type=public, language=<lang>, gender=<gender>)`
+**CLI:**
 ```bash
 curl -s "https://api.heygen.com/v3/voices?type=private&limit=20" \
   -H "X-Api-Key: $HEYGEN_API_KEY"
@@ -164,8 +165,9 @@ curl -s "https://api.heygen.com/v3/voices?type=public&engine=starfish&language=e
 
 ## How Avatar/Voice Are Passed
 
-Video Agent (`POST /v3/video-agents`) accepts `avatar_id` and `voice_id` as top-level parameters:
+**MCP:** `create_video_agent(prompt=<prompt>, avatar_id=<look_id>, voice_id=<voice_id>, style_id=<optional>, orientation=<orientation>)`
 
+**CLI:** `POST /v3/video-agents` with `avatar_id` and `voice_id` as top-level parameters:
 ```json
 {
   "prompt": "...",
@@ -180,4 +182,4 @@ Video Agent (`POST /v3/video-agents`) accepts `avatar_id` and `voice_id` as top-
 - **No avatar_id (auto-select)** → describe desired presenter in prompt. Less reliable (~80% vs ~97%).
 - **Voice-over only** → omit `avatar_id`, state in prompt.
 
-> 💡 Always provide explicit `avatar_id` for presenter videos. 97.6% duration accuracy vs ~80% without.
+> Always provide explicit `avatar_id` for presenter videos. 97.6% duration accuracy vs ~80% without.

@@ -1,6 +1,10 @@
 # API Reference — HeyGen v3
 
-All endpoints use base URL `https://api.heygen.com` with header `X-Api-Key: $HEYGEN_API_KEY`.
+## API Modes
+
+**MCP (preferred):** HeyGen Remote MCP at `https://mcp.heygen.com/mcp/v1/` — OAuth-based, no API key needed. Tools prefixed `mcp__heygen__*` or `mcp_heygen_*`. Uses the user's existing HeyGen plan credits.
+
+**CLI fallback:** All endpoints use base URL `https://api.heygen.com` with header `X-Api-Key: $HEYGEN_API_KEY`.
 
 ## Live Documentation
 
@@ -8,41 +12,62 @@ Canonical docs with exact schemas, curl examples, and field descriptions:
 - **Full index:** https://developers.heygen.com/llms.txt
 - **Any page as markdown:** append `.md` to URL (e.g. `https://developers.heygen.com/docs/video-agent.md`)
 - **API reference pages:** `https://developers.heygen.com/reference/<slug>.md`
+- **MCP docs:** https://developers.heygen.com/mcp.md
 
 When in doubt about a field name or type, fetch the `.md` page before guessing.
 
 ## Endpoints
 
-| Action | Method | Endpoint |
-|--------|--------|----------|
-| **Video Agent (primary)** | POST | `/v3/video-agents` |
-| **Create Interactive Session** | POST | `/v3/video-agents/sessions` |
-| **Poll Session** | GET | `/v3/video-agents/sessions/{session_id}` |
-| **Send Session Message** | POST | `/v3/video-agents/sessions/{session_id}/messages` |
-| **Stop Session** | POST | `/v3/video-agents/sessions/{session_id}/stop` |
-| **Avatar Video (direct)** | POST | `/v3/videos` |
-| **Poll Video Status** | GET | `/v3/videos/{video_id}` |
-| **List Videos** | GET | `/v3/videos` |
-| **Delete Video** | DELETE | `/v3/videos/{video_id}` |
-| **List Avatar Groups** | GET | `/v3/avatars` |
-| **Get Avatar Group** | GET | `/v3/avatars/{group_id}` |
-| **List Avatar Looks** | GET | `/v3/avatars/looks` |
-| **Get Avatar Look** | GET | `/v3/avatars/looks/{look_id}` |
-| **Create Avatar** | POST | `/v3/avatars` |
-| **List Voices** | GET | `/v3/voices` |
-| **Design Voice** | POST | `/v3/voices` |
-| **TTS** | POST | `/v3/voices/speech` |
-| **List Styles** | GET | `/v3/video-agents/styles` |
-| **Upload Asset** | POST | `/v3/assets` |
-| **Webhooks: Register** | POST | `/v3/webhooks` |
-| **Webhooks: List** | GET | `/v3/webhooks` |
-| **Webhooks: Delete** | DELETE | `/v3/webhooks/{id}` |
-| **Webhooks: Event Types** | GET | `/v3/webhooks/event-types` |
-| **Webhooks: Event History** | GET | `/v3/webhooks/events` |
-| **Overdub** | POST | `/v3/overdubs` |
+| Action | MCP Tool | CLI Method | CLI Endpoint |
+|--------|----------|------------|--------------|
+| **Video Agent (primary)** | `create_video_agent` | POST | `/v3/video-agents` |
+| **Poll Session** | `get_video_agent_session` | GET | `/v3/video-agents/sessions/{session_id}` |
+| **Send Session Message** | `send_video_agent_message` | POST | `/v3/video-agents/sessions/{session_id}/messages` |
+| **Stop Session** | `stop_video_agent_session` | POST | `/v3/video-agents/sessions/{session_id}/stop` |
+| **Session Resources** | `get_video_agent_resource` | — | — |
+| **Session Videos** | `list_video_agent_session_videos` | — | — |
+| **Avatar Video (direct)** | `create_video_from_avatar` | POST | `/v3/videos` |
+| **Image Video (direct)** | `create_video_from_image` | POST | `/v3/videos` |
+| **Poll Video Status** | `get_video` | GET | `/v3/videos/{video_id}` |
+| **List Videos** | `list_videos` | GET | `/v3/videos` |
+| **Delete Video** | `delete_video` | DELETE | `/v3/videos/{video_id}` |
+| **List Avatar Groups** | `list_avatar_groups` | GET | `/v3/avatars` |
+| **Get Avatar Group** | `get_avatar_group` | GET | `/v3/avatars/{group_id}` |
+| **List Avatar Looks** | `list_avatar_looks` | GET | `/v3/avatars/looks` |
+| **Get Avatar Look** | `get_avatar_look` | GET | `/v3/avatars/looks/{look_id}` |
+| **Update Avatar Look** | `update_avatar_look` | — | — |
+| **Create Photo Avatar** | `create_photo_avatar` | POST | `/v3/avatars` |
+| **Create Prompt Avatar** | `create_prompt_avatar` | POST | `/v3/avatars` |
+| **Create Digital Twin** | `create_digital_twin` | POST | `/v3/avatars` |
+| **Avatar Consent** | `create_avatar_consent` | — | — |
+| **List Voices** | `list_voices` | GET | `/v3/voices` |
+| **Design Voice** | `design_voice` | POST | `/v3/voices` |
+| **TTS** | `create_speech` | POST | `/v3/voices/speech` |
+| **Create Lip Sync** | `create_lipsync` | POST | `/v3/overdubs` |
+| **List Lip Syncs** | `list_lipsyncs` | GET | `/v3/overdubs` |
+| **Get Lip Sync** | `get_lipsync` | GET | `/v3/overdubs/{id}` |
+| **Translate Video** | `create_video_translation` | POST | `/v3/video-translations` |
+| **Get Translation** | `get_video_translation` | GET | `/v3/video-translations/{id}` |
+| **Translation Languages** | `list_video_translation_languages` | GET | `/v3/video-translations/languages` |
+| **Account Info** | `get_current_user` | — | — |
+| **List Styles** | — | GET | `/v3/video-agents/styles` |
+| **Upload Asset** | — | POST | `/v3/assets` |
+| **Webhooks** | — | POST/GET/DELETE | `/v3/webhooks` |
 
 ## Video Agent — One-Shot
 
+**MCP:**
+```
+create_video_agent(
+  prompt=<constructed prompt>,
+  avatar_id=<optional, from discovery>,
+  voice_id=<optional, from discovery>,
+  style_id=<optional, from styles>,
+  orientation="landscape"
+)
+```
+
+**CLI:**
 ```bash
 curl -s -X POST "https://api.heygen.com/v3/video-agents" \
   -H "X-Api-Key: $HEYGEN_API_KEY" \

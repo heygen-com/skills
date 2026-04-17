@@ -16,6 +16,7 @@ description: |
   Returns avatar_id + voice_id — pass directly to heygen-video to create HeyGen videos.
   NOT for: generating videos (use heygen-video), translating videos, or TTS-only tasks.
 argument-hint: "[photo_url_or_description]"
+allowed-tools: mcp__heygen__*
 ---
 
 # HeyGen Avatar Designer
@@ -29,7 +30,12 @@ Try to read `SOUL.md` from the workspace root.
 - **Found** → OpenClaw environment. Skip this section entirely and go straight to Phase 0.
 - **Not found** → Claude Code environment. Say this before anything else:
 
-First, fetch the user's existing HeyGen avatars: `GET https://api.heygen.com/v3/avatars` (no query params — the endpoint returns private avatars for the authenticated key). Parse the `data` array.
+First, fetch the user's existing HeyGen avatars.
+
+**MCP:** `list_avatar_groups(ownership=private)` — returns the user's private avatar groups.
+**CLI:** `curl -s "https://api.heygen.com/v3/avatars" -H "X-Api-Key: $HEYGEN_API_KEY"`
+
+Parse the `data` array.
 
 **⚠️ AVATAR file caveat:** Ignore any AVATAR-*.md files found in the workspace that belong to a *different* person or agent (e.g., AVATAR-Eve.md when creating an avatar for Claude). Only use an AVATAR file if its name matches the subject you're creating for right now.
 
@@ -39,15 +45,13 @@ If the user has **no existing avatars** (empty `data`), tell them none were foun
 
 Wait for their answer before proceeding.
 
-**Required:** `HEYGEN_API_KEY`. Resolved in order: (1) env var, (2) `~/.heygen/config` file (`export HEYGEN_API_KEY=$(grep -m1 '^HEYGEN_API_KEY=' ~/.heygen/config 2>/dev/null | cut -d= -f2-)`). Do not `source` the config file. Verify permissions before reading: `[ "$(stat -c %a ~/.heygen/config 2>/dev/null || stat -f %Lp ~/.heygen/config 2>/dev/null)" = "600" ] || echo "Warning: config permissions too open — run chmod 600 ~/.heygen/config"`. If still unset, tell the user to run `./setup` or `export HEYGEN_API_KEY=<key>`.
-**API:** v3 only. Base: `https://api.heygen.com`. Never use v1 or v2 endpoints.
+## API Mode Detection
 
-**Required headers on every API request — no exceptions:**
-```
-X-Api-Key: $HEYGEN_API_KEY
-User-Agent: HeyGen-Skills/1.3.6 (OpenClaw; heygen-skills)
-X-HeyGen-Source: openclaw-skill
-```
+**MCP (preferred):** If HeyGen MCP tools are available (tools matching `mcp__heygen__*` or `mcp_heygen_*`), use them. MCP handles authentication via OAuth — no API key needed. MCP uses the user's existing HeyGen plan credits.
+
+**CLI fallback:** If MCP tools are not available, use curl with `X-Api-Key: $HEYGEN_API_KEY`. Resolve the key from: (1) `$HEYGEN_API_KEY` env var, (2) `~/.heygen/config` file. If neither found, tell the user to run `./setup` or `export HEYGEN_API_KEY=<key>`.
+
+**API:** v3 only. Base: `https://api.heygen.com`. Never use v1 or v2 endpoints.
 
 **Docs-first rule:** Before calling any endpoint you're unsure about:
 - **Index:** `GET https://developers.heygen.com/llms.txt` — full sitemap
@@ -144,9 +148,7 @@ Then proceed to the **Reference Photo Nudge** before Phase 2.
 
 ### Phase 2 — Avatar Creation
 
-**API:** `POST https://api.heygen.com/v3/avatars`
-
-Two modes via the same endpoint:
+Two modes:
 
 **Mode 1 — New character** (omit `avatar_group_id`):
 Creates a brand new character with its own group.
@@ -157,38 +159,21 @@ Adds a variation to an existing character. Read the Group ID from the AVATAR fil
 Two creation types:
 
 **Type A — From prompt (AI-generated appearance):**
-```json
-{
-  "type": "prompt",
-  "name": "<name>",
-  "prompt": "<appearance prompt, max 1000 chars>",
-  "avatar_group_id": "<optional — Mode 2 only>"
-}
-```
+
+**MCP:** `create_prompt_avatar(name=<name>, prompt=<appearance>, avatar_group_id=<optional>)`
+**CLI:** `POST https://api.heygen.com/v3/avatars` with `{"type": "prompt", "name": "...", "prompt": "...", "avatar_group_id": "..."}`
 
 Prompt limit is 1000 characters. Be descriptive — include style, features, expression, lighting. The API spec says 200 but the actual enforced limit is 1000.
 
 **Type B — From reference image:**
-```json
-{
-  "type": "photo",
-  "name": "<name>",
-  "file": { "type": "url", "url": "https://..." },
-  "avatar_group_id": "<optional — Mode 2 only>"
-}
-```
+
+**MCP:** `create_photo_avatar(name=<name>, file=<file_object>, avatar_group_id=<optional>)`
+**CLI:** `POST https://api.heygen.com/v3/avatars` with `{"type": "photo", "name": "...", "file": {"type": "url", "url": "..."}, "avatar_group_id": "..."}`
 
 File options for Type B:
 - `{ "type": "url", "url": "https://..." }` — public image URL
 - `{ "type": "asset_id", "asset_id": "<id>" }` — from asset upload
 - `{ "type": "base64", "media_type": "image/png", "data": "<base64>" }` — inline
-
-To upload a local file first:
-```
-POST https://api.heygen.com/v3/assets
-Content-Type: multipart/form-data
-Body: file=@<photo_path>
-```
 
 **Response:** Returns `avatar_item.id` (look ID) and `avatar_item.group_id` (character identity).
 
@@ -221,13 +206,8 @@ Find matching voices via semantic search using the Voice section from the AVATAR
 
 **Language matching:** The voice design prompt should specify the target language from `user_language`. Example for Japanese: `"A calm, warm female voice. Professional but approachable. Japanese speaker."` This ensures semantic search returns voices in the correct language.
 
-```bash
-POST https://api.heygen.com/v3/voices
-{
-  "prompt": "<built from AVATAR Voice section: tone, accent, energy, personality. Include target language.>",
-  "seed": 0
-}
-```
+**MCP:** `design_voice(prompt=<voice description>, seed=0)`
+**CLI:** `POST https://api.heygen.com/v3/voices` with `{"prompt": "...", "seed": 0}`
 
 Returns 3 voice options per seed. Present all 3 with inline audio previews:
 - Download each `preview_audio_url`: `curl -sL "<url>" -o /tmp/voice-design-<n>.mp3`
@@ -247,9 +227,8 @@ Increment `seed` and call again. Different seeds give completely different voice
 
 Browse HeyGen's existing voice library:
 
-```
-GET https://api.heygen.com/v3/voices
-```
+**MCP:** `list_voices(type=private)` then `list_voices(type=public, language=<lang>, gender=<gender>)`
+**CLI:** `GET https://api.heygen.com/v3/voices`
 
 1. Read the Voice section from the AVATAR file
 2. Filter by gender and language
@@ -280,14 +259,8 @@ Confirm the avatar is saved and that other skills (like heygen-video) will pick 
 
 If the user wants to see their avatar in action:
 
-```json
-POST https://api.heygen.com/v3/video-agents
-{
-  "avatar_id": "<avatar_id>",
-  "voice_id": "<voice_id>",
-  "prompt": "<short greeting in the video language>"
-}
-```
+**MCP:** `create_video_agent(avatar_id=<avatar_id>, voice_id=<voice_id>, prompt=<greeting>)`
+**CLI:** `POST https://api.heygen.com/v3/video-agents` with `{"avatar_id": "...", "voice_id": "...", "prompt": "..."}`
 
 Generate a natural greeting in the video language (from `user_language`). Examples: English "Hi, I'm [name]. Nice to meet you!", Japanese "[name]です。はじめまして！", Spanish "Hola, soy [name]. ¡Mucho gusto!", Korean "안녕하세요, [name]입니다. 만나서 반갑습니다!"
 
