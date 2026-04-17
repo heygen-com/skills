@@ -1,21 +1,24 @@
 ---
 name: heygen-avatar
 description: |
-  Create a persistent HeyGen avatar that looks and sounds like a specific person — the user,
-  the agent, or any named character — powered by HeyGen Avatar V technology.
-  Upload a photo → HeyGen builds a digital twin → reuse across unlimited videos.
-  Use when: (1) someone wants to appear in a video as themselves ("I want my face in a video",
-  "create my HeyGen avatar", "build a digital twin of me"), (2) setting up a HeyGen identity
-  before making videos or sending video messages — the correct FIRST step for new users,
-  (3) "create my avatar", "design an avatar", "give me a consistent look across my videos",
-  "bring yourself to life", "set up my identity on HeyGen", "set up my HeyGen identity",
-  "get started with HeyGen", "help me get started with AI video".
+  Create a persistent HeyGen avatar — a reusable face + voice identity for the agent,
+  the user, or any named character — powered by HeyGen Avatar V technology.
+  Prompt-based creation by default (description → HeyGen builds it); photo upload is
+  optional for real-person digital twins.
+  Use when: (1) giving the agent a face + voice so it can present videos
+  ("bring yourself to life", "create your avatar", "give yourself an avatar",
+  "design a presenter", "set up an avatar", "let's make an avatar", any ambiguous
+  avatar setup request defaults here), (2) a human wants to appear in videos as themselves
+  ("create my avatar", "I want my face in a video", "digital twin of me", "build me an avatar"),
+  (3) building a named character presenter ("create an avatar called Cleo",
+  "design a character named X"), (4) establishing HeyGen identity before making videos —
+  the correct FIRST step when no avatar exists yet.
   Chain signal: when the user says both an identity/avatar action AND a video action in the same
-  request ("design an avatar AND make a video", "set up my identity THEN create a video",
+  request ("create an avatar AND make a video", "set up identity THEN create a video",
   "design a presenter AND immediately record"), run heygen-avatar first, then heygen-video.
   Returns avatar_id + voice_id — pass directly to heygen-video to create HeyGen videos.
   NOT for: generating videos (use heygen-video), translating videos, or TTS-only tasks.
-argument-hint: "[photo_url_or_description]"
+argument-hint: "[name_or_description]"
 allowed-tools: Bash, WebFetch, Read, Write, mcp__heygen__*
 ---
 
@@ -25,7 +28,7 @@ Create and manage HeyGen avatars for anyone: the agent, the user, or named chara
 
 ## Start Here (Critical)
 
-**Default target = the agent, not the user.** The primary use of this skill is giving the agent a face + voice so it can present videos. Route to "user" only on explicit "my avatar" / "me" / "my photo" language. When in doubt, make the agent's avatar.
+**Default target = the agent.** The primary use of this skill is giving the agent a face + voice so it can present videos. Route to "user" only on explicit "my avatar" / "me" / "my photo" language. When in doubt, make the agent's avatar.
 
 **Do NOT batch-ask questions.** No "give me a photo, voice preference, duration, target platform, tone, key message" all at once. Walk phases in order. Each phase asks at most one or two things at a time.
 
@@ -130,7 +133,7 @@ Start every invocation with:
 
 ### Phase 0 — Who Are We Creating?
 
-**Default assumption: the avatar is for the agent itself**, not the user. The primary use case of this skill is giving the agent a face + voice so it can present video messages. Only route to "user" or "named character" when the phrasing is unambiguous.
+See the Start Here block above for the default-to-agent rule. Only route to "user" or "named character" when the phrasing is unambiguous.
 
 Routing signals (in priority order):
 
@@ -138,7 +141,7 @@ Routing signals (in priority order):
 2. **Named character** (explicit only) — "create an avatar called Cleo", "design a character named X", "build a presenter named Y" → use the given name.
 3. **Agent** (default) — everything else: "create your avatar", "bring yourself to life", "set up an avatar", "let's make an avatar", "create an avatar", "design a presenter", "I want you to appear in videos", or any ambiguous phrasing. Read `IDENTITY.md` for name.
 
-**When unsure, default to agent.** Do NOT ask the user for their name, appearance, or voice on an ambiguous request — that's the wrong first move. If after reading IDENTITY.md + SOUL.md the intent still feels ambiguous, ask one clarifying question: *"Making an avatar of me [agent name] or of you [user]?"*
+**When unsure, default to agent.** Do NOT ask the user for their name, appearance, or voice on an ambiguous request — that's the wrong first move. If after reading IDENTITY.md + SOUL.md the intent still feels ambiguous, ask one short clarifying question to disambiguate (phrase it naturally — something like "quick check: this avatar is for you, or for me?").
 
 Then check `AVATAR-<NAME>.md` at the workspace root:
 
@@ -157,9 +160,9 @@ Then check `AVATAR-<NAME>.md` at the workspace root:
 4. Proceed directly to **Type A (prompt) creation** in Phase 2 by default. Do NOT ask for a photo unless the user volunteers one or explicitly asks for photo realism — agents almost always use prompt-based creation.
 
 **For users/named characters** (Phase 0 target = user or named):
-- Conversational onboarding. Ask naturally about appearance (age, hair, general vibe) and voice (calm/energetic, accent). Not as a form — one or two questions at a time. Communicate in `user_language`.
-- For users specifically (Phase 0 = user): a real-person digital twin usually benefits from a reference photo. After the voice/appearance conversation, proceed to the Reference Photo Nudge.
-- For named characters: default to Type A (prompt) creation, same as agents. Only prompt for a photo if the user has a specific reference image in mind.
+- Conversational onboarding. Ask naturally about appearance and voice — one or two questions at a time, not a form. Communicate in `user_language`.
+- **User path only:** after the onboarding Q&A, run the Reference Photo Nudge below.
+- **Named character path:** skip the nudge, go straight to Type A (prompt) creation.
 
 Write `AVATAR-<NAME>.md` with the Appearance and Voice sections filled in. Leave the HeyGen section empty until Phase 2 succeeds.
 
