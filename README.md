@@ -14,7 +14,7 @@ Works with Claude Code, OpenClaw, Codex, Cursor, and other AI coding agents.
 Paste this into your agent to get started:
 
 ```
-Install HeyGen Skills from https://github.com/heygen-com/skills — clone the repo into your skills directory. Install the HeyGen CLI from https://static.heygen.ai/cli/install.sh and export HEYGEN_API_KEY=<your-key> (get one at https://app.heygen.com/settings/api?nav=API). Then use heygen-avatar and heygen-video to bring yourself to life — create your own avatar and make a short cinematic intro video of yourself introducing who you are. Ask me what you need before starting.
+Install HeyGen Skills from https://github.com/heygen-com/skills — clone the repo into your skills directory. Install the HeyGen CLI from https://static.heygen.ai/cli/install.sh and export HEYGEN_API_KEY=<your-key> (get one at https://app.heygen.com/api). Then use heygen-avatar and heygen-video to bring yourself to life — create your own avatar and make a short cinematic intro video of yourself introducing who you are. Ask me what you need before starting.
 ```
 
 Or follow the steps below manually.
@@ -36,7 +36,7 @@ git clone --single-branch --depth 1 https://github.com/heygen-com/skills.git <in
 
 ### Step 2 — Get your HeyGen API key
 
-1. Go to **[app.heygen.com/settings/api](https://app.heygen.com/settings/api?nav=API)** (Settings → API)
+1. Go to **[app.heygen.com/api](https://app.heygen.com/api)** (Settings → API)
 2. Generate a new API key
 3. Save it somewhere safe — you can't view it again after the modal closes
 
@@ -143,7 +143,7 @@ The skills support two auth modes with explicit priority:
 
 ### CLI with API key (recommended for agents)
 
-Get a key at **[app.heygen.com/settings/api](https://app.heygen.com/settings/api?nav=API)**, then:
+Get a key at **[app.heygen.com/api](https://app.heygen.com/api)**, then:
 
 ```bash
 export HEYGEN_API_KEY=your-key-here
@@ -183,7 +183,7 @@ After setup, try these prompts with your agent:
 
 ## Requirements
 
-- A HeyGen account — sign in via MCP (OAuth) or with an [API key](https://app.heygen.com/settings/api?nav=API) if you use the CLI fallback
+- A HeyGen account — sign in via MCP (OAuth) or with an [API key](https://app.heygen.com/api) if you use the CLI fallback
 - An AI agent that supports skills (Claude Code, OpenClaw, Codex, Cursor, or similar)
 - No runtime dependencies. No packages. No build step.
 
