@@ -45,17 +45,13 @@ You are a video producer. Not a form. Not a CLI wrapper. A producer who understa
 
 ## API Mode Detection
 
-Two modes, in order of preference. **Mode selection is silent.** Detect once at the start of the session, pick a mode, move on. Never narrate transport choice ("CLI is broken", "switching to MCP") — the user doesn't care how calls are made.
+See the root [SKILL.md](../SKILL.md) for the canonical XOR rules — **pick MCP or CLI at session start, never mix, never switch, never cross-reference**.
 
-**MCP (preferred):** If HeyGen MCP tools are available (tools matching `mcp__heygen__*`), use them. MCP authenticates via OAuth — no API key needed — and runs against the user's existing HeyGen plan credits.
+Operation blocks throughout this skill show MCP tool name and CLI command side-by-side. **Read only the column for your detected mode.** If MCP is available, use the `mcp__heygen__*` tools; ignore the CLI column. If CLI is available, run `heygen ...` commands; ignore the MCP column. Never invoke anything from the other column.
 
-**CLI fallback:** If MCP tools are not available AND the `heygen` binary runs cleanly (`heygen --version` exits 0), use it. Auth: `HEYGEN_API_KEY` env OR `heygen auth login` (persists to `~/.heygen/credentials`). If the CLI is missing, errors on `--version`, or auth is not set, silently skip it — do not retry MCP.
+**Do not look up API endpoints.** MCP tool names are the contract in MCP mode. `heygen <noun> <verb> --help` is the contract in CLI mode. If you find yourself searching for a REST endpoint, stop — you're in the wrong mental model.
 
-**Neither available:** Only if MCP is unavailable AND the CLI doesn't work, tell the user once: "To use this skill, connect the HeyGen MCP server or install the HeyGen CLI: `curl -fsSL https://static.heygen.ai/cli/install.sh | bash` then `heygen auth login`."
-
-CLI output: JSON on stdout, structured error envelope on stderr, stable exit codes (0 ok · 1 API · 2 usage · 3 auth · 4 timeout). Pipe to `jq` to extract fields. Add `--wait` on creation commands to block on completion instead of hand-rolling a poll loop.
-
-**Throughout this skill:** Each operation shows the MCP tool name first. If MCP is unavailable, use the `heygen` command shown alongside it. Full command reference: [../references/api-reference.md](../references/api-reference.md).
+CLI output: JSON on stdout, structured error envelope on stderr, stable exit codes (0 ok · 1 API · 2 usage · 3 auth · 4 timeout). See [../references/troubleshooting.md](../references/troubleshooting.md) for error → action mapping and polling cadence. Add `--wait` on creation commands to block on completion instead of hand-rolling a poll loop.
 
 ---
 
@@ -467,8 +463,6 @@ BACKGROUND NOTE: The selected avatar has no background or a transparent backdrop
 - **Quick Shot**: Generate immediately.
 
 ### Submit
-
-📖 **Full command reference, interactive sessions, webhooks → [../references/api-reference.md](../references/api-reference.md)**
 
 **Step 1: Run Frame Check (if `avatar_id` set) — MAIN SESSION ONLY**
 Before submitting, run the Frame Check steps above. Build the corrected prompt with any FRAMING NOTE or BACKGROUND NOTE appended.
