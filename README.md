@@ -14,7 +14,7 @@ Works with Claude Code, OpenClaw, Codex, Cursor, and other AI coding agents.
 Paste this into your agent to get started:
 
 ```
-Install HeyGen Skills from https://github.com/heygen-com/skills — clone the repo into your skills directory. If MCP is connected, you're done. Otherwise install the HeyGen CLI from https://static.heygen.ai/cli/install.sh and run `heygen auth login`. Then use heygen-avatar and heygen-video to bring yourself to life — create your own avatar and make a short cinematic intro video of yourself introducing who you are. Ask me what you need before starting.
+Install HeyGen Skills from https://github.com/heygen-com/skills — clone the repo into your skills directory. Install the HeyGen CLI from https://static.heygen.ai/cli/install.sh and export HEYGEN_API_KEY=<your-key> (get one at https://app.heygen.com/api). Or, if you're on a HeyGen plan and already have MCP connected to your agent, skip the key step — MCP will be used automatically. Then use heygen-avatar and heygen-video to bring yourself to life — create your own avatar and make a short cinematic intro video of yourself introducing who you are. Ask me what you need before starting.
 ```
 
 Or follow the steps below manually.
@@ -34,13 +34,40 @@ Detect which agent you are and clone to the right path:
 git clone --single-branch --depth 1 https://github.com/heygen-com/skills.git <install-path>/heygen-skills
 ```
 
-### Step 2 — Connect to HeyGen (pick one)
+### Step 2 — Get your HeyGen API key
 
-The skills auto-detect which mode is available and prefer MCP when connected.
+1. Go to **[app.heygen.com/api](https://app.heygen.com/api)** (Settings → API)
+2. Generate a new API key
+3. Save it somewhere safe — you can't view it again after the modal closes
 
-**Option A — MCP (recommended, no API key needed)**
+### Step 3 — Install the HeyGen CLI
 
-Connect HeyGen's remote MCP server to your agent. OAuth handles auth and the skills use your existing HeyGen plan credits — no separate API billing.
+One-line install (macOS / Linux):
+
+```bash
+curl -fsSL https://static.heygen.ai/cli/install.sh | bash
+```
+
+Then set your API key:
+
+```bash
+export HEYGEN_API_KEY=<your-key>
+```
+
+That's ephemeral (current shell only). To persist across sessions, add `export HEYGEN_API_KEY=<your-key>` to your shell profile (`~/.zshrc`, `~/.bashrc`, or equivalent).
+
+Verify:
+
+```bash
+heygen --version
+heygen auth status
+```
+
+The [HeyGen CLI](https://github.com/heygen-com/heygen-cli) is a single static binary. No runtime deps.
+
+### Alternative: MCP (OAuth, no API key)
+
+If you prefer OAuth and already have a HeyGen plan with credits, connect the remote MCP server instead of setting an API key. The skills will auto-detect MCP when no `HEYGEN_API_KEY` is set.
 
 Claude Code:
 ```bash
@@ -60,21 +87,9 @@ OpenClaw: add to `~/.openclaw/openclaw.json`:
 
 The first call triggers an OAuth consent flow in your browser.
 
-**Option B — HeyGen CLI fallback**
+> **Priority:** If `HEYGEN_API_KEY` is set, the skills use the CLI. Otherwise they look for MCP tools. Set the key only if you want direct API access; otherwise use MCP.
 
-If MCP is unavailable or you prefer direct access:
-
-```bash
-curl -fsSL https://static.heygen.ai/cli/install.sh | bash
-heygen auth login   # or: export HEYGEN_API_KEY=<your-key>
-heygen auth status  # verify
-```
-
-The [HeyGen CLI](https://github.com/heygen-com/heygen-cli) is a single static binary. Auth persists to `~/.heygen/credentials`. Get an API key at [app.heygen.com/settings/api](https://app.heygen.com/settings/api?nav=API).
-
-> **Either path works.** The skills detect MCP tools matching `mcp__heygen__*` and use them first. If none are found, they fall back to `heygen <noun> <verb>` CLI calls. You can have both configured — MCP wins.
-
-### Step 3 — Create your avatar
+### Step 4 — Create your avatar
 
 Ask the user for a photo (URL or file), then use the **heygen-avatar** skill:
 
@@ -82,7 +97,7 @@ Ask the user for a photo (URL or file), then use the **heygen-avatar** skill:
 
 The skill uploads the photo, creates a persistent digital twin with a voice, and saves an `AVATAR-<NAME>.md` file for future use.
 
-### Step 4 — Make your first video
+### Step 5 — Make your first video
 
 Use the **heygen-video** skill to generate an intro video with the avatar you just created:
 
@@ -118,25 +133,40 @@ Skills communicate through `AVATAR-<NAME>.md` files. heygen-avatar writes them, 
 
 ## Authentication
 
-The skills support two auth modes and auto-detect which is available.
+The skills support two auth modes with explicit priority:
 
-### MCP (preferred)
+| Priority | Mode | Trigger | Billing | Best for |
+|----------|------|---------|---------|----------|
+| 1 | **CLI (API key)** | `HEYGEN_API_KEY` is set | Direct API usage ($, separately billed) | Agents, CI, scripts |
+| 2 | **MCP (OAuth)** | MCP tools visible AND no API key | HeyGen plan credits (no extra billing) | Users on a HeyGen plan |
+| 3 | **CLI (fallback)** | `heygen auth login` session | Direct API usage ($) | Interactive CLI users |
 
-When HeyGen's remote MCP server is connected to your agent, the skills use it automatically. No API key needed, OAuth handles everything, and calls use your existing HeyGen plan credits.
+**Billing tradeoff:** CLI mode bills against your HeyGen API usage (separately metered). MCP mode consumes your existing HeyGen plan credits — no extra API billing. Pick the mode that matches how you want to be charged.
+
+### CLI with API key (recommended for agents)
+
+Get a key at **[app.heygen.com/api](https://app.heygen.com/api)**, then:
+
+```bash
+export HEYGEN_API_KEY=your-key-here
+```
+
+If `HEYGEN_API_KEY` is set, the skills use the CLI directly. No MCP probing. This is the most predictable setup for agent workflows.
+
+The [HeyGen CLI](https://github.com/heygen-com/heygen-cli) pattern is `heygen <noun> <verb>`. Output is JSON on stdout with stable exit codes.
+
+- **Verify**: `heygen auth status`
+- **Alternative login**: `heygen auth login` — interactive browser flow, persists to `~/.heygen/credentials`
+
+### MCP (OAuth, no API key)
+
+If you don't set an API key and HeyGen's remote MCP server is connected to your agent, the skills use MCP via OAuth. Calls run against your existing HeyGen plan credits.
 
 - Endpoint: `https://mcp.heygen.com/mcp/v1/`
 - Tool namespace: `mcp__heygen__*`
 - [MCP docs](https://developers.heygen.com/docs/mcp-remote)
 
-### HeyGen CLI (fallback)
-
-If MCP isn't available, the skills fall back to the [HeyGen CLI](https://github.com/heygen-com/heygen-cli) (`heygen` binary). Pattern: `heygen <noun> <verb>`. Output is JSON on stdout with stable exit codes.
-
-- **Interactive login**: `heygen auth login` — persists to `~/.heygen/credentials`
-- **Environment variable**: `export HEYGEN_API_KEY="your-key"` — agent-/CI-friendly; takes precedence over the credentials file
-- **Verify anytime**: `heygen auth status`
-
-You can have both configured — the skills check for MCP first and only fall back to the CLI if MCP tools aren't visible.
+You can have both configured — if `HEYGEN_API_KEY` is set, CLI wins.
 
 ## Things to Try
 
@@ -155,7 +185,7 @@ After setup, try these prompts with your agent:
 
 ## Requirements
 
-- A HeyGen account — sign in via MCP (OAuth) or with an [API key](https://app.heygen.com/settings/api?nav=API) if you use the CLI fallback
+- A HeyGen account — sign in via MCP (OAuth) or with an [API key](https://app.heygen.com/api) if you use the CLI fallback
 - An AI agent that supports skills (Claude Code, OpenClaw, Codex, Cursor, or similar)
 - No runtime dependencies. No packages. No build step.
 
