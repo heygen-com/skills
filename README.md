@@ -5,8 +5,8 @@ AI agent skills for creating avatar videos. Your agent gets a face, a voice, and
 Works with Claude Code, OpenClaw, Codex, Cursor, and other AI coding agents.
 
 ```
-"Create an avatar of me and make a 30-second intro video. Use heygen-avatar and heygen-video — ask me anything before you start."
-→ asks the right questions → builds your avatar → picks the best style → generates the video → delivers the share link
+"Bring yourself to life — create your own avatar and make a 30-second intro video of yourself. Use heygen-avatar and heygen-video, ask me anything before you start."
+→ reads your agent's identity files → asks only what's missing → builds the agent's avatar → picks the best style → generates the video → delivers the share link
 ```
 
 ## Install
@@ -14,7 +14,7 @@ Works with Claude Code, OpenClaw, Codex, Cursor, and other AI coding agents.
 Paste this into your agent to get started:
 
 ```
-Install HeyGen Skills from https://github.com/heygen-com/skills — clone the repo into your skills directory. If MCP is connected, you're done. Otherwise install the HeyGen CLI from https://static.heygen.ai/cli/install.sh and run `heygen auth login`. Then use heygen-avatar and heygen-video to create an avatar of me and make a short cinematic intro video. Ask me what you need before starting.
+Install HeyGen Skills from https://github.com/heygen-com/skills — clone the repo into your skills directory. If MCP is connected, you're done. Otherwise install the HeyGen CLI from https://static.heygen.ai/cli/install.sh and run `heygen auth login`. Then use heygen-avatar and heygen-video to bring yourself to life — create your own avatar and make a short cinematic intro video of yourself introducing who you are. Ask me what you need before starting.
 ```
 
 Or follow the steps below manually.
