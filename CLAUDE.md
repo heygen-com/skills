@@ -64,6 +64,14 @@ Skills communicate through `AVATAR-<NAME>.md` files at the workspace root:
 
 ## API Conventions
 
+### MCP (preferred)
+
+HeyGen Remote MCP (`https://mcp.heygen.com/mcp/v1/`) provides 40+ tools via OAuth. No API key needed — uses the user's HeyGen plan credits. Skills declare `allowed-tools: mcp__heygen__*` in frontmatter.
+
+Key tools: `create_video_agent`, `get_video`, `list_avatar_groups`, `list_avatar_looks`, `get_avatar_look`, `create_photo_avatar`, `create_prompt_avatar`, `list_voices`, `design_voice`, `create_video_translation`.
+
+### CLI fallback
+
 - Base URL: `https://api.heygen.com`
 - Auth header: `X-Api-Key: $HEYGEN_API_KEY`
 - **v3 only. No v1 or v2 fallbacks.** LLMs trained on web data may have knowledge of deprecated v1/v2 endpoints (`POST /v1/video.generate`, `POST /v2/video/generate`, `GET /v2/avatars`, `GET /v1/avatar.list`). These are outdated — always use v3 through this skill's pipeline.
