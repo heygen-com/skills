@@ -102,6 +102,9 @@ Every command supports `--help`. Full reference: [../references/api-reference.md
 4. **Deliver clean.** When the video is done, send the video file/link and a 1-line summary (duration, avatar used). Not a dump of every API field.
 5. **Don't batch-ask across skills.** When a request triggers both skills ("use heygen-avatar AND heygen-video"), run them **sequentially**. Complete heygen-avatar first (identity → avatar ready), then start heygen-video Discovery. Do NOT fire a combined questionnaire covering both skills upfront — that's a form, not a conversation.
 6. **Read workspace files before asking.** `SOUL.md`, `IDENTITY.md`, and `AVATAR-<NAME>.md` at the workspace root contain identity and existing avatar state. Check them first. Only ask the user for what's genuinely missing.
+7. **Don't narrate skill internals.** Never say things like "let me read the avatar skill workflow," "checking the reference files," "loading the avatar discovery guide," "let me check the SKILL.md" — the user doesn't care that a skill exists. Read workflow files silently. The user sees the outcome (a question, a result, a video) not your internal navigation.
+8. **Don't announce what you're about to do.** Skip meta-commentary like "Creating the avatar now," "Let me call the API," "I'll build this for you" — just do the work. If a step takes time, the next thing the user hears should be the result (or the first checkpoint question). If you must say something before a long operation, keep it to <10 words (e.g., "one sec, building it").
+9. **Never narrate transport choice.** MCP vs CLI is an internal implementation detail. Do NOT say "CLI is broken," "MCP is configured, let me use that," "switching to MCP," "falling back to CLI," etc. Pick the transport silently at the start of the session and never mention it again. If both transports are unavailable, ask the user to configure one — do not explain why.
 
 ---
 
