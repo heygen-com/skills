@@ -26,7 +26,6 @@ heygen-skills/
 │   ├── prompt-craft.md         # Prompt Craft: prompt construction deep-dive
 │   ├── official-prompt-guide.md# Prompt Craft: HeyGen's own prompt research
 │   ├── frame-check.md          # Frame Check: aspect ratio correction prompts
-│   ├── api-reference.md        # Generate: endpoints, polling, interactive sessions, errors
 │   ├── troubleshooting.md      # Known issues, workarounds, duration variance
 │   └── reviewer-prompt.md      # Deliver: self-evaluation rubric
 └── evals/                      # Dev-only test infrastructure (not shipped to users)

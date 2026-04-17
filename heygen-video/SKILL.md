@@ -55,7 +55,7 @@ Two modes, in order of preference. **Mode selection is silent.** Detect once at 
 
 CLI output: JSON on stdout, structured error envelope on stderr, stable exit codes (0 ok · 1 API · 2 usage · 3 auth · 4 timeout). Pipe to `jq` to extract fields. Add `--wait` on creation commands to block on completion instead of hand-rolling a poll loop.
 
-**Throughout this skill:** Each operation shows the MCP tool name first. If MCP is unavailable, use the `heygen` command shown alongside it. Full command reference: [../references/api-reference.md](../references/api-reference.md).
+**Throughout this skill:** Each operation shows the MCP tool name first. If MCP is unavailable, use the `heygen` command shown alongside it. Never look up API endpoints — MCP tool names and `heygen ... --help` are your only references.
 
 ---
 
@@ -467,8 +467,6 @@ BACKGROUND NOTE: The selected avatar has no background or a transparent backdrop
 - **Quick Shot**: Generate immediately.
 
 ### Submit
-
-📖 **Full command reference, interactive sessions, webhooks → [../references/api-reference.md](../references/api-reference.md)**
 
 **Step 1: Run Frame Check (if `avatar_id` set) — MAIN SESSION ONLY**
 Before submitting, run the Frame Check steps above. Build the corrected prompt with any FRAMING NOTE or BACKGROUND NOTE appended.

@@ -57,40 +57,30 @@ You are a video producer. Not a form. Not a CLI wrapper. A producer who understa
 
 ## API Mode Detection
 
-Two modes, in order of preference. **Mode selection is silent — detect once at the start of the session, pick a mode, and move on.** Never narrate transport choice ("CLI is broken", "switching to MCP") — the user doesn't care how calls are made.
+**Pick one transport at session start. Never mix, never switch mid-session, never narrate the choice.**
 
-**MCP (preferred):** If HeyGen MCP tools are available (tools matching `mcp__heygen__*`), use them. MCP authenticates via OAuth — no API key needed — and runs against the user's existing HeyGen plan credits. Endpoint: `https://mcp.heygen.com/mcp/v1/`.
+Detect which is available:
 
-**CLI fallback:** If MCP tools are not available AND the `heygen` binary runs cleanly (`heygen --version` exits 0), use it. Auth: set `HEYGEN_API_KEY` in the env OR run `heygen auth login` (persists to `~/.heygen/credentials`). If the CLI binary is missing, errors on `--version`, or auth is not set, silently skip it — do not retry MCP.
+1. **MCP mode** — HeyGen MCP tools are visible in the toolset (tools matching `mcp__heygen__*`). OAuth auth, uses existing plan credits.
+2. **CLI mode** — MCP tools NOT available AND `heygen --version` exits 0. Auth via `HEYGEN_API_KEY` env or `heygen auth login`.
+3. **Neither** — tell the user once: "To use this skill, connect the HeyGen MCP server or install the HeyGen CLI: `curl -fsSL https://static.heygen.ai/cli/install.sh | bash` then `heygen auth login`."
 
-**Neither available:** Only if both MCP and a working CLI are missing, tell the user once — concisely — how to connect: "To use this skill, connect the HeyGen MCP server or install the HeyGen CLI: `curl -fsSL https://static.heygen.ai/cli/install.sh | bash` then `heygen auth login`."
+**Hard rules:**
+- **MCP mode: only use `mcp__heygen__*` tools.** Never call `curl api.heygen.com/...`. Never run `heygen ...` CLI commands. Never look up endpoints. The MCP tool name IS the API.
+- **CLI mode: only use `heygen ...` commands.** Never call `curl api.heygen.com/...`. Never reference MCP tools. Run `heygen <noun> <verb> --help` to discover arguments.
+- **Either mode: never cross over.** If something isn't exposed in your current mode, tell the user — don't switch transports.
 
-CLI output is JSON on stdout, structured error envelopes on stderr, and stable exit codes: `0` ok · `1` API/network · `2` usage · `3` auth · `4` timeout under `--wait`. Pipe to `jq` to extract fields.
+### MCP tool names (MCP mode only)
 
-**Key MCP tool → CLI command mapping:**
+`create_video_agent`, `get_video_agent_session`, `get_video`, `list_avatar_groups`, `list_avatar_looks`, `get_avatar_look`, `create_photo_avatar`, `create_prompt_avatar`, `create_digital_twin`, `list_voices`, `design_voice`, `create_speech`, `list_video_agent_styles`, `create_video_translation`
 
-| MCP Tool | CLI Command | Purpose |
-|----------|-------------|---------|
-| `create_video_agent` | `heygen video-agent create` | Generate video from prompt |
-| `get_video_agent_session` | `heygen video-agent get` | Poll session status |
-| `get_video` | `heygen video get` | Get video details/status |
-| `list_avatar_groups` | `heygen avatar list` | Browse avatar groups |
-| `list_avatar_looks` | `heygen avatar looks list` | Browse avatar looks |
-| `get_avatar_look` | `heygen avatar looks get` | Get avatar look metadata |
-| `create_photo_avatar` | `heygen avatar create` (type: photo) | Create from photo |
-| `create_prompt_avatar` | `heygen avatar create` (type: prompt) | Create from text |
-| `create_digital_twin` | `heygen avatar create` (type: video) | Create from video |
-| `list_voices` | `heygen voice list` | Browse voices |
-| `design_voice` | `heygen voice create` | Semantic voice search |
-| `create_speech` | `heygen voice speech create` | TTS |
-| `list_video_agent_styles` | `heygen video-agent styles list` | Browse visual styles |
-| `create_video_translation` | `heygen video-translate create` | Translate video |
+### CLI commands (CLI mode only)
 
-Every command supports `--help`. Full reference: [../references/api-reference.md](references/api-reference.md).
+`heygen video-agent {create,get,styles}`, `heygen video {get,download}`, `heygen avatar {list,looks,create}`, `heygen voice {list,create,speech}`, `heygen video-translate create`, `heygen asset create`. Every subcommand supports `--help` — that's your reference.
 
-**Docs-first rule:** Before calling any endpoint you're unsure about, fetch the raw markdown spec:
-- **Index:** `GET https://developers.heygen.com/llms.txt` — full sitemap
-- **Any page:** Append `.md` to the URL for clean markdown
+CLI output contract: JSON on stdout, `{error:{code,message,hint}}` envelope on stderr, exit codes `0` ok · `1` API · `2` usage · `3` auth · `4` timeout.
+
+**Do not look up API endpoints.** There is no `api-reference.md` lookup step. MCP mode uses tool names. CLI mode uses `heygen ... --help`. If you catch yourself thinking "let me check the endpoint," stop — you're in the wrong mental model.
 
 ---
 
