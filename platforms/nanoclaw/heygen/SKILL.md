@@ -52,6 +52,8 @@ heygen video-agent create \
 
 With `--wait`, the CLI blocks until the video completes and emits the final status object. Without `--wait`, submission returns immediately — save the `session_id` from stdout for manual polling.
 
+`--timeout 10m` is sized for short videos (≤60s). **Bump to `--timeout 45m` for videos >60s** or when targeting 2+ minute output — Video Agent generation routinely takes 20-45m for longer clips.
+
 ### Step 5: Poll for Completion (only without `--wait`)
 
 ```bash

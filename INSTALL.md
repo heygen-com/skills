@@ -35,10 +35,11 @@ Two options — the skills prefer MCP when it's available:
 **HeyGen CLI (fallback):** install the CLI and authenticate:
 ```bash
 curl -fsSL https://static.heygen.ai/cli/install.sh | bash
+heygen --version        # verify binary is on PATH
 heygen auth login       # persists to ~/.heygen/credentials
 # OR
 export HEYGEN_API_KEY=<your-key>
-heygen auth status      # verify
+heygen auth status      # verify auth
 ```
 
 ## First Run

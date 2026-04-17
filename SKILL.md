@@ -63,7 +63,7 @@ Two modes, in order of preference:
 
 **CLI fallback:** If MCP tools are not available, use the [HeyGen CLI](https://github.com/heygen-com/heygen-cli) (`heygen` binary). Install: `curl -fsSL https://static.heygen.ai/cli/install.sh | bash`. Auth: set `HEYGEN_API_KEY` in the env OR run `heygen auth login` (persists to `~/.heygen/credentials`). Verify with `heygen auth status`. If neither auth source is set, tell the user: "No HeyGen auth found. Run `heygen auth login` or set `export HEYGEN_API_KEY=<your-key>`."
 
-CLI output is JSON on stdout, structured error envelopes on stderr, and stable exit codes: `0` ok · `1` API/network · `2` usage · `3` auth · `4` timeout under `--wait`. Pipe to `jq` to extract fields. Never call `api.heygen.com` with curl — use MCP or the CLI.
+CLI output is JSON on stdout, structured error envelopes on stderr, and stable exit codes: `0` ok · `1` API/network · `2` usage · `3` auth · `4` timeout under `--wait`. Pipe to `jq` to extract fields.
 
 **Key MCP tool → CLI command mapping:**
 

@@ -53,7 +53,7 @@ Two modes, in order of preference:
 
 CLI output: JSON on stdout, structured error envelope on stderr, stable exit codes (0 ok · 1 API · 2 usage · 3 auth · 4 timeout). Pipe to `jq` to extract fields. Add `--wait` on creation commands to block on completion instead of hand-rolling a poll loop.
 
-**Throughout this skill:** Each operation shows the MCP tool name first. If MCP is unavailable, use the `heygen` command shown alongside it. Never call `api.heygen.com` with curl — route through MCP or the CLI. Full command reference: [../references/api-reference.md](../references/api-reference.md).
+**Throughout this skill:** Each operation shows the MCP tool name first. If MCP is unavailable, use the `heygen` command shown alongside it. Full command reference: [../references/api-reference.md](../references/api-reference.md).
 
 ---
 
@@ -493,7 +493,7 @@ Subagents are for **submit + poll + deliver only**. All creative decisions, Fram
 
 **MCP:** `create_video_agent(prompt=<prompt>, avatar_id=<look_id>, voice_id=<voice_id>, style_id=<optional>, orientation=<orientation>)`
 
-**CLI:** `heygen video-agent create` — add `--wait --timeout 45m` to block on completion, or omit `--wait` and poll manually.
+**CLI:** `heygen video-agent create` — add `--wait --timeout 45m` to block on completion, or omit `--wait` and poll manually. **Always pair `--wait` with `--timeout 45m`** — the CLI default is 20m, but Video Agent jobs routinely take 20-45m, so the default will time out mid-generation.
 
 ```bash
 heygen video-agent create \

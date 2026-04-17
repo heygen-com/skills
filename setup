@@ -126,7 +126,13 @@ echo "    ${BOLD}heygen auth login${RESET}    # or: export HEYGEN_API_KEY=<your-
 echo "    ${BOLD}heygen auth status${RESET}   # verify"
 
 if command -v heygen &>/dev/null; then
-  ok "heygen CLI detected on PATH"
+  HEYGEN_VERSION="$(heygen --version 2>/dev/null | head -n1 || echo 'unknown')"
+  ok "heygen CLI detected: ${HEYGEN_VERSION}"
+  if heygen auth status &>/dev/null; then
+    ok "heygen auth OK"
+  else
+    warn "heygen not authenticated — run: heygen auth login  (or export HEYGEN_API_KEY=<key>)"
+  fi
 else
   warn "heygen CLI not found on PATH (optional — only needed if MCP isn't connected)"
 fi

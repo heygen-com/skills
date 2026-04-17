@@ -51,7 +51,7 @@ Wait for their answer before proceeding.
 
 **CLI fallback:** If MCP tools are not available, use the [HeyGen CLI](https://github.com/heygen-com/heygen-cli) (`heygen` binary). Auth: set `HEYGEN_API_KEY` in the env OR run `heygen auth login` (persists to `~/.heygen/credentials`). Verify with `heygen auth status`. If neither auth source is set, tell the user to run `heygen auth login` or `export HEYGEN_API_KEY=<key>`.
 
-**API:** v3 only. Never call v1 or v2 endpoints. Never call `api.heygen.com` with curl — route through MCP or the CLI.
+**API:** v3 only. Never call v1 or v2 endpoints.
 
 **Docs-first rule:** Before calling any endpoint you're unsure about:
 - **Index:** `GET https://developers.heygen.com/llms.txt` — full sitemap
