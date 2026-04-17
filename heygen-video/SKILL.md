@@ -54,7 +54,7 @@ Detect which API mode is available, in order of preference:
 **Required headers on every CLI request — no exceptions:**
 ```
 X-Api-Key: $HEYGEN_API_KEY
-User-Agent: HeyGen-Skills/1.4.0 (OpenClaw; heygen-skills)
+User-Agent: HeyGen-Skills/2.0.4 (OpenClaw; heygen-skills)
 X-HeyGen-Source: openclaw-skill
 ```
 

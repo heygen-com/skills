@@ -16,7 +16,7 @@ description: |
   HeyGen avatar creation, voice design, photo → digital twin, HeyGen video generation,
   identity-first video, messaging-first video, AI presenter, talking head video.
   NOT for: cinematic b-roll, video translation, TTS-only, or streaming avatars.
-version: 1.4.0
+version: 2.0.4
 homepage: https://developers.heygen.com/docs/quick-start
 allowed-tools: mcp__heygen__*
 metadata:
