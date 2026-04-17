@@ -1,6 +1,6 @@
 # Install HeyGen Skills
 
-Get your API key from [app.heygen.com/settings](https://app.heygen.com/settings/api?nav=API).
+Sign in via MCP (OAuth, no key needed) — or grab an [API key](https://app.heygen.com/settings/api?nav=API) if you'll use the CLI fallback.
 
 ## Option 1 — ClawHub (recommended)
 
