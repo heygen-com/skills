@@ -51,12 +51,11 @@ When the user provides files, URLs, or references, route each asset to the right
 
 ### Path B (Attach)
 Upload to HeyGen:
-```bash
-curl -X POST "https://api.heygen.com/v3/assets" \
-  -H "X-Api-Key: $HEYGEN_API_KEY" \
-  -F "file=@/path/to/file.png"
-```
-Max 32MB per file. Returns `asset_id`.
+
+**MCP:** upload via the asset tool (depends on environment).
+**CLI:** `heygen asset create --file /path/to/file.png`
+
+Max 32MB per file. Returns JSON with the new `asset_id`.
 
 Or pass inline in `files[]`:
 ```json

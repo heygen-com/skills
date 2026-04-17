@@ -116,51 +116,19 @@ if [ -n "$SKILLS_DIR" ]; then
   for skill in "${SKILLS[@]}"; do echo "    ${skill}/SKILL.md"; done
 fi
 
-# ─── Persistent config ──────────────────────────────────────
-HEYGEN_CONFIG_DIR="$HOME/.heygen"
-HEYGEN_CONFIG="$HEYGEN_CONFIG_DIR/config"
-
-# Load key from config file if env var is not set
-if [ -z "${HEYGEN_API_KEY:-}" ] && [ -f "$HEYGEN_CONFIG" ]; then
-  # shellcheck source=/dev/null
-  source "$HEYGEN_CONFIG"
-fi
-
-# ─── Check HEYGEN_API_KEY ────────────────────────────────────
+# ─── Auth guidance ───────────────────────────────────────────
 echo ""
-if [ -z "${HEYGEN_API_KEY:-}" ]; then
-  echo "  Get your key: ${BOLD}https://app.heygen.com/settings/api${RESET}"
-  echo ""
-  if [ -t 0 ]; then
-    printf "  Enter your HeyGen API key: "
-    read -r HEYGEN_API_KEY
-    if [ -z "$HEYGEN_API_KEY" ]; then
-      warn "No key entered. You can set it later:"
-      echo "    export HEYGEN_API_KEY=<your-key>"
-      echo "    Or re-run ./setup"
-    fi
-  else
-    warn "HEYGEN_API_KEY is not set (non-interactive shell)."
-    echo "  Set it manually:  export HEYGEN_API_KEY=<your-key>"
-    echo "  Or re-run ./setup in an interactive terminal."
-  fi
-fi
+echo "${BOLD}Auth:${RESET}"
+echo "  The skills prefer HeyGen Remote MCP (OAuth, no API key needed)."
+echo "  If MCP isn't connected, install and use the HeyGen CLI:"
+echo "    ${BOLD}curl -fsSL https://static.heygen.ai/cli/install.sh | bash${RESET}"
+echo "    ${BOLD}heygen auth login${RESET}    # or: export HEYGEN_API_KEY=<your-key>"
+echo "    ${BOLD}heygen auth status${RESET}   # verify"
 
-if [ -n "${HEYGEN_API_KEY:-}" ]; then
-  echo -n "Validating API key... "
-  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://api.heygen.com/v3/users/me" \
-    -H "X-Api-Key: $HEYGEN_API_KEY" 2>/dev/null || echo "000")
-  if [ "$HTTP_CODE" = "200" ]; then
-    ok "API key is valid."
-    # Persist to ~/.heygen/config
-    mkdir -p "$HEYGEN_CONFIG_DIR"
-    echo "HEYGEN_API_KEY=$HEYGEN_API_KEY" > "$HEYGEN_CONFIG"
-    chmod 600 "$HEYGEN_CONFIG"
-    ok "Key saved to ${BOLD}~/.heygen/config${RESET} (persists across sessions)."
-  else
-    err "API key validation failed (HTTP $HTTP_CODE)."
-    echo "  Check your key: https://app.heygen.com/settings/api"
-  fi
+if command -v heygen &>/dev/null; then
+  ok "heygen CLI detected on PATH"
+else
+  warn "heygen CLI not found on PATH (optional — only needed if MCP isn't connected)"
 fi
 
 # ─── Summary ─────────────────────────────────────────────────
@@ -171,12 +139,6 @@ for skill in "${SKILLS[@]}"; do
 done
 
 echo ""
-echo "${BOLD}Next steps:${RESET}"
-if [ -z "${HEYGEN_API_KEY:-}" ]; then
-  echo "  1. Re-run ./setup and enter your API key, or:"
-  echo "     export HEYGEN_API_KEY=<your-key>"
-  echo "  2. Ask your agent:  \"Create my HeyGen avatar\""
-else
-  echo "  Ask your agent: \"Create my HeyGen avatar\""
-fi
+echo "${BOLD}Next step:${RESET}"
+echo "  Ask your agent: \"Create my HeyGen avatar\""
 echo ""

@@ -11,26 +11,25 @@ NOT for: image generation, audio-only TTS, video translation, or cinematic b-rol
 ## Required Environment
 
 - `HEYGEN_API_KEY` — Get from https://app.heygen.com/settings?nav=API
+- `heygen` CLI — install: `curl -fsSL https://static.heygen.ai/cli/install.sh | bash`. Verify: `heygen auth status`.
 
 ## Steps
 
 ### Step 1: Discover Available Avatars
 
 ```bash
-curl -s -X GET "https://api.heygen.com/v3/avatars" \
-  -H "X-Api-Key: $HEYGEN_API_KEY" | jq '.data.avatar_list[:5] | .[] | {avatar_id: .avatar_group_id, avatar_name}'
+heygen avatar list --ownership public --limit 5 | jq '.data[] | {group_id, avatar_name}'
 ```
 
-Pick an avatar_id. If the user has a specific avatar, use that ID.
+Pick an `avatar_id`. If the user has a specific avatar, use that ID. To see looks for a group: `heygen avatar looks list --group-id <group_id>`.
 
 ### Step 2: Find a Voice
 
 ```bash
-curl -s -X GET "https://api.heygen.com/v3/voices" \
-  -H "X-Api-Key: $HEYGEN_API_KEY" | jq '.data.voices[:10] | .[] | {voice_id, display_name, language}'
+heygen voice list --limit 10 | jq '.data.voices[] | {voice_id, display_name, language}'
 ```
 
-Pick a voice_id matching the desired language and tone.
+Pick a `voice_id` matching the desired language and tone.
 
 ### Step 3: Write the Script
 
@@ -43,36 +42,20 @@ Write a spoken-word script for the avatar. Rules:
 ### Step 4: Generate the Video
 
 ```bash
-curl -s -X POST "https://api.heygen.com/v3/video-agents" \
-  -H "X-Api-Key: $HEYGEN_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "video_inputs": [{
-      "character": {
-        "type": "avatar",
-        "avatar_id": "AVATAR_ID_HERE",
-        "avatar_style": "normal"
-      },
-      "voice": {
-        "type": "text",
-        "input_text": "YOUR SCRIPT HERE",
-        "voice_id": "VOICE_ID_HERE"
-      }
-    }],
-    "dimension": {
-      "width": 1920,
-      "height": 1080
-    }
-  }'
+heygen video-agent create \
+  --prompt "YOUR SCRIPT HERE" \
+  --avatar-id "AVATAR_ID_HERE" \
+  --voice-id "VOICE_ID_HERE" \
+  --orientation landscape \
+  --wait --timeout 10m
 ```
 
-Save the `session_id` from the response.
+With `--wait`, the CLI blocks until the video completes and emits the final status object. Without `--wait`, submission returns immediately — save the `session_id` from stdout for manual polling.
 
-### Step 5: Poll for Completion
+### Step 5: Poll for Completion (only without `--wait`)
 
 ```bash
-curl -s -X GET "https://api.heygen.com/v3/video-agents/sessions/SESSION_ID" \
-  -H "X-Api-Key: $HEYGEN_API_KEY" | jq '{status: .data.status, video_url: .data.video_url}'
+heygen video-agent get --session-id SESSION_ID | jq '{status: .data.status, video_url: .data.video_url}'
 ```
 
 Poll every 15 seconds. Status progression: `pending` → `processing` → `completed`.
@@ -84,25 +67,27 @@ When status is `completed`, the `video_url` field contains the download URL.
 Download the video and present it to the user:
 
 ```bash
-curl -sL -o output.mp4 "VIDEO_URL_HERE"
+heygen video download <video_id>
 ```
+
+Writes the MP4 to disk and emits `{"asset", "message", "path"}` on stdout — chain on `.path`.
 
 ## Verification
 
 After generating a video, confirm:
-1. Response contains `session_id` (generation accepted)
-2. Polling returns `status: "completed"` within 5 minutes
-3. `video_url` is a valid HTTPS URL
+1. CLI exits `0` and stdout contains `session_id` (generation accepted)
+2. Polling (or `--wait`) returns `status: "completed"` within 5 minutes
+3. `video_url` / `video_page_url` is a valid HTTPS URL
 4. Downloaded file is a playable MP4
 
 ## Troubleshooting
 
-| Error | Fix |
+| Symptom | Fix |
 |-------|-----|
-| 401 Unauthorized | Check HEYGEN_API_KEY is set and valid |
-| 400 Bad Request | Verify avatar_id and voice_id exist (re-run Steps 1-2) |
+| Exit code `3` / auth error on stderr | Check `heygen auth status`; run `heygen auth login` or set `HEYGEN_API_KEY` |
+| Exit code `2` / usage error | Run `heygen video-agent create --help` — verify flag names and required args |
 | Status stuck on "processing" | Wait up to 5 minutes. Videos over 60s take longer. |
-| Empty video_url | Video may have failed. Check `error` field in poll response. |
+| Empty `video_url` | Video may have failed. Check `error` field in poll response. |
 
 ## Limits
 

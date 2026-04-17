@@ -73,23 +73,23 @@ Video Agent rejects `text/html` content type in the `files[]` array. Web pages (
 
 **Symptom:** Video generation fails or produces errors immediately after creating a new avatar. The avatar exists in the HeyGen dashboard but videos referencing it fail.
 
-**Root Cause:** Avatar creation is asynchronous. `POST /v3/avatars` returns success immediately, but the avatar image is still being processed. If you submit a video request before processing completes, it fails.
+**Root Cause:** Avatar creation is asynchronous. `heygen avatar create` (and `create_photo_avatar` / `create_prompt_avatar` MCP tools) return success immediately, but the avatar image is still being processed. If you submit a video request before processing completes, it fails.
 
-**Detection:** Poll `GET /v3/avatars/looks?group_id=<group_id>`. The avatar is NOT ready until:
+**Detection:** Poll with `heygen avatar looks list --group-id <group_id>` (or MCP `list_avatar_looks`). The avatar is NOT ready until:
 - `preview_image_url` is non-null
 - `image_width` and `image_height` are non-zero
 
-At the group level (`GET /v3/avatars`), an unready avatar will have no `preview_image_url` on the group object.
+At the group level (`heygen avatar list`), an unready avatar will have no `preview_image_url` on the group object.
 
 **Fix:** Poll every 10 seconds after creation, wait for preview URL to appear. Typical: 30-90s for photo avatars, 1-3 min for prompt avatars. Timeout at 5 min.
 
-**The heygen-avatar skill handles this automatically.** If you bypass the skill and call the API directly, you must implement this polling yourself.
+**The heygen-avatar skill handles this automatically.** If you bypass the skill, you must implement this polling yourself.
 
 ---
 
 ## Interactive Sessions Reliability
 
-Interactive sessions (`POST /v3/video-agents/sessions`) have known issues:
+Interactive sessions (created without `--wait` and iterated via `heygen video-agent send`) have known issues:
 - Sessions frequently stuck at `processing` status
 - `reviewing` state may never be reached
 - Follow-up messages fail with timing errors

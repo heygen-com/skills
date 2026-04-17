@@ -33,7 +33,7 @@ Try to read `SOUL.md` from the workspace root.
 First, fetch the user's existing HeyGen avatars.
 
 **MCP:** `list_avatar_groups(ownership=private)` — returns the user's private avatar groups.
-**CLI:** `curl -s "https://api.heygen.com/v3/avatars" -H "X-Api-Key: $HEYGEN_API_KEY"`
+**CLI:** `heygen avatar list --ownership private`
 
 Parse the `data` array.
 
@@ -47,17 +47,16 @@ Wait for their answer before proceeding.
 
 ## API Mode Detection
 
-**MCP (preferred):** If HeyGen MCP tools are available (tools matching `mcp__heygen__*`), use them. MCP handles authentication via OAuth — no API key needed. MCP uses the user's existing HeyGen plan credits.
+**MCP (preferred):** If HeyGen MCP tools are available (tools matching `mcp__heygen__*`), use them. MCP authenticates via OAuth — no API key needed — and runs against the user's existing HeyGen plan credits.
 
-**CLI fallback:** If MCP tools are not available, use curl with `X-Api-Key: $HEYGEN_API_KEY`. Resolve the key from: (1) `$HEYGEN_API_KEY` env var, (2) `~/.heygen/config` file. If neither found, tell the user to run `./setup` or `export HEYGEN_API_KEY=<key>`.
+**CLI fallback:** If MCP tools are not available, use the [HeyGen CLI](https://github.com/heygen-com/heygen-cli) (`heygen` binary). Auth: set `HEYGEN_API_KEY` in the env OR run `heygen auth login` (persists to `~/.heygen/credentials`). Verify with `heygen auth status`. If neither auth source is set, tell the user to run `heygen auth login` or `export HEYGEN_API_KEY=<key>`.
 
-**CLI headers:** See [../references/api-reference.md](../references/api-reference.md) for required headers (X-Api-Key, User-Agent, X-HeyGen-Source).
-
-**API:** v3 only. Base: `https://api.heygen.com`. Never use v1 or v2 endpoints.
+**API:** v3 only. Never call v1 or v2 endpoints. Never call `api.heygen.com` with curl — route through MCP or the CLI.
 
 **Docs-first rule:** Before calling any endpoint you're unsure about:
 - **Index:** `GET https://developers.heygen.com/llms.txt` — full sitemap
 - **Any page:** Append `.md` to the URL for clean markdown
+- Or run `heygen <noun> <verb> --help`
 - Read the spec, THEN build your request. Never guess field names.
 
 ## Avatar File Convention
@@ -99,7 +98,7 @@ Format:
 - Looks: landscape=<look_id>, portrait=<look_id>, square=<look_id>
 - Last Synced: <ISO timestamp>
 
-⚠️ look_ids are ephemeral — always resolve fresh from group_id at runtime via GET /v3/avatars/looks?group_id=<id>. Never hardcode look_id as the primary avatar reference.
+⚠️ look_ids are ephemeral — always resolve fresh from group_id at runtime via `heygen avatar looks list --group-id <id>` (or MCP `list_avatar_looks`). Never hardcode look_id as the primary avatar reference.
 ```
 
 **Top sections** (Appearance, Voice) are portable natural language. Any platform can use them.
@@ -135,7 +134,7 @@ Ask if they have a reference photo, explaining that a headshot or clear face pho
 
 This applies to ALL targets (agent, user, named character). For agents, check if a reference photo path already exists in the AVATAR file's Appearance section or in IDENTITY.md before asking.
 
-- **Photo provided** → upload via `POST /v3/assets`, then use Type B (photo) creation in Phase 2
+- **Photo provided** → upload via `heygen asset create --file <path>` (or MCP equivalent), then use Type B (photo) creation in Phase 2
 - **Skip** → use Type A (prompt) creation in Phase 2
 
 ### Phase 1 — Identity Extraction
@@ -163,18 +162,18 @@ Two creation types:
 **Type A — From prompt (AI-generated appearance):**
 
 **MCP:** `create_prompt_avatar(name=<name>, prompt=<appearance>, avatar_group_id=<optional>)`
-**CLI:** `POST https://api.heygen.com/v3/avatars` with `{"type": "prompt", "name": "...", "prompt": "...", "avatar_group_id": "..."}`
+**CLI:** `heygen avatar create -d '{"type":"prompt","name":"...","prompt":"...","avatar_group_id":"..."}'` (accepts inline JSON, a file path, or `-` for stdin)
 
 Prompt limit is 1000 characters. Be descriptive — include style, features, expression, lighting. The API spec says 200 but the actual enforced limit is 1000.
 
 **Type B — From reference image:**
 
 **MCP:** `create_photo_avatar(name=<name>, file=<file_object>, avatar_group_id=<optional>)`
-**CLI:** `POST https://api.heygen.com/v3/avatars` with `{"type": "photo", "name": "...", "file": {"type": "url", "url": "..."}, "avatar_group_id": "..."}`
+**CLI:** `heygen avatar create -d '{"type":"photo","name":"...","file":{"type":"url","url":"..."},"avatar_group_id":"..."}'`
 
 File options for Type B:
 - `{ "type": "url", "url": "https://..." }` — public image URL
-- `{ "type": "asset_id", "asset_id": "<id>" }` — from asset upload
+- `{ "type": "asset_id", "asset_id": "<id>" }` — from `heygen asset create --file <path>`
 - `{ "type": "base64", "media_type": "image/png", "data": "<base64>" }` — inline
 
 **Response:** Returns `avatar_item.id` (look ID) and `avatar_item.group_id` (character identity).
@@ -209,11 +208,11 @@ Find matching voices via semantic search using the Voice section from the AVATAR
 **Language matching:** The voice design prompt should specify the target language from `user_language`. Example for Japanese: `"A calm, warm female voice. Professional but approachable. Japanese speaker."` This ensures semantic search returns voices in the correct language.
 
 **MCP:** `design_voice(prompt=<voice description>, seed=0)`
-**CLI:** `POST https://api.heygen.com/v3/voices` with `{"prompt": "...", "seed": 0}`
+**CLI:** `heygen voice create --prompt "..." --seed 0` (also accepts `--gender`, `--locale`)
 
 Returns 3 voice options per seed. Present all 3 with inline audio previews:
-- Download each `preview_audio_url`: `curl -sL "<url>" -o /tmp/voice-design-<n>.mp3`
-- Send as audio attachment: `message(action:send, media:"/tmp/voice-design-<n>.mp3", caption:"Option <n>: <voice_name> — <gender>, <language>")` so it plays inline in Telegram/Discord
+- Download each `preview_audio_url` to a temp path (any standard download method works — no HeyGen auth needed, these are public S3 URLs)
+- Send as audio attachment: `message(action:send, media:"<path>", caption:"Option <n>: <voice_name> — <gender>, <language>")` so it plays inline in Telegram/Discord
 - After all previews sent, present selection buttons
 
 ⛔ **STOP. Wait for the user to pick a voice via buttons or text. Do NOT select a voice yourself or proceed to Phase 4 until the user explicitly chooses.**
@@ -230,7 +229,7 @@ Increment `seed` and call again. Different seeds give completely different voice
 Browse HeyGen's existing voice library:
 
 **MCP:** `list_voices(type=private)` then `list_voices(type=public, language=<lang>, gender=<gender>)`
-**CLI:** `GET https://api.heygen.com/v3/voices`
+**CLI:** `heygen voice list --type private` / `heygen voice list --type public --language <lang> --gender <gender>`
 
 1. Read the Voice section from the AVATAR file
 2. Filter by gender and language
@@ -252,7 +251,7 @@ Update the HeyGen section of `AVATAR-<NAME>.md` to match the canonical format:
 - Looks: <orientation>=<avatar_item.id> (e.g., landscape=<look_id>, portrait=<look_id>)
 - Last Synced: <ISO timestamp>
 
-⚠️ look_ids are ephemeral — always resolve fresh from group_id at runtime via GET /v3/avatars/looks?group_id=<id>. Never hardcode look_id as the primary avatar reference.
+⚠️ look_ids are ephemeral — always resolve fresh from group_id at runtime via `heygen avatar looks list --group-id <id>` (or MCP `list_avatar_looks`). Never hardcode look_id as the primary avatar reference.
 ```
 
 Confirm the avatar is saved and that other skills (like heygen-video) will pick it up automatically. Communicate in `user_language`.
@@ -262,7 +261,7 @@ Confirm the avatar is saved and that other skills (like heygen-video) will pick 
 If the user wants to see their avatar in action:
 
 **MCP:** `create_video_agent(avatar_id=<avatar_id>, voice_id=<voice_id>, prompt=<greeting>)`
-**CLI:** `POST https://api.heygen.com/v3/video-agents` with `{"avatar_id": "...", "voice_id": "...", "prompt": "..."}`
+**CLI:** `heygen video-agent create --avatar-id <id> --voice-id <id> --prompt "..." --wait`
 
 Generate a natural greeting in the video language (from `user_language`). Examples: English "Hi, I'm [name]. Nice to meet you!", Japanese "[name]です。はじめまして！", Spanish "Hola, soy [name]. ¡Mucho gusto!", Korean "안녕하세요, [name]입니다. 만나서 반갑습니다!"
 
