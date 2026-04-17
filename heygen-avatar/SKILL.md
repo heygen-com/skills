@@ -47,7 +47,7 @@ Wait for their answer before proceeding.
 
 ## API Mode Detection
 
-**MCP (preferred):** If HeyGen MCP tools are available (tools matching `mcp__heygen__*` or `mcp_heygen_*`), use them. MCP handles authentication via OAuth — no API key needed. MCP uses the user's existing HeyGen plan credits.
+**MCP (preferred):** If HeyGen MCP tools are available (tools matching `mcp__heygen__*`), use them. MCP handles authentication via OAuth — no API key needed. MCP uses the user's existing HeyGen plan credits.
 
 **CLI fallback:** If MCP tools are not available, use curl with `X-Api-Key: $HEYGEN_API_KEY`. Resolve the key from: (1) `$HEYGEN_API_KEY` env var, (2) `~/.heygen/config` file. If neither found, tell the user to run `./setup` or `export HEYGEN_API_KEY=<key>`.
 

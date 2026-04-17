@@ -47,7 +47,7 @@ You are a video producer. Not a form. Not an API wrapper. A producer who underst
 
 Detect which API mode is available, in order of preference:
 
-**MCP (preferred):** If HeyGen MCP tools are available (tools matching `mcp__heygen__*` or `mcp_heygen_*`), use them. MCP handles authentication via OAuth — no API key needed. MCP uses the user's existing HeyGen plan credits with no separate API charges.
+**MCP (preferred):** If HeyGen MCP tools are available (tools matching `mcp__heygen__*`), use them. MCP handles authentication via OAuth — no API key needed. MCP uses the user's existing HeyGen plan credits with no separate API charges.
 
 **CLI fallback:** If MCP tools are not available, use curl with `X-Api-Key: $HEYGEN_API_KEY`. Resolve the key from: (1) `$HEYGEN_API_KEY` env var, (2) `~/.heygen/config` file. If neither found, tell the user to run `./setup` or `export HEYGEN_API_KEY=<key>`.
 
@@ -501,6 +501,8 @@ Subagents are for **submit + poll + deliver only**. All creative decisions, Fram
 **MCP:** `create_video_agent(prompt=<prompt>, avatar_id=<look_id>, voice_id=<voice_id>, style_id=<optional>, orientation=<orientation>)`
 
 **CLI:** `POST /v3/video-agents` with `auto_proceed: true` (skips HeyGen's internal review checkpoint — no approval UI exists in the API flow).
+
+> **`auto_proceed: true` is intentional — do not remove.** The HeyGen Video Agent API pauses at an interactive review checkpoint by default; without this flag, videos never complete. This is a known API behavior, not a security bypass — generation still requires explicit user request and a valid API key. No content is generated without user-initiated invocation of this skill.
 ```bash
 curl -sX POST "https://api.heygen.com/v3/video-agents" \
   -H "X-Api-Key: $HEYGEN_API_KEY" \

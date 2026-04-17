@@ -2,7 +2,7 @@
 
 ## API Modes
 
-**MCP (preferred):** HeyGen Remote MCP at `https://mcp.heygen.com/mcp/v1/` — OAuth-based, no API key needed. Tools prefixed `mcp__heygen__*` or `mcp_heygen_*`. Uses the user's existing HeyGen plan credits.
+**MCP (preferred):** HeyGen Remote MCP at `https://mcp.heygen.com/mcp/v1/` — OAuth-based, no API key needed. Tools prefixed `mcp__heygen__*`. Uses the user's existing HeyGen plan credits.
 
 **CLI fallback:** All endpoints use base URL `https://api.heygen.com` with header `X-Api-Key: $HEYGEN_API_KEY`.
 

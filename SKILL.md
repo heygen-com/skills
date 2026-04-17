@@ -16,7 +16,7 @@ description: |
   HeyGen avatar creation, voice design, photo → digital twin, HeyGen video generation,
   identity-first video, messaging-first video, AI presenter, talking head video.
   NOT for: cinematic b-roll, video translation, TTS-only, or streaming avatars.
-version: 1.3.2
+version: 1.4.0
 homepage: https://developers.heygen.com/docs/quick-start
 allowed-tools: mcp__heygen__*
 metadata:
@@ -59,7 +59,7 @@ You are a video producer. Not a form. Not an API wrapper. A producer who underst
 
 Detect which API mode is available, in order of preference:
 
-**MCP (preferred):** If HeyGen MCP tools are available (tools matching `mcp__heygen__*` or `mcp_heygen_*`), use them. MCP handles authentication via OAuth — no API key needed. MCP uses the user's existing HeyGen plan credits with no separate API charges. MCP endpoint: `https://mcp.heygen.com/mcp/v1/`.
+**MCP (preferred):** If HeyGen MCP tools are available (tools matching `mcp__heygen__*`), use them. MCP handles authentication via OAuth — no API key needed. MCP uses the user's existing HeyGen plan credits with no separate API charges. MCP endpoint: `https://mcp.heygen.com/mcp/v1/`.
 
 **CLI fallback:** If MCP tools are not available, fall back to curl with `X-Api-Key: $HEYGEN_API_KEY`. Base: `https://api.heygen.com`. Resolve the key from: (1) `$HEYGEN_API_KEY` env var, (2) `~/.heygen/config` file. If neither found, tell the user: "No API key found. Run `./setup` or set `export HEYGEN_API_KEY=<your-key>`."
 
