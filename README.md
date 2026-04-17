@@ -155,7 +155,7 @@ After setup, try these prompts with your agent:
 
 ## Requirements
 
-- A HeyGen API key ([get one here](https://app.heygen.com/settings/api?nav=API))
+- A HeyGen account — sign in via MCP (OAuth) or with an [API key](https://app.heygen.com/settings/api?nav=API) if you use the CLI fallback
 - An AI agent that supports skills (Claude Code, OpenClaw, Codex, Cursor, or similar)
 - No runtime dependencies. No packages. No build step.
 
