@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.0](https://github.com/heygen-com/skills/compare/v2.0.3...v2.1.0) (2026-04-17)
+
+
+### Features
+
+* MCP-first API mode with CLI fallback ([#47](https://github.com/heygen-com/skills/issues/47)) ([4b052ae](https://github.com/heygen-com/skills/commit/4b052aee846589c0aefb861191fc6285d8c95c4e))
+
+
+### Bug Fixes
+
+* remove prompt injection triggers from README ([#44](https://github.com/heygen-com/skills/issues/44)) ([94981e0](https://github.com/heygen-com/skills/commit/94981e042429e2c6b4c3aebd72cf2dfbdcffd958))
+
 ## v1.3.7 (2026-04-13) — Auto-Proceed Fix
 
 ### Fixed
