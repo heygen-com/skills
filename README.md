@@ -14,7 +14,7 @@ Works with Claude Code, OpenClaw, Codex, Cursor, and other AI coding agents.
 Paste this into your agent to get started:
 
 ```
-Install HeyGen Skills from https://github.com/heygen-com/skills — clone the repo into your skills directory. Install the HeyGen CLI from https://static.heygen.ai/cli/install.sh and export HEYGEN_API_KEY=<your-key> (get one at https://app.heygen.com/api). Then use heygen-avatar and heygen-video to bring yourself to life — create your own avatar and make a short cinematic intro video of yourself introducing who you are. Ask me what you need before starting.
+Install HeyGen Skills from https://github.com/heygen-com/skills — clone the repo into your skills directory. Install the HeyGen CLI from https://static.heygen.ai/cli/install.sh and export HEYGEN_API_KEY=<your-key> (get one at https://app.heygen.com/api). Or, if you're on a HeyGen plan and already have MCP connected to your agent, skip the key step — MCP will be used automatically. Then use heygen-avatar and heygen-video to bring yourself to life — create your own avatar and make a short cinematic intro video of yourself introducing who you are. Ask me what you need before starting.
 ```
 
 Or follow the steps below manually.
@@ -51,10 +51,10 @@ curl -fsSL https://static.heygen.ai/cli/install.sh | bash
 Then set your API key:
 
 ```bash
-export HEYGEN_API_KEY=<your-key>           # ephemeral (current shell)
-# or persist it:
-echo 'export HEYGEN_API_KEY=<your-key>' >> ~/.zshrc   # or ~/.bashrc
+export HEYGEN_API_KEY=<your-key>
 ```
+
+That's ephemeral (current shell only). To persist across sessions, add `export HEYGEN_API_KEY=<your-key>` to your shell profile (`~/.zshrc`, `~/.bashrc`, or equivalent).
 
 Verify:
 
@@ -135,11 +135,13 @@ Skills communicate through `AVATAR-<NAME>.md` files. heygen-avatar writes them, 
 
 The skills support two auth modes with explicit priority:
 
-| Priority | Mode | Trigger | Best for |
-|----------|------|---------|----------|
-| 1 | **CLI (API key)** | `HEYGEN_API_KEY` is set | Agents, CI, scripts, direct API access |
-| 2 | **MCP (OAuth)** | MCP tools visible AND no API key | Users on a HeyGen plan, zero-setup |
-| 3 | **CLI (fallback)** | `heygen auth login` session | Interactive CLI users |
+| Priority | Mode | Trigger | Billing | Best for |
+|----------|------|---------|---------|----------|
+| 1 | **CLI (API key)** | `HEYGEN_API_KEY` is set | Direct API usage ($, separately billed) | Agents, CI, scripts |
+| 2 | **MCP (OAuth)** | MCP tools visible AND no API key | HeyGen plan credits (no extra billing) | Users on a HeyGen plan |
+| 3 | **CLI (fallback)** | `heygen auth login` session | Direct API usage ($) | Interactive CLI users |
+
+**Billing tradeoff:** CLI mode bills against your HeyGen API usage (separately metered). MCP mode consumes your existing HeyGen plan credits — no extra API billing. Pick the mode that matches how you want to be charged.
 
 ### CLI with API key (recommended for agents)
 
