@@ -432,12 +432,12 @@ From the response, pick the look matching the target orientation. Use the first 
 
 For portrait/square avatar → landscape video:
 ```
-FRAMING NOTE: The selected avatar image is in {source} orientation but this video is landscape (16:9). Frame the presenter from the chest up, centered in the landscape canvas. Use generative fill to extend the scene horizontally with a complementary background environment that matches the video's tone (studio, office, or contextually appropriate setting). Do NOT add black bars or pillarboxing. The avatar should feel natural in the 16:9 frame.
+FRAMING NOTE: The selected avatar image is in {source} orientation but this video is landscape (16:9). Frame the presenter from the chest up, centered in the landscape canvas. Use AI Image tool to generative fill to extend the scene horizontally with a complementary background environment that matches the video's tone (studio, office, or contextually appropriate setting). Do NOT add black bars or pillarboxing. The avatar should feel natural in the 16:9 frame.
 ```
 
 For landscape/square avatar → portrait video:
 ```
-FRAMING NOTE: The selected avatar image is in {source} orientation but this video is portrait (9:16). Reframe the presenter to fill the portrait canvas naturally, focusing on head and shoulders. Use generative fill to extend vertically if needed. Do NOT add letterboxing. The avatar should fill the portrait frame comfortably.
+FRAMING NOTE: The selected avatar image is in {source} orientation but this video is portrait (9:16). Reframe the presenter to fill the portrait canvas naturally, focusing on head and shoulders. Use AI Image tool to generative fill to extend vertically if needed. Do NOT add letterboxing. The avatar should fill the portrait frame comfortably.
 ```
 
 ### Background Note (studio_avatar only, no background)
