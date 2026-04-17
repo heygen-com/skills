@@ -51,6 +51,13 @@ Wait for their answer before proceeding.
 
 **CLI fallback:** If MCP tools are not available, use curl with `X-Api-Key: $HEYGEN_API_KEY`. Resolve the key from: (1) `$HEYGEN_API_KEY` env var, (2) `~/.heygen/config` file. If neither found, tell the user to run `./setup` or `export HEYGEN_API_KEY=<key>`.
 
+**Required headers on every CLI request — no exceptions:**
+```
+X-Api-Key: $HEYGEN_API_KEY
+User-Agent: HeyGen-Skills/1.4.0 (OpenClaw; heygen-skills)
+X-HeyGen-Source: openclaw-skill
+```
+
 **API:** v3 only. Base: `https://api.heygen.com`. Never use v1 or v2 endpoints.
 
 **Docs-first rule:** Before calling any endpoint you're unsure about:

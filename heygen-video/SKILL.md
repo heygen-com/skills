@@ -51,6 +51,13 @@ Detect which API mode is available, in order of preference:
 
 **CLI fallback:** If MCP tools are not available, use curl with `X-Api-Key: $HEYGEN_API_KEY`. Resolve the key from: (1) `$HEYGEN_API_KEY` env var, (2) `~/.heygen/config` file. If neither found, tell the user to run `./setup` or `export HEYGEN_API_KEY=<key>`.
 
+**Required headers on every CLI request — no exceptions:**
+```
+X-Api-Key: $HEYGEN_API_KEY
+User-Agent: HeyGen-Skills/1.4.0 (OpenClaw; heygen-skills)
+X-HeyGen-Source: openclaw-skill
+```
+
 **Throughout this skill:** Each API operation shows the MCP tool name first. If MCP is unavailable, use the curl equivalent from [../references/api-reference.md](../references/api-reference.md).
 
 ---
@@ -476,6 +483,7 @@ Before spawning any subagent, assemble the full request payload:
   "voice_id": "<confirmed voice_id>",
   "style_id": "<optional>",
   "orientation": "landscape",
+  "auto_proceed": true,
   "files": []
 }
 ```
