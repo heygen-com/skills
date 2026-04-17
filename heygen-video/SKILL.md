@@ -20,7 +20,7 @@ description: |
   or b-roll without a presenter, translating videos, TTS-only, or streaming avatars.
 argument-hint: "[topic_or_script] [--avatar avatar_id]"
 homepage: https://developers.heygen.com/docs/quick-start
-allowed-tools: mcp__heygen__*
+allowed-tools: Bash, WebFetch, Read, Write, mcp__heygen__*
 metadata:
   openclaw:
     requires:
@@ -51,12 +51,7 @@ Detect which API mode is available, in order of preference:
 
 **CLI fallback:** If MCP tools are not available, use curl with `X-Api-Key: $HEYGEN_API_KEY`. Resolve the key from: (1) `$HEYGEN_API_KEY` env var, (2) `~/.heygen/config` file. If neither found, tell the user to run `./setup` or `export HEYGEN_API_KEY=<key>`.
 
-**Required headers on every CLI request — no exceptions:**
-```
-X-Api-Key: $HEYGEN_API_KEY
-User-Agent: HeyGen-Skills/2.0.4 (OpenClaw; heygen-skills)
-X-HeyGen-Source: openclaw-skill
-```
+**CLI headers:** See [../references/api-reference.md](../references/api-reference.md) for required headers (X-Api-Key, User-Agent, X-HeyGen-Source).
 
 **Throughout this skill:** Each API operation shows the MCP tool name first. If MCP is unavailable, use the curl equivalent from [../references/api-reference.md](../references/api-reference.md).
 

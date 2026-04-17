@@ -18,7 +18,7 @@ description: |
   NOT for: cinematic b-roll, video translation, TTS-only, or streaming avatars.
 version: 2.0.4
 homepage: https://developers.heygen.com/docs/quick-start
-allowed-tools: mcp__heygen__*
+allowed-tools: Bash, WebFetch, Read, Write, mcp__heygen__*
 metadata:
   openclaw:
     requires:

@@ -6,6 +6,16 @@
 
 **CLI fallback:** All endpoints use base URL `https://api.heygen.com` with header `X-Api-Key: $HEYGEN_API_KEY`.
 
+## Required CLI Headers
+
+Every CLI request — no exceptions:
+
+```
+X-Api-Key: $HEYGEN_API_KEY
+User-Agent: HeyGen-Skills/2.0.4 (OpenClaw; heygen-skills)
+X-HeyGen-Source: openclaw-skill
+```
+
 ## Live Documentation
 
 Canonical docs with exact schemas, curl examples, and field descriptions:
