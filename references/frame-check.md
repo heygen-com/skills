@@ -4,10 +4,8 @@ Runs automatically when `avatar_id` is set, before Generate. Appends correction 
 
 ## Step 1: Fetch the avatar look metadata
 
-```bash
-curl -s "https://api.heygen.com/v3/avatars/looks/<avatar_id>" \
-  -H "X-Api-Key: $HEYGEN_API_KEY"
-```
+**MCP:** `get_avatar_look(look_id=<avatar_id>)`
+**CLI:** `heygen avatar looks get --look-id <avatar_id>`
 
 Extract:
 - `avatar_type`: `"photo_avatar"` | `"studio_avatar"` | `"video_avatar"`

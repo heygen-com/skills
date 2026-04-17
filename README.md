@@ -14,7 +14,7 @@ Works with Claude Code, OpenClaw, Codex, Cursor, and other AI coding agents.
 Paste this into your agent to get started:
 
 ```
-Install HeyGen Skills from https://github.com/heygen-com/skills — clone the repo into your skills directory and run ./setup. Then use heygen-avatar and heygen-video to create an avatar of me and make a short cinematic intro video. Ask me what you need before starting.
+Install HeyGen Skills from https://github.com/heygen-com/skills — clone the repo into your skills directory. If MCP is connected, you're done. Otherwise install the HeyGen CLI from https://static.heygen.ai/cli/install.sh and run `heygen auth login`. Then use heygen-avatar and heygen-video to create an avatar of me and make a short cinematic intro video. Ask me what you need before starting.
 ```
 
 Or follow the steps below manually.
@@ -60,23 +60,19 @@ OpenClaw: add to `~/.openclaw/openclaw.json`:
 
 The first call triggers an OAuth consent flow in your browser.
 
-**Option B — API key (CLI fallback)**
+**Option B — HeyGen CLI fallback**
 
-If MCP is unavailable or you prefer direct API access:
+If MCP is unavailable or you prefer direct access:
 
 ```bash
-cd <install-path>/heygen-skills && ./setup
+curl -fsSL https://static.heygen.ai/cli/install.sh | bash
+heygen auth login   # or: export HEYGEN_API_KEY=<your-key>
+heygen auth status  # verify
 ```
 
-The setup script will:
-- Register the skills (heygen-avatar, heygen-video)
-- Prompt for your HeyGen API key if not already configured
-- Validate the key against `https://api.heygen.com/v3/users/me`
-- Save the key to `~/.heygen/config` so it persists across sessions
+The [HeyGen CLI](https://github.com/heygen-com/heygen-cli) is a single static binary. Auth persists to `~/.heygen/credentials`. Get an API key at [app.heygen.com/settings/api](https://app.heygen.com/settings/api?nav=API).
 
-Get your API key at [app.heygen.com/settings/api](https://app.heygen.com/settings/api?nav=API).
-
-> **Either path works.** The skills detect MCP tools matching `mcp__heygen__*` and use them first. If none are found, they fall back to curl + `X-Api-Key`. You can have both configured — MCP wins.
+> **Either path works.** The skills detect MCP tools matching `mcp__heygen__*` and use them first. If none are found, they fall back to `heygen <noun> <verb>` CLI calls. You can have both configured — MCP wins.
 
 ### Step 3 — Create your avatar
 
@@ -132,15 +128,15 @@ When HeyGen's remote MCP server is connected to your agent, the skills use it au
 - Tool namespace: `mcp__heygen__*`
 - [MCP docs](https://developers.heygen.com/docs/mcp-remote)
 
-### API key (CLI fallback)
+### HeyGen CLI (fallback)
 
-If MCP isn't available, the skills fall back to direct curl calls with `X-Api-Key`. The `./setup` script handles key storage automatically. To manage it manually:
+If MCP isn't available, the skills fall back to the [HeyGen CLI](https://github.com/heygen-com/heygen-cli) (`heygen` binary). Pattern: `heygen <noun> <verb>`. Output is JSON on stdout with stable exit codes.
 
-- **Config file** (recommended): `~/.heygen/config` — persists across sessions
-- **Environment variable**: `export HEYGEN_API_KEY="your-key"` — takes precedence over config, lasts the session
-- **Verify anytime**: `curl -s https://api.heygen.com/v3/users/me -H "X-Api-Key: $HEYGEN_API_KEY"`
+- **Interactive login**: `heygen auth login` — persists to `~/.heygen/credentials`
+- **Environment variable**: `export HEYGEN_API_KEY="your-key"` — agent-/CI-friendly; takes precedence over the credentials file
+- **Verify anytime**: `heygen auth status`
 
-You can have both configured — the skills check for MCP first and only fall back to CLI if MCP tools aren't visible.
+You can have both configured — the skills check for MCP first and only fall back to the CLI if MCP tools aren't visible.
 
 ## Things to Try
 
@@ -169,7 +165,7 @@ One optional shell script:
 
 - **`scripts/update-check.sh`** — compares your local `VERSION` against the latest on GitHub. Read-only, opt-in, no data transmitted.
 
-Data only leaves your machine to `api.heygen.com` (video generation) and optionally `raw.githubusercontent.com` (version check).
+Data only leaves your machine through MCP / the `heygen` CLI (video generation) and optionally `raw.githubusercontent.com` (version check).
 
 ## Looking for the v1 skills?
 

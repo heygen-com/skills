@@ -39,21 +39,21 @@ This script is opt-in only. Do not execute it automatically on skill invocation.
 
 # HeyGen Video Producer
 
-You are a video producer. Not a form. Not an API wrapper. A producer who understands what makes video work and guides the user from idea to finished cut.
+You are a video producer. Not a form. Not a CLI wrapper. A producer who understands what makes video work and guides the user from idea to finished cut.
 
-**API Docs:** https://developers.heygen.com/docs/quick-start — All endpoints are v3.
+**Docs:** https://developers.heygen.com/docs/quick-start (API) · https://developers.heygen.com/cli (CLI)
 
 ## API Mode Detection
 
-Detect which API mode is available, in order of preference:
+Two modes, in order of preference:
 
-**MCP (preferred):** If HeyGen MCP tools are available (tools matching `mcp__heygen__*`), use them. MCP handles authentication via OAuth — no API key needed. MCP uses the user's existing HeyGen plan credits with no separate API charges.
+**MCP (preferred):** If HeyGen MCP tools are available (tools matching `mcp__heygen__*`), use them. MCP authenticates via OAuth — no API key needed — and runs against the user's existing HeyGen plan credits.
 
-**CLI fallback:** If MCP tools are not available, use curl with `X-Api-Key: $HEYGEN_API_KEY`. Resolve the key from: (1) `$HEYGEN_API_KEY` env var, (2) `~/.heygen/config` file. If neither found, tell the user to run `./setup` or `export HEYGEN_API_KEY=<key>`.
+**CLI fallback:** If MCP tools are not available, use the [HeyGen CLI](https://github.com/heygen-com/heygen-cli) (`heygen` binary). Auth: set `HEYGEN_API_KEY` in the env OR run `heygen auth login` (persists to `~/.heygen/credentials`). Verify with `heygen auth status`. If neither auth source is set, tell the user to run `heygen auth login` or `export HEYGEN_API_KEY=<key>`.
 
-**CLI headers:** See [../references/api-reference.md](../references/api-reference.md) for required headers (X-Api-Key, User-Agent, X-HeyGen-Source).
+CLI output: JSON on stdout, structured error envelope on stderr, stable exit codes (0 ok · 1 API · 2 usage · 3 auth · 4 timeout). Pipe to `jq` to extract fields. Add `--wait` on creation commands to block on completion instead of hand-rolling a poll loop.
 
-**Throughout this skill:** Each API operation shows the MCP tool name first. If MCP is unavailable, use the curl equivalent from [../references/api-reference.md](../references/api-reference.md).
+**Throughout this skill:** Each operation shows the MCP tool name first. If MCP is unavailable, use the `heygen` command shown alongside it. Full command reference: [../references/api-reference.md](../references/api-reference.md).
 
 ---
 
@@ -88,7 +88,7 @@ Interview the user. Be conversational, skip anything already answered.
 
 Two paths for every asset:
 - **Path A (Contextualize):** Read/analyze, bake info into script. For reference material, auth-walled content.
-- **Path B (Attach):** Upload to HeyGen via `POST /v3/assets` or `files[]`. For visuals the viewer should see.
+- **Path B (Attach):** Upload to HeyGen via `heygen asset create --file <path>` (or include as `files[]` entries on video-agent create). For visuals the viewer should see.
 - **A+B (Both):** Summarize for script AND attach original.
 
 📖 **Full routing matrix and upload examples → [../references/asset-routing.md](../references/asset-routing.md)**
@@ -106,9 +106,9 @@ Two approaches — use one or combine both:
 **1. API Styles (`style_id`)** — Curated visual templates. One parameter replaces all visual direction.
 
 **MCP:** `list_video_agent_styles(tag=<tag>, limit=20)` — filter by tag, returns style_id, name, thumbnail_url, preview_video_url, tags, aspect_ratio.
-**CLI:** `curl -s "https://api.heygen.com/v3/video-agents/styles?tag=cinematic&limit=10" -H "X-Api-Key: $HEYGEN_API_KEY"`
+**CLI:** `heygen video-agent styles list --tag cinematic --limit 10`
 
-Tags: `cinematic`, `retro-tech`, `iconic-artist`, `pop-culture`, `handmade`, `print`. Pass `style_id` to `create_video_agent`.
+Tags: `cinematic`, `retro-tech`, `iconic-artist`, `pop-culture`, `handmade`, `print`. Pass `style_id` / `--style-id` to the video-agent create call.
 
 **Show users thumbnails + preview videos before choosing.** Browse by tag, show 3-5 options with previews, let user pick. If a style has a fixed `aspect_ratio`, match orientation to it.
 
@@ -402,7 +402,7 @@ YouTube/web/LinkedIn → `"landscape"` | TikTok/Reels/Shorts → `"portrait"` | 
 **Never trust a stored `look_id` — looks are ephemeral and get deleted.** Always resolve fresh from the `group_id`:
 
 **MCP:** `list_avatar_looks(group_id=<group_id>)` — returns all looks for the group.
-**CLI:** `curl -s "https://api.heygen.com/v3/avatars/looks?group_id=<group_id>&limit=20" -H "X-Api-Key: $HEYGEN_API_KEY"`
+**CLI:** `heygen avatar looks list --group-id <group_id> --limit 20`
 
 From the response, pick the look matching the target orientation. Use the first match. If no looks exist in the group, tell the user.
 
@@ -410,7 +410,7 @@ From the response, pick the look matching the target orientation. Use the first 
 
 ### Steps
 
-1. **Fetch avatar look metadata:** `get_avatar_look(look_id=<avatar_id>)` (CLI: `GET /v3/avatars/looks/<avatar_id>`) → extract `avatar_type`, `preview_image_url`, `image_width`, `image_height`
+1. **Fetch avatar look metadata:** `get_avatar_look(look_id=<avatar_id>)` (CLI: `heygen avatar looks get --look-id <avatar_id>`) → extract `avatar_type`, `preview_image_url`, `image_width`, `image_height`
 2. **Determine orientation:** width > height = landscape, height > width = portrait, width == height = square. Fetch fails = assume portrait.
 3. **Determine background:** `photo_avatar` → Video Agent handles environment. `studio_avatar` → check if transparent/solid/empty. `video_avatar` → always has background.
 4. **Append the appropriate correction note(s)** to the end of the Video Agent prompt. That's it. No image generation, no new looks.
@@ -462,31 +462,29 @@ BACKGROUND NOTE: The selected avatar has no background or a transparent backdrop
 - **Full Producer**: User approved script. Proceed.
 - **Quick Shot**: Generate immediately.
 
-### API Call
+### Submit
 
-📖 **Full request/response schemas, interactive sessions, webhooks → [../references/api-reference.md](../references/api-reference.md)**
+📖 **Full command reference, interactive sessions, webhooks → [../references/api-reference.md](../references/api-reference.md)**
 
 **Step 1: Run Frame Check (if `avatar_id` set) — MAIN SESSION ONLY**
-Before calling the API, run the Frame Check steps above. Build the corrected prompt with any FRAMING NOTE or BACKGROUND NOTE appended.
+Before submitting, run the Frame Check steps above. Build the corrected prompt with any FRAMING NOTE or BACKGROUND NOTE appended.
 
-**Step 2: Build the complete payload object in main session**
-Before spawning any subagent, assemble the full request payload:
-```json
-{
-  "prompt": "<corrected prompt — Frame Check notes already embedded>",
-  "avatar_id": "<look_id resolved from group_id>",
-  "voice_id": "<confirmed voice_id>",
-  "style_id": "<optional>",
-  "orientation": "landscape",
-  "auto_proceed": true,
-  "files": []
-}
-```
-This payload is the handoff to any subagent. The subagent receives a finished payload — it does NOT modify the prompt, does NOT re-run Frame Check, does NOT look up avatar IDs.
+**Step 2: Build the complete payload in main session**
+Before spawning any subagent, assemble the full set of arguments:
+
+| Flag | Value |
+|---|---|
+| `--prompt` | corrected prompt — Frame Check notes already embedded |
+| `--avatar-id` | look_id resolved from group_id |
+| `--voice-id` | confirmed voice_id |
+| `--style-id` | optional |
+| `--orientation` | `landscape` or `portrait` |
+
+This payload is the handoff to any subagent. The subagent receives a finished set of arguments — it does NOT modify the prompt, does NOT re-run Frame Check, does NOT look up avatar IDs.
 
 **Step 3: Subagent spawn pattern (for batch or non-blocking generation)**
 
-When generating multiple videos or wanting non-blocking polling, spawn one subagent per video with the finished payload.
+When generating multiple videos or wanting non-blocking polling, spawn one subagent per video with the finished args.
 Subagents are for **submit + poll + deliver only**. All creative decisions, Frame Check, and prompt construction happen in the main session before the spawn.
 
 > ⛔ **BATCH RULE:** When generating N videos in parallel, spawn subagents in batches of **2–3 max**. Submitting too many simultaneously causes queue congestion — all get stuck in `thinking` for 15+ min. Submit batch 1, wait for completions, then submit batch 2.
@@ -495,26 +493,27 @@ Subagents are for **submit + poll + deliver only**. All creative decisions, Fram
 
 **MCP:** `create_video_agent(prompt=<prompt>, avatar_id=<look_id>, voice_id=<voice_id>, style_id=<optional>, orientation=<orientation>)`
 
-**CLI:** `POST /v3/video-agents` with `auto_proceed: true` (skips HeyGen's internal review checkpoint — no approval UI exists in the API flow).
+**CLI:** `heygen video-agent create` — add `--wait --timeout 45m` to block on completion, or omit `--wait` and poll manually. **Always pair `--wait` with `--timeout 45m`** — the CLI default is 20m, but Video Agent jobs routinely take 20-45m, so the default will time out mid-generation.
 
-> **`auto_proceed: true` is intentional — do not remove.** The HeyGen Video Agent API pauses at an interactive review checkpoint by default; without this flag, videos never complete. This is a known API behavior, not a security bypass — generation still requires explicit user request and a valid API key. No content is generated without user-initiated invocation of this skill.
 ```bash
-curl -sX POST "https://api.heygen.com/v3/video-agents" \
-  -H "X-Api-Key: $HEYGEN_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{ "prompt": "...", "avatar_id": "...", "voice_id": "...", "orientation": "landscape", "auto_proceed": true }'
+heygen video-agent create \
+  --prompt "..." \
+  --avatar-id "..." \
+  --voice-id "..." \
+  --orientation landscape \
+  --wait --timeout 45m
 ```
 
-Response: `{ "data": { "video_id": "...", "session_id": "..." } }`
+The CLI returns JSON on stdout: `{"data": {"video_id": "...", "session_id": "..."}}` after submission. With `--wait`, it blocks until the video completes and emits the final status object. Without `--wait`, submit returns immediately — poll with `heygen video-agent get --session-id <id>`.
 
 **⚠️ Always capture `session_id` immediately.** Session URL: `https://app.heygen.com/video-agent/{session_id}`. Cannot be recovered later.
 
 ### Polling
 
 **MCP:** `get_video_agent_session(session_id=<session_id>)` — returns status, progress, video_id.
-**CLI:** `GET /v3/videos/<video_id>` with polling.
+**CLI:** `heygen video-agent get --session-id <session_id>` (or `heygen video get <video-id>` once you have the `video_id`).
 
-Total wall time per video: **20–45 minutes**. First check at **5 min**, then every **60s** up to 45 min.
+Total wall time per video: **20–45 minutes**. If you passed `--wait`, the CLI handles polling with exponential backoff. If polling manually: first check at **5 min**, then every **60s** up to 45 min.
 
 Status flow: `thinking` → `generating` → `completed` | `failed`
 
@@ -522,12 +521,12 @@ Stuck in `thinking` >15 min with no progress → flag to user.
 
 ### Delivery
 
-1. Get the `video_url` (S3 mp4) from the completed status response.
-2. Download the MP4 locally: `curl -sL "<video_url>" -o /tmp/heygen-<video_id>.mp4`
-3. Send inline via message tool: `message(action:send, media:"/tmp/heygen-<video_id>.mp4", caption:"Your video is ready! 🎬\n📊 Duration: [actual]s vs [target]s ([percentage]%)")`. This makes the video playable inline in Telegram/Discord instead of an external link.
+1. Get the `video_url` (S3 mp4) from the completed status response, or use `heygen video get <video_id> | jq -r '.data.video_page_url'` for the shareable link.
+2. Download the MP4 locally: `heygen video download <video_id>` (writes the file and emits `{"asset", "message", "path"}` on stdout — chain on `.path`).
+3. Send inline via message tool: `message(action:send, media:"<downloaded-path>", caption:"Your video is ready! 🎬\n📊 Duration: [actual]s vs [target]s ([percentage]%)")`. This makes the video playable inline in Telegram/Discord instead of an external link.
 4. Also share the HeyGen dashboard link for editing: `https://app.heygen.com/videos/<video_id>`
 
-Always report duration accuracy. Clean up /tmp files after sending.
+Always report duration accuracy. Clean up downloaded files after sending.
 
 ---
 
