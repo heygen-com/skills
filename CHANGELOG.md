@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.1.1](https://github.com/heygen-com/skills/compare/v2.1.0...v2.1.1) (2026-04-17)
+
+
+### Bug Fixes
+
+* **heygen-avatar:** agent-first default + prompt-based as primary path ([#55](https://github.com/heygen-com/skills/issues/55)) ([57c319b](https://github.com/heygen-com/skills/commit/57c319b656ffa8b88ea7ce6f85d49be30e27e927))
+* **heygen-avatar:** Before You Start ran user-centric logic before Phase 0 ([#56](https://github.com/heygen-com/skills/issues/56)) ([0c1e9d3](https://github.com/heygen-com/skills/commit/0c1e9d38b96247fbd124966f85760e3b652ec18e))
+* prevent batch-asking and fix agent onboarding flow ([#51](https://github.com/heygen-com/skills/issues/51)) ([e5e5db3](https://github.com/heygen-com/skills/commit/e5e5db358ada7429d1f1f2a51a232e4cfc5c763e))
+* remove api-reference.md, enforce MCP xor CLI (no cross-lookup) ([#59](https://github.com/heygen-com/skills/issues/59)) ([75f1ee3](https://github.com/heygen-com/skills/commit/75f1ee3556ac051834a90914a6e2cf96ca6f46ef))
+* silent mode detection, no CLI-broken narration ([#54](https://github.com/heygen-com/skills/issues/54)) ([ff7b6a3](https://github.com/heygen-com/skills/commit/ff7b6a32ffbd533b56f0aa8c040f78eef09500fd))
+* **SKILL:** add UX rules against narrating skill internals, next-action, and transport choice ([#58](https://github.com/heygen-com/skills/issues/58)) ([3e8b06d](https://github.com/heygen-com/skills/commit/3e8b06df38538245596588909d4404b1eb850f1d))
+* **SKILL:** HEYGEN_API_KEY presence → use CLI, short-circuit MCP ([#60](https://github.com/heygen-com/skills/issues/60)) ([808dd77](https://github.com/heygen-com/skills/commit/808dd776fc5c3f19b905f549a4a6c1ee46a2a656))
+
 ## [2.1.0](https://github.com/heygen-com/skills/compare/v2.0.3...v2.1.0) (2026-04-17)
 
 
