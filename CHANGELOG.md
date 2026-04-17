@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.2](https://github.com/heygen-com/skills/compare/v2.1.1...v2.1.2) (2026-04-17)
+
+
+### Bug Fixes
+
+* **frame-check:** specify AI Image tool for generative fill ([#62](https://github.com/heygen-com/skills/issues/62)) ([af77568](https://github.com/heygen-com/skills/commit/af77568e3f7c6fd76144869a05f8b20fb8639fec))
+
 ## [2.1.1](https://github.com/heygen-com/skills/compare/v2.1.0...v2.1.1) (2026-04-17)
 
 
