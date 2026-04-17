@@ -103,9 +103,10 @@ Two approaches — use one or combine both:
 
 **1. API Styles (`style_id`)** — Curated visual templates. One parameter replaces all visual direction.
 
-Browse styles by tag. Tags: `cinematic`, `retro-tech`, `iconic-artist`, `pop-culture`, `handmade`, `print`. Each style returns `style_id`, `name`, `thumbnail_url`, `preview_video_url`, `aspect_ratio`. Pass `style_id` to `create_video_agent`.
-
+**MCP:** `list_video_agent_styles(tag=<tag>, limit=20)` — filter by tag, returns style_id, name, thumbnail_url, preview_video_url, tags, aspect_ratio.
 **CLI:** `curl -s "https://api.heygen.com/v3/video-agents/styles?tag=cinematic&limit=10" -H "X-Api-Key: $HEYGEN_API_KEY"`
+
+Tags: `cinematic`, `retro-tech`, `iconic-artist`, `pop-culture`, `handmade`, `print`. Pass `style_id` to `create_video_agent`.
 
 **Show users thumbnails + preview videos before choosing.** Browse by tag, show 3-5 options with previews, let user pick. If a style has a fixed `aspect_ratio`, match orientation to it.
 

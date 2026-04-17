@@ -79,6 +79,7 @@ Detect which API mode is available, in order of preference:
 | `list_voices` | `GET /v3/voices` | Browse voices |
 | `design_voice` | `POST /v3/voices` | Semantic voice search |
 | `create_speech` | `POST /v3/voices/speech` | TTS |
+| `list_video_agent_styles` | `GET /v3/video-agents/styles` | Browse visual styles |
 | `create_video_translation` | `POST /v3/video-translations` | Translate video |
 
 **Docs-first rule:** Before calling any endpoint you're unsure about, fetch the raw markdown spec:

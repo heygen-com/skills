@@ -50,7 +50,7 @@ When in doubt about a field name or type, fetch the `.md` page before guessing.
 | **Get Translation** | `get_video_translation` | GET | `/v3/video-translations/{id}` |
 | **Translation Languages** | `list_video_translation_languages` | GET | `/v3/video-translations/languages` |
 | **Account Info** | `get_current_user` | — | — |
-| **List Styles** | — | GET | `/v3/video-agents/styles` |
+| **List Styles** | `list_video_agent_styles` | GET | `/v3/video-agents/styles` |
 | **Upload Asset** | — | POST | `/v3/assets` |
 | **Webhooks** | — | POST/GET/DELETE | `/v3/webhooks` |
 
