@@ -14,6 +14,18 @@ The canonical install target for GitHub CLI is `skills/heygen-skills/`.
 gh skill install ./skills heygen-skills --from-local
 ```
 
+### Local Package Testing
+
+The local checkout install flow is intentionally maintainer-only and should not be part of the main user-facing install story.
+
+Use it when you need to validate a branch before release:
+
+```bash
+git clone https://github.com/heygen-com/skills.git
+cd skills
+gh skill install ./skills heygen-skills --from-local
+```
+
 All changes go through pull requests. No direct pushes to `main`.
 
 ### For every change:

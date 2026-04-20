@@ -21,13 +21,20 @@ Or follow the steps below manually.
 
 ### Step 1 — Install with `gh skill`
 
-Preferred install:
+If your agent supports `gh skill`, this is the preferred install path.
 
 ```bash
 gh skill install heygen-com/skills heygen-skills
 ```
 
-This installs the packaged skill bundle from `skills/heygen-skills/` and lets the GitHub CLI handle the correct destination for Claude Code, Codex, Cursor, and other supported agents.
+Why this is the preferred path for supported agents:
+
+- GitHub CLI handles the correct install directory for Claude Code, Codex, Cursor, and other supported agents
+- installs can be pinned to tags or commits
+- `gh skill update` gives a standard update path
+- GitHub-native release controls such as immutable releases and provenance are a better fit for enterprise environments
+
+This installs the packaged skill bundle from `skills/heygen-skills/`.
 
 Update later with:
 
@@ -35,16 +42,15 @@ Update later with:
 gh skill update heygen-skills
 ```
 
-### Step 1b — Fallbacks
+### Step 1b — Alternate install paths
 
-If you want to install from a local checkout:
+If you already use ClawHub, you can install from there instead:
 
 ```bash
-git clone --single-branch --depth 1 https://github.com/heygen-com/skills.git
-gh skill install ./skills heygen-skills --from-local
+clawhub install heygen-skills
 ```
 
-If you need a manual copy for an unsupported agent, copy `skills/heygen-skills/` into whatever directory that agent uses for local skills.
+If your agent does not support `gh skill`, use a manual copy by placing `skills/heygen-skills/` into whatever directory that agent uses for local skills.
 
 ### Step 2 — Get your HeyGen API key
 

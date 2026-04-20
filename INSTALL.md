@@ -2,13 +2,22 @@
 
 Grab an [API key](https://app.heygen.com/api) and set it in your shell. If you're already on a HeyGen plan with MCP connected to your agent, you can skip the key — MCP will be used automatically.
 
-## Option 1 — `gh skill` (recommended)
+## Option 1 — `gh skill`
+
+If your agent supports `gh skill`, this is the preferred install path.
 
 ```bash
 gh skill install heygen-com/skills heygen-skills
 ```
 
-This installs the packaged skill bundle from `skills/heygen-skills/` and lets GitHub CLI handle the correct destination for supported agents.
+Why this is the preferred path for supported agents:
+
+- GitHub CLI handles the destination path automatically
+- installs can be pinned to tags or commits
+- `gh skill update` gives a standard update path
+- GitHub-native release controls are a better fit for enterprise environments
+
+This installs the packaged skill bundle from `skills/heygen-skills/`.
 
 Update later with:
 
@@ -22,16 +31,9 @@ gh skill update heygen-skills
 clawhub install heygen-skills
 ```
 
-## Option 3 — Local checkout
+Use this if you already rely on ClawHub as your skill distribution channel.
 
-Use this if you want to test the package from a branch before release:
-
-```bash
-git clone https://github.com/heygen-com/skills.git
-gh skill install ./skills heygen-skills --from-local
-```
-
-## Option 4 — Manual copy
+## Option 3 — Manual copy
 
 For agents without `gh skill` support, copy `skills/heygen-skills/` into the agent's local skills directory.
 
