@@ -4,18 +4,18 @@ Grab an [API key](https://app.heygen.com/api) and set it in your shell. If you'r
 
 ## Option 1 — `gh skill`
 
-If your agent supports `gh skill`, this is the preferred install path.
+If your agent supports `gh skill`, you can install the packaged bundle directly with GitHub CLI.
 
 ```bash
 gh skill install heygen-com/skills heygen-skills
 ```
 
-Why this is the preferred path for supported agents:
+With `gh skill`:
 
 - GitHub CLI handles the destination path automatically
 - installs can be pinned to tags or commits
 - `gh skill update` gives a standard update path
-- GitHub-native release controls are a better fit for enterprise environments
+- GitHub-native release controls are available
 
 This installs the packaged skill bundle from `skills/heygen-skills/`.
 
@@ -35,7 +35,7 @@ Use this if you already rely on ClawHub as your skill distribution channel.
 
 ## Option 3 — Manual copy
 
-For agents without `gh skill` support, copy `skills/heygen-skills/` into the agent's local skills directory.
+For agents without either install path, copy `skills/heygen-skills/` into the agent's local skills directory.
 
 **OpenClaw** (default: `~/.openclaw/skills/heygen-skills`, custom installs may differ — check your config):
 ```bash
@@ -73,4 +73,4 @@ heygen auth status      # verify auth
 
 Paste this prompt to your agent — it will find the right paths automatically:
 
-> Install the HeyGen Skills from https://github.com/heygen-com/skills with `gh skill install heygen-com/skills heygen-skills`. Install the HeyGen CLI via `curl -fsSL https://static.heygen.ai/cli/install.sh | bash` and export HEYGEN_API_KEY=\<your-key\> (get one at https://app.heygen.com/api). Or, if you're on a HeyGen plan and already have MCP connected to your agent, skip the key step — MCP will be used automatically. Then use the heygen-avatar skill to create an avatar for me, and heygen-video to make a 30-60 second intro video, casual tone.
+> Install the HeyGen Skills from https://github.com/heygen-com/skills using either `gh skill install heygen-com/skills heygen-skills` or `clawhub install heygen-skills`. Install the HeyGen CLI via `curl -fsSL https://static.heygen.ai/cli/install.sh | bash` and export HEYGEN_API_KEY=\<your-key\> (get one at https://app.heygen.com/api). Or, if you're on a HeyGen plan and already have MCP connected to your agent, skip the key step — MCP will be used automatically. Then use the heygen-avatar skill to create an avatar for me, and heygen-video to make a 30-60 second intro video, casual tone.

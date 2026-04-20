@@ -14,25 +14,25 @@ Works with Claude Code, OpenClaw, Codex, Cursor, and other AI coding agents.
 Paste this into your agent to get started:
 
 ```
-Install HeyGen Skills from https://github.com/heygen-com/skills with gh skill install heygen-com/skills heygen-skills. Install the HeyGen CLI from https://static.heygen.ai/cli/install.sh and export HEYGEN_API_KEY=<your-key> (get one at https://app.heygen.com/api). Or, if you're on a HeyGen plan and already have MCP connected to your agent, skip the key step — MCP will be used automatically. Then use heygen-avatar and heygen-video to bring yourself to life — create your own avatar and make a short cinematic intro video of yourself introducing who you are. Ask me what you need before starting.
+Install HeyGen Skills from https://github.com/heygen-com/skills using either gh skill install heygen-com/skills heygen-skills or clawhub install heygen-skills. Install the HeyGen CLI from https://static.heygen.ai/cli/install.sh and export HEYGEN_API_KEY=<your-key> (get one at https://app.heygen.com/api). Or, if you're on a HeyGen plan and already have MCP connected to your agent, skip the key step — MCP will be used automatically. Then use heygen-avatar and heygen-video to bring yourself to life — create your own avatar and make a short cinematic intro video of yourself introducing who you are. Ask me what you need before starting.
 ```
 
 Or follow the steps below manually.
 
 ### Step 1 — Install with `gh skill`
 
-If your agent supports `gh skill`, this is the preferred install path.
+If your agent supports `gh skill`, you can install the packaged bundle directly with GitHub CLI.
 
 ```bash
 gh skill install heygen-com/skills heygen-skills
 ```
 
-Why this is the preferred path for supported agents:
+With `gh skill`:
 
 - GitHub CLI handles the correct install directory for Claude Code, Codex, Cursor, and other supported agents
 - installs can be pinned to tags or commits
 - `gh skill update` gives a standard update path
-- GitHub-native release controls such as immutable releases and provenance are a better fit for enterprise environments
+- GitHub-native release controls such as immutable releases and provenance are available
 
 This installs the packaged skill bundle from `skills/heygen-skills/`.
 
@@ -50,7 +50,7 @@ If you already use ClawHub, you can install from there instead:
 clawhub install heygen-skills
 ```
 
-If your agent does not support `gh skill`, use a manual copy by placing `skills/heygen-skills/` into whatever directory that agent uses for local skills.
+If your agent does not support either install flow, use a manual copy by placing `skills/heygen-skills/` into whatever directory that agent uses for local skills.
 
 ### Step 2 — Get your HeyGen API key
 
