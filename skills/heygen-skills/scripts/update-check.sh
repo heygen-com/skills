@@ -19,7 +19,7 @@ CACHE_FILE="$STATE_DIR/last-update-check"
 MARKER_FILE="$STATE_DIR/just-upgraded-from"
 SNOOZE_FILE="$STATE_DIR/update-snoozed"
 VERSION_FILE="$SKILL_DIR/VERSION"
-REMOTE_URL="${HEYGEN_REMOTE_URL:-https://raw.githubusercontent.com/heygen-com/skills/master/VERSION}"
+REMOTE_URL="${HEYGEN_REMOTE_URL:-https://raw.githubusercontent.com/heygen-com/skills/master/skills/heygen-skills/VERSION}"
 
 # ─── Force flag (busts cache + snooze) ────────────────────────
 if [ "${1:-}" = "--force" ]; then
