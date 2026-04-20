@@ -20,6 +20,7 @@ description: |
   or b-roll without a presenter, translating videos, TTS-only, or streaming avatars.
 argument-hint: "[topic_or_script] [--avatar avatar_id]"
 homepage: https://developers.heygen.com/docs/quick-start
+license: MIT
 allowed-tools: Bash, WebFetch, Read, Write, mcp__heygen__*
 metadata:
   openclaw:
@@ -33,7 +34,7 @@ metadata:
 
 No auto-run steps. Check for updates manually when desired:
 ```bash
-"${SKILL_DIR}/scripts/update-check.sh"
+"${SKILL_DIR}/../scripts/update-check.sh"
 ```
 This script is opt-in only. Do not execute it automatically on skill invocation.
 

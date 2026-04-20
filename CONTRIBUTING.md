@@ -2,6 +2,18 @@
 
 ## Git Workflow
 
+## Package Layout
+
+The canonical install target for GitHub CLI is `skills/heygen-skills/`.
+
+- Keep all shipped skill assets under that package directory
+- Do not reintroduce a root-level `SKILL.md`; it collides with `gh skill install heygen-com/skills heygen-skills`
+- When validating packaging locally, prefer:
+
+```bash
+gh skill install ./skills heygen-skills --from-local
+```
+
 All changes go through pull requests. No direct pushes to `main`.
 
 ### For every change:

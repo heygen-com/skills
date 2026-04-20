@@ -2,29 +2,48 @@
 
 Grab an [API key](https://app.heygen.com/api) and set it in your shell. If you're already on a HeyGen plan with MCP connected to your agent, you can skip the key — MCP will be used automatically.
 
-## Option 1 — ClawHub (recommended)
+## Option 1 — `gh skill` (recommended)
+
+```bash
+gh skill install heygen-com/skills heygen-skills
+```
+
+This installs the packaged skill bundle from `skills/heygen-skills/` and lets GitHub CLI handle the correct destination for supported agents.
+
+Update later with:
+
+```bash
+gh skill update heygen-skills
+```
+
+## Option 2 — ClawHub
 
 ```bash
 clawhub install heygen-skills
 ```
 
-ClawHub installs to your agent's default skills directory automatically.
+## Option 3 — Local checkout
 
-## Option 2 — Git clone
+Use this if you want to test the package from a branch before release:
 
-Clone into your agent's skills directory:
+```bash
+git clone https://github.com/heygen-com/skills.git
+gh skill install ./skills heygen-skills --from-local
+```
+
+## Option 4 — Manual copy
+
+For agents without `gh skill` support, copy `skills/heygen-skills/` into the agent's local skills directory.
 
 **OpenClaw** (default: `~/.openclaw/skills/heygen-skills`, custom installs may differ — check your config):
 ```bash
-git clone https://github.com/heygen-com/skills.git ~/.openclaw/skills/heygen-skills
+cp -R skills/heygen-skills ~/.openclaw/skills/heygen-skills
 ```
 
 **Claude Code** (default: `~/.claude/skills/heygen-skills`):
 ```bash
-git clone https://github.com/heygen-com/skills.git ~/.claude/skills/heygen-skills
+cp -R skills/heygen-skills ~/.claude/skills/heygen-skills
 ```
-
-> Not sure where your skills directory is? Ask your agent: *"Where is your skills directory?"*
 
 ## Auth
 
@@ -52,4 +71,4 @@ heygen auth status      # verify auth
 
 Paste this prompt to your agent — it will find the right paths automatically:
 
-> Install the HeyGen Skills from https://github.com/heygen-com/skills.git — clone it into your skills directory (find it with your config or ask if unsure). Install the HeyGen CLI via `curl -fsSL https://static.heygen.ai/cli/install.sh | bash` and export HEYGEN_API_KEY=\<your-key\> (get one at https://app.heygen.com/api). Or, if you're on a HeyGen plan and already have MCP connected to your agent, skip the key step — MCP will be used automatically. Then use the heygen-avatar skill to create an avatar for me, and heygen-video to make a 30-60 second intro video, casual tone.
+> Install the HeyGen Skills from https://github.com/heygen-com/skills with `gh skill install heygen-com/skills heygen-skills`. Install the HeyGen CLI via `curl -fsSL https://static.heygen.ai/cli/install.sh | bash` and export HEYGEN_API_KEY=\<your-key\> (get one at https://app.heygen.com/api). Or, if you're on a HeyGen plan and already have MCP connected to your agent, skip the key step — MCP will be used automatically. Then use the heygen-avatar skill to create an avatar for me, and heygen-video to make a 30-60 second intro video, casual tone.

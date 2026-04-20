@@ -19,6 +19,7 @@ description: |
   Returns avatar_id + voice_id — pass directly to heygen-video to create HeyGen videos.
   NOT for: generating videos (use heygen-video), translating videos, or TTS-only tasks.
 argument-hint: "[name_or_description]"
+license: MIT
 allowed-tools: Bash, WebFetch, Read, Write, mcp__heygen__*
 ---
 

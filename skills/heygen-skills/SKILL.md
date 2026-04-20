@@ -18,6 +18,7 @@ description: |
   NOT for: cinematic b-roll, video translation, TTS-only, or streaming avatars.
 version: 2.1.2 # x-release-please-version
 homepage: https://developers.heygen.com/docs/quick-start
+license: MIT
 allowed-tools: Bash, WebFetch, Read, Write, mcp__heygen__*
 metadata:
   openclaw:

@@ -1,4 +1,4 @@
-name: Publish to ClawHub
+name: Publish Skills
 
 on:
   push:
@@ -35,7 +35,7 @@ jobs:
       - name: Publish heygen-skills
         run: |
           CHANGELOG=$(git tag -l --format='%(contents)' ${{ github.ref_name }})
-          clawhub publish . \
+          clawhub publish skills/heygen-skills \
             --slug heygen-skills \
             --version ${{ steps.version.outputs.version }} \
             --name "HeyGen Skills" \

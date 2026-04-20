@@ -14,25 +14,37 @@ Works with Claude Code, OpenClaw, Codex, Cursor, and other AI coding agents.
 Paste this into your agent to get started:
 
 ```
-Install HeyGen Skills from https://github.com/heygen-com/skills — clone the repo into your skills directory. Install the HeyGen CLI from https://static.heygen.ai/cli/install.sh and export HEYGEN_API_KEY=<your-key> (get one at https://app.heygen.com/api). Or, if you're on a HeyGen plan and already have MCP connected to your agent, skip the key step — MCP will be used automatically. Then use heygen-avatar and heygen-video to bring yourself to life — create your own avatar and make a short cinematic intro video of yourself introducing who you are. Ask me what you need before starting.
+Install HeyGen Skills from https://github.com/heygen-com/skills with gh skill install heygen-com/skills heygen-skills. Install the HeyGen CLI from https://static.heygen.ai/cli/install.sh and export HEYGEN_API_KEY=<your-key> (get one at https://app.heygen.com/api). Or, if you're on a HeyGen plan and already have MCP connected to your agent, skip the key step — MCP will be used automatically. Then use heygen-avatar and heygen-video to bring yourself to life — create your own avatar and make a short cinematic intro video of yourself introducing who you are. Ask me what you need before starting.
 ```
 
 Or follow the steps below manually.
 
-### Step 1 — Clone into your skills directory
+### Step 1 — Install with `gh skill`
 
-Detect which agent you are and clone to the right path:
-
-| Agent | Install path |
-|-------|-------------|
-| **Claude Code** | `~/.claude/skills/heygen-skills` |
-| **OpenClaw** | `~/.openclaw/workspace/skills/heygen-skills` |
-| **ClawHub** | Run `clawhub install heygen-skills` and skip to Step 2 |
-| **Other** | Clone anywhere your agent loads skills from |
+Preferred install:
 
 ```bash
-git clone --single-branch --depth 1 https://github.com/heygen-com/skills.git <install-path>/heygen-skills
+gh skill install heygen-com/skills heygen-skills
 ```
+
+This installs the packaged skill bundle from `skills/heygen-skills/` and lets the GitHub CLI handle the correct destination for Claude Code, Codex, Cursor, and other supported agents.
+
+Update later with:
+
+```bash
+gh skill update heygen-skills
+```
+
+### Step 1b — Fallbacks
+
+If you want to install from a local checkout:
+
+```bash
+git clone --single-branch --depth 1 https://github.com/heygen-com/skills.git
+gh skill install ./skills heygen-skills --from-local
+```
+
+If you need a manual copy for an unsupported agent, copy `skills/heygen-skills/` into whatever directory that agent uses for local skills.
 
 ### Step 2 — Get your HeyGen API key
 
@@ -189,11 +201,20 @@ After setup, try these prompts with your agent:
 - An AI agent that supports skills (Claude Code, OpenClaw, Codex, Cursor, or similar)
 - No runtime dependencies. No packages. No build step.
 
+## Packaging Notes
+
+The canonical installable package now lives at `skills/heygen-skills/`.
+
+- `gh skill install heygen-com/skills heygen-skills` installs that package directly
+- relative references stay intact because the package preserves the existing internal layout:
+  `heygen-avatar/`, `heygen-video/`, `references/`, `scripts/`, and platform-specific skill files
+- the repo root is now documentation and release plumbing, not the install target
+
 ## Security
 
 One optional shell script:
 
-- **`scripts/update-check.sh`** — compares your local `VERSION` against the latest on GitHub. Read-only, opt-in, no data transmitted.
+- **`skills/heygen-skills/scripts/update-check.sh`** — compares your local `VERSION` against the latest on GitHub. Read-only, opt-in, no data transmitted.
 
 Data only leaves your machine through MCP / the `heygen` CLI (video generation) and optionally `raw.githubusercontent.com` (version check).
 

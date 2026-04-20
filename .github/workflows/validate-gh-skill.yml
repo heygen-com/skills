@@ -1,0 +1,39 @@
+name: Validate gh skill package
+
+on:
+  pull_request:
+    paths:
+      - "skills/heygen-skills/**"
+      - "README.md"
+      - "INSTALL.md"
+      - ".github/workflows/validate-gh-skill.yml"
+  push:
+    branches:
+      - master
+    paths:
+      - "skills/heygen-skills/**"
+      - "README.md"
+      - "INSTALL.md"
+      - ".github/workflows/validate-gh-skill.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install GitHub CLI with gh skill support
+        run: |
+          curl -L https://github.com/cli/cli/releases/download/v2.90.0/gh_2.90.0_linux_amd64.tar.gz -o /tmp/gh.tgz
+          tar -xzf /tmp/gh.tgz -C /tmp
+          echo "/tmp/gh_2.90.0_linux_amd64/bin" >> "$GITHUB_PATH"
+
+      - name: Validate local install layout
+        run: |
+          gh --version
+          gh skill install "$GITHUB_WORKSPACE" heygen-skills --from-local --dir "$RUNNER_TEMP/skills"
+          test -f "$RUNNER_TEMP/skills/heygen-skills/SKILL.md"
+          test -f "$RUNNER_TEMP/skills/heygen-skills/heygen-avatar/SKILL.md"
+          test -f "$RUNNER_TEMP/skills/heygen-skills/heygen-video/SKILL.md"
+          test -f "$RUNNER_TEMP/skills/heygen-skills/references/prompt-craft.md"
+          test -f "$RUNNER_TEMP/skills/heygen-skills/scripts/update-check.sh"
