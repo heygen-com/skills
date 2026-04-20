@@ -5,12 +5,8 @@
     ".": {
       "package-name": "heygen-skills",
       "changelog-path": "CHANGELOG.md",
-      "version-file": "VERSION",
+      "version-file": "skills/heygen-skills/VERSION",
       "extra-files": [
-        {
-          "type": "generic",
-          "path": "skills/heygen-skills/VERSION"
-        },
         {
           "type": "generic",
           "path": "skills/heygen-skills/SKILL.md"
@@ -31,5 +27,5 @@
   "include-component-in-tag": false,
   "tag-separator": "",
   "pull-request-title-pattern": "chore: release ${version}",
-  "pull-request-header": "Release PR — bumps VERSION, packaged skill frontmatter, and User-Agent strings from conventional commits since last release."
+  "pull-request-header": "Release PR — bumps the packaged VERSION, packaged skill frontmatter, and User-Agent strings from conventional commits since last release."
 }

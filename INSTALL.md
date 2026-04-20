@@ -35,16 +35,20 @@ Use this if you already rely on ClawHub as your skill distribution channel.
 
 ## Option 3 — Manual copy
 
-For agents without either install path, copy `skills/heygen-skills/` into the agent's local skills directory.
+For agents without either install path, first clone the repo somewhere local, then copy `skills/heygen-skills/` into the agent's local skills directory.
+
+```bash
+git clone --depth 1 https://github.com/heygen-com/skills.git /tmp/heygen-skills
+```
 
 **OpenClaw** (default: `~/.openclaw/skills/heygen-skills`, custom installs may differ — check your config):
 ```bash
-cp -R skills/heygen-skills ~/.openclaw/skills/heygen-skills
+cp -R /tmp/heygen-skills/skills/heygen-skills ~/.openclaw/skills/heygen-skills
 ```
 
 **Claude Code** (default: `~/.claude/skills/heygen-skills`):
 ```bash
-cp -R skills/heygen-skills ~/.claude/skills/heygen-skills
+cp -R /tmp/heygen-skills/skills/heygen-skills ~/.claude/skills/heygen-skills
 ```
 
 ## Auth

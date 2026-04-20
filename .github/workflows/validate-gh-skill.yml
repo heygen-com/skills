@@ -25,6 +25,8 @@ jobs:
       - name: Install GitHub CLI with gh skill support
         run: |
           curl -L https://github.com/cli/cli/releases/download/v2.90.0/gh_2.90.0_linux_amd64.tar.gz -o /tmp/gh.tgz
+          curl -L https://github.com/cli/cli/releases/download/v2.90.0/gh_2.90.0_checksums.txt -o /tmp/gh_checksums.txt
+          grep " gh_2.90.0_linux_amd64.tar.gz\$" /tmp/gh_checksums.txt | sha256sum -c -
           tar -xzf /tmp/gh.tgz -C /tmp
           echo "/tmp/gh_2.90.0_linux_amd64/bin" >> "$GITHUB_PATH"
 

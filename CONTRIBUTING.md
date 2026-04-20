@@ -1,7 +1,5 @@
 # Contributing to HeyGen Skills
 
-## Git Workflow
-
 ## Package Layout
 
 The canonical install target for GitHub CLI is `skills/heygen-skills/`.
@@ -25,6 +23,8 @@ git clone https://github.com/heygen-com/skills.git
 cd skills
 gh skill install ./skills heygen-skills --from-local
 ```
+
+## Git Workflow
 
 All changes go through pull requests. No direct pushes to `main`.
 
