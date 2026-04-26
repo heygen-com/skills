@@ -1,0 +1,30 @@
+{
+  "$schema": "https://cursor.com/schemas/cursor-plugin/plugin.json",
+  "name": "heygen",
+  "displayName": "HeyGen",
+  "version": "1.3.2",
+  "description": "Create HeyGen avatar videos and personalized video messages. Build a persistent digital identity from a photo, then generate presenter-led videos with your digital twin.",
+  "author": {
+    "name": "HeyGen",
+    "email": "developers@heygen.com"
+  },
+  "publisher": "HeyGen",
+  "homepage": "https://heygen.com",
+  "repository": "https://github.com/heygen-com/skills",
+  "license": "MIT",
+  "logo": "assets/logo.png",
+  "category": "developer-tools",
+  "keywords": [
+    "heygen",
+    "avatar",
+    "identity",
+    "video",
+    "digital-twin",
+    "video-message",
+    "presenter",
+    "talking-head",
+    "ai-avatar",
+    "avatar-video"
+  ],
+  "tags": ["video", "avatar", "ai", "identity", "presenter", "creative"]
+}
