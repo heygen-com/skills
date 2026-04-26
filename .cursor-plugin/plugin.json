@@ -26,5 +26,6 @@
     "ai-avatar",
     "avatar-video"
   ],
-  "tags": ["video", "avatar", "ai", "identity", "presenter", "creative"]
+  "tags": ["video", "avatar", "ai", "identity", "presenter", "creative"],
+  "skills": ["./heygen-avatar/", "./heygen-video/"]
 }

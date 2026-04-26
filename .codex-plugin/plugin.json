@@ -22,6 +22,7 @@
     "ai-avatar",
     "avatar-video"
   ],
+  "skills": "./",
   "interface": {
     "displayName": "HeyGen",
     "shortDescription": "Avatar videos and personalized video messages",
