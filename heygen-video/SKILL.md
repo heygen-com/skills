@@ -444,7 +444,7 @@ Video Agent supports three media types. Guide it explicitly or it guesses (often
 Be explicit in the prompt: "Use motion graphics for the statistics, stock footage for the office scene, AI-generated visuals for the futuristic concept."
 
 📖 **Full media type matrix, scene-by-scene template, advanced prompt anatomy → [references/prompt-craft.md](references/prompt-craft.md)**
-📖 **Named styles (Deconstructed, Swiss Pulse, etc.) → inlined in Style Selection above**
+📖 **20 named visual styles (mood-first selection, copy-paste STYLE blocks) → [references/prompt-styles.md](references/prompt-styles.md)**
 📖 **Motion vocabulary and B-roll → [references/motion-vocabulary.md](references/motion-vocabulary.md)**
 
 ### Orientation
