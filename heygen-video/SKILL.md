@@ -1,5 +1,5 @@
 ---
-version: 2.3.0 # x-release-please-version
+version: 3.0.0 # x-release-please-version
 name: heygen-video
 description: |
   Generate HeyGen presenter videos via the v3 Video Agent pipeline — handles Frame Check
