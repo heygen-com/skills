@@ -201,9 +201,13 @@ The skill will:
 4. Save `AVATAR-<AGENT-NAME>.md` at the workspace root for future reuse.
 5. Return `avatar_id` + `voice_id` for use in Step 7 (defaults).
 
-At the end of this step the workspace has a new file like `AVATAR-EVE.md`,
-`AVATAR-ADAM.md`, or `AVATAR-CLEO.md`. That file is the persistent identity
-— every future video reuses it automatically.
+On the happy path, this step ends with a new file like `AVATAR-EVE.md`,
+`AVATAR-ADAM.md`, or `AVATAR-CLEO.md` at the workspace root. That file is
+the persistent identity — every future video reuses it automatically. Note
+that the heygen-avatar skill has a Phase 2 STOP gate before generation; if
+the user aborts there, no file is written and no credits are spent. That's
+the correct behavior — it's a confirmation gate, not a bug. Resume by
+re-invoking the sub-skill.
 
 ### If you are running outside an OpenClaw workspace (no `SOUL.md`)
 
@@ -213,7 +217,9 @@ direction directly instead of reading from `SOUL.md`.
 
 Same entry point: read [`heygen-avatar/SKILL.md`](./heygen-avatar/SKILL.md)
 and follow Phase 0. The skill detects the missing `SOUL.md` and switches
-to user-driven prompt creation.
+to Phase 1 conversational onboarding — it asks the user about appearance,
+voice, and presenter persona one or two traits at a time, not as a single
+batch prompt.
 
 ### Skip conditions (rare)
 
@@ -229,11 +235,13 @@ without this step.
 
 ## Step 6: Verify the install (opt-in)
 
-Ask the user: **"Want to run a 5-second smoke test using the avatar we just
-created? It generates a real video, costs roughly half a credit, and
-confirms the integration works end-to-end."**
+Ask the user: **"Want to run a 5-second smoke test? It generates a real
+video, costs roughly half a credit, and confirms the integration works
+end-to-end."**
 
-If yes:
+If yes, branch on whether Step 5 ran:
+
+**If Step 5 created an avatar:**
 
 ```
 Use heygen-video to generate a 5-second test clip with the avatar from
@@ -241,9 +249,18 @@ AVATAR-<NAME>.md saying "HeyGen install working, ready to ship." Save
 the file locally and tell me the path.
 ```
 
+**If Step 5 was skipped (user has an existing `avatar_id` they want to reuse,
+or scoped install to stock avatars):**
+
+```
+Use heygen-video to generate a 5-second test clip with avatar_id
+<the user's avatar_id> and voice_id <the user's voice_id> saying
+"HeyGen install working, ready to ship." Save the file locally and tell
+me the path.
+```
+
 Expected outcome: a `.mp4` file roughly 1-3 MB, 5 seconds long, with the
-avatar speaking the test line. If Step 5 was skipped (user has an existing
-avatar_id), pass it via providerOptions instead.
+avatar speaking the test line.
 
 If the user declines, skip to Step 7. The skill works either way; the smoke
 test just removes uncertainty about whether everything is wired correctly.
@@ -260,11 +277,14 @@ If the smoke test fails, the most common causes (in order):
    `mode` incorrectly — see the heygen-video sub-skill's review-checkpoint
    handler. Re-read the sub-skill SKILL.md.
 
-## Step 7: Set agent-wide defaults (recommended)
+## Step 7: Set agent-wide defaults
 
-If you ran Step 5, you now have an `avatar_id` / `voice_id` (and optionally
-a `style_id`) from the `AVATAR-<NAME>.md` file. Save them as defaults so
-the user does not have to repeat them on every video call.
+This step only applies if **Step 5 ran** (the user has a new
+`AVATAR-<NAME>.md`) OR if **the user already has an `avatar_id` / `voice_id`**
+they want to reuse on every call. If neither, skip to Step 8.
+
+When it applies, save the ids as defaults so the user doesn't repeat them
+per-call.
 
 For the **OpenClaw plugin path** (Option A), use `openclaw config set`:
 
@@ -278,9 +298,9 @@ For the **CLI path** (Option B), defaults live in `~/.heygen/config` — the
 CLI will prompt on first use, or you can run `heygen config set` directly.
 
 For the **MCP path** (Option C), there are no per-skill defaults; the agent
-passes avatar / voice ids per call. The `AVATAR-<NAME>.md` file the skill
-wrote in Step 5 is the source of truth — the agent reads it on each
-video generation.
+passes avatar / voice ids per call. If Step 5 ran, the `AVATAR-<NAME>.md`
+file is the source of truth and the agent reads it on each video
+generation. If Step 5 was skipped, the user provides ids per call directly.
 
 ## Step 8: Make HeyGen the default video provider (OpenClaw plugin path only)
 
@@ -304,7 +324,7 @@ Tell the user:
 > Try:
 > - "Make a 30-second video of yourself introducing what we're working on this week"
 > - "Send a video update to the team about today's progress"
-> - "Generate a video and POST the result to my webhook when done"
+> - "Generate a 60-second product walkthrough using my avatar"
 
 The skill handles avatar resolution, prompt engineering, aspect ratio
 correction, voice selection, and Frame Check automatically. Give it a topic,
