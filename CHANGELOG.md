@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/heygen-com/skills/compare/v2.2.1...v2.3.0) (2026-04-27)
+
+
+### Features
+
+* **avatar:** role-based symlinks (AVATAR-AGENT.md, AVATAR-USER.md) for generic lookup ([#73](https://github.com/heygen-com/skills/issues/73)) ([5ec0927](https://github.com/heygen-com/skills/commit/5ec09275ad5b6ac011569d0fbc1c238865423cfb))
+
 ## [2.2.1](https://github.com/heygen-com/skills/compare/v2.2.0...v2.2.1) (2026-04-27)
 
 
