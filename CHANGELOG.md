@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.1](https://github.com/heygen-com/skills/compare/v2.2.0...v2.2.1) (2026-04-27)
+
+
+### Bug Fixes
+
+* **install:** make avatar creation a first-class install step ([#71](https://github.com/heygen-com/skills/issues/71)) ([64ab640](https://github.com/heygen-com/skills/commit/64ab6404a3c2d0c7f32b55e2decf5de511c75f9e))
+
 ## [2.2.0](https://github.com/heygen-com/skills/compare/v2.1.2...v2.2.0) (2026-04-27)
 
 
