@@ -5,6 +5,8 @@ on:
     paths:
       - "heygen-avatar/**"
       - "heygen-video/**"
+      - "references/**"
+      - "scripts/**"
       - ".github/workflows/validate-skills.yml"
       - "SKILL.md"
   push:
@@ -12,10 +14,53 @@ on:
     paths:
       - "heygen-avatar/**"
       - "heygen-video/**"
+      - "references/**"
+      - "scripts/**"
       - ".github/workflows/validate-skills.yml"
       - "SKILL.md"
 
 jobs:
+  references-in-sync:
+    name: Root references/ stays in sync with subdir copies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Diff shared references against root
+        run: |
+          set -euo pipefail
+          # These files are deliberately byte-identical between root references/
+          # and the per-skill copies. Any drift here indicates an edit that should
+          # have been propagated. New per-skill files (e.g. avatar-creation.md)
+          # and the cleaved per-skill avatar-discovery.md are intentionally NOT in
+          # this matrix — only the truly shared files are gated.
+          # Format: <subdir-copy>|<canonical-root-source>
+          PAIRS=(
+            'heygen-avatar/references/asset-routing.md|references/asset-routing.md'
+            'heygen-avatar/references/troubleshooting.md|references/troubleshooting.md'
+            'heygen-video/references/asset-routing.md|references/asset-routing.md'
+            'heygen-video/references/frame-check.md|references/frame-check.md'
+            'heygen-video/references/motion-vocabulary.md|references/motion-vocabulary.md'
+            'heygen-video/references/official-prompt-guide.md|references/official-prompt-guide.md'
+            'heygen-video/references/prompt-craft.md|references/prompt-craft.md'
+            'heygen-video/references/prompt-styles.md|references/prompt-styles.md'
+            'heygen-video/references/reviewer-prompt.md|references/reviewer-prompt.md'
+            'heygen-video/references/troubleshooting.md|references/troubleshooting.md'
+          )
+          fail=0
+          for pair in "${PAIRS[@]}"; do
+            sub="${pair%%|*}"
+            root="${pair##*|}"
+            if ! diff -q "$root" "$sub" >/dev/null; then
+              echo "::error::Drift detected — '$sub' differs from canonical '$root'"
+              echo "::error::If you edited one, edit the other (or add a sync script)"
+              diff -u "$root" "$sub" | head -40 || true
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then exit 1; fi
+          echo "✓ All shared references are byte-identical to canonical root copies"
+
   self-contained-bundles:
     name: Skills install cleanly via gh skill (self-contained)
     runs-on: ubuntu-latest
@@ -47,18 +92,26 @@ jobs:
           mkdir -p _ghskill_test/skills
           cp -R heygen-avatar _ghskill_test/skills/heygen-avatar
           cp -R heygen-video  _ghskill_test/skills/heygen-video
-          ls -la _ghskill_test/skills/
+
+      - name: Init isolated install project
+        run: |
+          # gh skill install --scope project writes to <project_root>/.agents/skills.
+          # Initialize an isolated git repo for the install target so it becomes
+          # its own project root (otherwise gh skill walks up to the outer repo).
+          mkdir -p _install_test
+          cd _install_test
+          git init -q
+          git -c user.email='ci@heygen.com' -c user.name='CI' commit -q --allow-empty -m bootstrap
 
       - name: Install heygen-avatar from local
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          mkdir -p _install_test
           cd _install_test
           gh skill install ../_ghskill_test heygen-avatar --from-local --scope project
           test -f .agents/skills/heygen-avatar/SKILL.md
-          echo "✓ heygen-avatar installed"
+          echo "✓ heygen-avatar installed at _install_test/.agents/skills/heygen-avatar/"
 
       - name: Verify heygen-avatar installed bundle is self-contained
         run: |
@@ -88,7 +141,7 @@ jobs:
           cd _install_test
           gh skill install ../_ghskill_test heygen-video --from-local --scope project
           test -f .agents/skills/heygen-video/SKILL.md
-          echo "✓ heygen-video installed"
+          echo "✓ heygen-video installed at _install_test/.agents/skills/heygen-video/"
 
       - name: Verify heygen-video installed bundle is self-contained
         run: |
