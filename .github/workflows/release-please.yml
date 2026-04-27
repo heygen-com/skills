@@ -15,6 +15,14 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Use a PAT (or GitHub App token) instead of GITHUB_TOKEN so the
+          # tag push fires downstream workflows (publish.yml). GITHUB_TOKEN
+          # is intentionally scoped to NOT trigger workflow runs on tag
+          # push, to prevent recursive CI loops. We need that triggering
+          # behavior, so use a separate token.
+          # Falls back to GITHUB_TOKEN if RELEASE_PLEASE_TOKEN is unset, so
+          # this change is non-breaking until the secret is added.
+          # Ref: https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
