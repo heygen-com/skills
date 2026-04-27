@@ -14,7 +14,8 @@ Works with Claude Code, OpenClaw, Codex, Cursor, and other AI coding agents.
 **Paste this into your agent.** It does the rest — clones the repo to the right path, asks for your HeyGen API key, picks the best transport, runs a verify test, and ends with a working video.
 
 ```
-Read https://raw.githubusercontent.com/heygen-com/skills/master/INSTALL_FOR_AGENTS.md and follow it. Ask me for any API keys you need.
+Read https://raw.githubusercontent.com/heygen-com/skills/master/INSTALL_FOR_AGENTS.md and follow it.
+Ask me for any API keys you need.
 ```
 
 That's it. The agent fetches [INSTALL_FOR_AGENTS.md](./INSTALL_FOR_AGENTS.md) and walks the rest of the install. Same prompt forever — the install spec lives in the repo, not in your clipboard.
