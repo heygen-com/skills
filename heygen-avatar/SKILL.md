@@ -27,6 +27,39 @@ allowed-tools: Bash, WebFetch, Read, Write, mcp__heygen__*
 
 Create and manage HeyGen avatars for anyone: the agent, the user, or named characters. Handles identity extraction, avatar generation, voice selection, and saves everything to `AVATAR-<NAME>.md` for consistent reuse.
 
+## Files & Paths
+
+This skill reads and writes the following. No other files are accessed without explicit user instruction.
+
+| Operation | Path | Purpose |
+|-----------|------|---------|
+| Read | `SOUL.md`, `IDENTITY.md` | Extract identity details when creating an avatar for the agent |
+| Read | `AVATAR-<NAME>.md` | Load existing avatar identity (for variant looks, voice updates) |
+| Write | `AVATAR-<NAME>.md` | Save new avatar identity after creation |
+| Write | `AVATAR-AGENT.md`, `AVATAR-USER.md` (symlinks) | Role aliases, see Phase 5 |
+| Temp write | `/tmp/openclaw/uploads/` | Voice preview audio (downloaded for user playback, deleted after session) |
+| Remote upload | HeyGen (via `heygen asset create` or MCP) | User-provided photos uploaded to HeyGen for digital-twin creation |
+
+Assets are only uploaded to HeyGen when the user explicitly provides them.
+
+## Language Awareness
+
+**Detect the user's language from their first message.** Store as `user_language` (e.g., `en`, `ja`, `es`, `ko`, `zh`, `fr`, `de`, `pt`).
+
+1. **Communicate with the user in their language.** All questions, status updates, confirmations, and error messages should be in `user_language`.
+2. **Voice design prompts and selection respect `user_language`.** When designing or selecting a voice, specify the target language so the voice library returns matches that speak it.
+3. **Technical directives stay in English** — enum values (`Young Adult`, `Realistic`, `landscape`, etc.) are API-level and not translated.
+
+## UX Rules
+
+1. **Be concise.** No avatar IDs, group IDs, or raw API payloads in chat. Report the result (avatar created, ready to use) not the plumbing.
+2. **No internal jargon.** Never mention internal phase names ("Phase 0", "Phase 5 Symlink Maintenance") to the user. The user sees natural conversation: "Setting up your avatar\u2026" not "Running Phase 2 avatar creation."
+3. **One or two questions per phase.** Don't batch-ask. Walk phases in order, ask the smallest set of questions needed to proceed.
+4. **Read workspace files before asking.** `SOUL.md`, `IDENTITY.md`, `AVATAR-*.md` at the workspace root contain identity. Check them first. Only ask the user for what's genuinely missing.
+5. **Don't narrate skill internals.** Never say "let me read the workflow," "checking the reference files," "loading the avatar discovery guide." Read silently. The user sees questions and results, not internal navigation.
+6. **Don't announce what you're about to do.** Skip meta-commentary like "Creating the avatar now." Just do the work. If a step takes time, the next thing the user hears should be the result (or a checkpoint question).
+7. **Never narrate transport choice.** MCP vs CLI is internal. Pick the transport silently and never mention it. If both are unavailable, ask the user to configure one without explaining why.
+
 ## Start Here (Critical)
 
 **Default target = the agent.** The primary use of this skill is giving the agent a face + voice so it can present videos. Route to "user" only on explicit "my avatar" / "me" / "my photo" language. When in doubt, make the agent's avatar.
