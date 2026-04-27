@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.0.0](https://github.com/heygen-com/skills/compare/v2.3.1...v3.0.0) (2026-04-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* Direct-clone consumers who cached root SKILL.md will lose access to the meta-router skill. Contents migrated into both heygen-avatar/SKILL.md and heygen-video/SKILL.md so the skills remain fully functional standalone. Re-clone or git pull picks up the new layout.
+
+### Features
+
+* eliminate root SKILL.md + root references/ — skills are now independent ([#79](https://github.com/heygen-com/skills/issues/79)) ([d70bfc4](https://github.com/heygen-com/skills/commit/d70bfc438abda0e859c646dca5a66676af65bd3d))
+* make heygen-avatar + heygen-video install cleanly via gh skill ([#77](https://github.com/heygen-com/skills/issues/77)) ([e66e716](https://github.com/heygen-com/skills/commit/e66e7161efebfb55017d7ca84ebcca436b1f426d))
+
 ## [2.3.1](https://github.com/heygen-com/skills/compare/v2.3.0...v2.3.1) (2026-04-27)
 
 
