@@ -19,6 +19,7 @@ live at:
 - `https://raw.githubusercontent.com/heygen-com/skills/master/CLAUDE.md` — runtime contract for the skills
 - `https://raw.githubusercontent.com/heygen-com/skills/master/heygen-avatar/SKILL.md` — avatar creation skill (mode detection ladder, hard rules, full creation workflow)
 - `https://raw.githubusercontent.com/heygen-com/skills/master/heygen-video/SKILL.md` — video generation skill (mode detection ladder, hard rules, full producer pipeline)
+- `https://raw.githubusercontent.com/heygen-com/skills/master/heygen-translate/SKILL.md` — video translation / dubbing skill (mode detection ladder, hard rules, proofreads workflow)
 - `https://raw.githubusercontent.com/heygen-com/skills/master/INSTALL.md` — human-facing install doc
 
 ## Step 1: Detect the agent host and pick the install path
@@ -330,6 +331,7 @@ Tell the user:
 > - "Make a 30-second video of yourself introducing what we're working on this week"
 > - "Send a video update to the team about today's progress"
 > - "Generate a 60-second product walkthrough using my avatar"
+> - "Translate this video into Spanish, Japanese, and German" (heygen-translate)
 
 The skill handles avatar resolution, prompt engineering, aspect ratio
 correction, voice selection, and Frame Check automatically. Give it a topic,

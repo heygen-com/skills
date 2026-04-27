@@ -24,13 +24,14 @@ Want to install manually instead? Follow the steps below.
 
 ### Step 1 — Install the skills
 
-The repo ships two skills, `heygen-avatar` and `heygen-video`. Pick the install path that matches your tooling.
+The repo ships three skills: `heygen-avatar`, `heygen-video`, and `heygen-translate`. Pick the install path that matches your tooling.
 
 **Option A: `gh skill install`** (works across Claude Code, Cursor, Codex, Gemini CLI, Copilot, Junie, Goose, OpenHands, Amp, Cline, OpenCode, Warp, and more — [agentskills.io](https://agentskills.io)):
 
 ```bash
 gh skill install heygen-com/skills heygen-avatar
 gh skill install heygen-com/skills heygen-video
+gh skill install heygen-com/skills heygen-translate
 ```
 
 Requires GitHub CLI v2.90+. The CLI writes to the right directory for your agent automatically.
@@ -59,7 +60,7 @@ openclaw plugins install clawhub:@heygen/openclaw-plugin-heygen
 git clone --single-branch --depth 1 https://github.com/heygen-com/skills.git <install-path>/heygen-skills
 ```
 
-After cloning, the two skills are auto-discovered at `heygen-avatar/SKILL.md` and `heygen-video/SKILL.md`.
+After cloning, the three skills are auto-discovered at `heygen-avatar/SKILL.md`, `heygen-video/SKILL.md`, and `heygen-translate/SKILL.md`.
 
 ### Step 2 — Get your HeyGen API key
 
@@ -138,14 +139,15 @@ The skill picks up the avatar automatically, writes a script, generates the vide
 
 ## What's Included
 
-Two skills that work standalone or chain together:
+Three skills that work standalone or chain together:
 
 | Skill | What it does | Invoke |
 |-------|-------------|--------|
 | **heygen-avatar** | Photo → persistent digital twin (face + voice). Reusable across every video. | `/heygen-avatar` |
 | **heygen-video** | Idea → script → prompt-engineered video with your avatar delivering the message. | `/heygen-video` |
+| **heygen-translate** | Existing video → translated and dubbed version with voice cloning and lip-sync. 175+ languages. | `/heygen-translate` |
 
-**heygen-avatar** creates the identity. **heygen-video** uses it.
+**heygen-avatar** creates the identity. **heygen-video** uses it. **heygen-translate** localizes finished videos.
 
 ## How It Works
 

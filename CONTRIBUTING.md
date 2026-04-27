@@ -43,9 +43,9 @@ gh pr create --title "Short summary" --body "$(cat <<'EOF'
 - [ ] No spec-sheet language leaked into user-facing output
 ## References layout
 
-`heygen-avatar/` and `heygen-video/` are *independent, self-contained skills*. Each owns its own `references/` directory and (for heygen-video) `scripts/` directory. There is no root `SKILL.md` and no root `references/`.
+`heygen-avatar/`, `heygen-video/`, and `heygen-translate/` are *independent, self-contained skills*. Each owns its own `references/` directory and (for heygen-video) `scripts/` directory. There is no root `SKILL.md` and no root `references/`.
 
-- Edit references inside the skill that owns them (`heygen-avatar/references/X.md` or `heygen-video/references/X.md`).
+- Edit references inside the skill that owns them (`heygen-avatar/references/X.md`, `heygen-video/references/X.md`, or `heygen-translate/references/X.md`).
 - If two skills happen to share a doc (e.g. both have `troubleshooting.md` and `asset-routing.md`), edit the relevant copy. Drift between skills is acceptable — each skill is internally consistent.
 - CI (`.github/workflows/validate-skills.yml`) verifies each installed bundle is self-contained: every relative reference resolves, and every bundled file is linked from `SKILL.md`.
 
