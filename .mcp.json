@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "heygen": {
+      "type": "http",
+      "url": "https://mcp.heygen.com/mcp/v1/",
+      "note": "Official HeyGen MCP server. OAuth on first connection — runs against the user's existing HeyGen plan credits. The heygen-avatar and heygen-video skills detect this MCP and use it instead of the HeyGen CLI when available."
+    }
+  }
+}
