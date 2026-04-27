@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.1](https://github.com/heygen-com/skills/compare/v2.3.0...v2.3.1) (2026-04-27)
+
+
+### Bug Fixes
+
+* **ci:** use PAT for release-please so tag push fires publish.yml ([#74](https://github.com/heygen-com/skills/issues/74)) ([256896e](https://github.com/heygen-com/skills/commit/256896e3b2159f9a5693e9dd6a39835204ff0269))
+
 ## [2.3.0](https://github.com/heygen-com/skills/compare/v2.2.1...v2.3.0) (2026-04-27)
 
 
