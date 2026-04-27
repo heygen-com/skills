@@ -1,5 +1,34 @@
 # Avatar Discovery & Voice Selection
 
+## Path 0: Resolve workspace AVATAR files first
+
+Before any HeyGen catalog lookup, check the workspace root for an
+applicable `AVATAR-*.md` file. These are written by `heygen-avatar`
+and contain `Group ID` + `Voice ID` ready to use, with no API call
+needed.
+
+Resolution precedence:
+
+| Request signal | File to read |
+|---|---|
+| Named subject ("video with Eve", "Cleo's update") | `AVATAR-<NAME>.md` |
+| Agent self-reference ("video of yourself", "give us your update") | `AVATAR-AGENT.md` (symlink) |
+| User self-reference ("video of me", "my video update") | `AVATAR-USER.md` (symlink) |
+| No subject in request | Skip to Path A |
+
+`AVATAR-AGENT.md` and `AVATAR-USER.md` are role-based symlinks maintained
+by `heygen-avatar` Phase 5; they resolve to the current agent's / user's
+named AVATAR file at read time. Treat them like any other AVATAR file
+once read.
+
+If the resolved file has a populated HeyGen section, extract `Group ID`
+and `Voice ID` and proceed to Frame Check. Skip Path A entirely. If the
+file exists but the HeyGen section is empty, run `heygen-avatar` Phase 2
+first.
+
+If no file applies (no name match, no role alias, generic catalog
+browsing requested) — fall through to Path A below.
+
 ## Path A: Discover Existing Avatars
 
 ### A1: Check for private avatars first

@@ -70,10 +70,24 @@ Try to read `SOUL.md` from the workspace root.
 Every avatar gets one file: `AVATAR-<NAME>.md` at the workspace root.
 
 ```
-AVATAR-EVE.md      ← agent
-AVATAR-KEN.md      ← user
-AVATAR-CLEO.md     ← named character
+AVATAR-EVE.md      ← agent      (named, canonical)
+AVATAR-KEN.md      ← user       (named, canonical)
+AVATAR-CLEO.md     ← character  (named, canonical)
 ```
+
+The skill also maintains two **role-based symlinks** alongside the named
+files, for generic lookups by consumer skills (e.g., heygen-video) when the
+request doesn't carry a specific name ("make a video of yourself" → read
+the agent alias; "make a video of me" → read the user alias):
+
+```
+AVATAR-AGENT.md → AVATAR-<CURRENT-AGENT-NAME>.md   (symlink)
+AVATAR-USER.md  → AVATAR-<CURRENT-USER-NAME>.md    (symlink)
+```
+
+Named files are the single source of truth; aliases are pointers and never
+drift. Phase 5 of the workflow maintains them. Named characters get NO
+role alias — they are referenced by name only.
 
 Format:
 ```markdown
@@ -137,6 +151,18 @@ Then check `AVATAR-<NAME>.md` at the workspace root:
 - **AVATAR file exists + HeyGen section filled in** → "You already have an avatar set up. Want to add a new look, update it, or start fresh?" Wait for answer.
 - **AVATAR file exists but HeyGen section empty** → skip to Phase 2.
 - **No AVATAR file** → proceed to Phase 1.
+
+**Role alias staleness check.** Before proceeding, also check whether the
+role alias for this target is already pointing at the right named file:
+
+- For **agent target**: read `AVATAR-AGENT.md` (follow symlink) and
+  compare to `AVATAR-<CURRENT-AGENT-NAME>.md`. If they differ (e.g.,
+  `AVATAR-AGENT.md` → `AVATAR-OLD-NAME.md` because the agent identity
+  changed since the last run), re-link in Phase 5 even if no other
+  changes are made. The named file is canonical, but the alias must
+  match the *current* identity, not the historical one.
+- For **user target**: same check on `AVATAR-USER.md`.
+- For **named character**: no alias to check.
 
 **Optional existing-avatar check** (only useful on the user path when the user might already have avatars in their HeyGen account). If Phase 0 target = **user** AND no `AVATAR-<USER>.md` exists, list their HeyGen avatars first:
 
@@ -285,7 +311,59 @@ Update the HeyGen section of `AVATAR-<NAME>.md` to match the canonical format:
 
 Confirm the avatar is saved and that other skills (like heygen-video) will pick it up automatically. Communicate in `user_language`.
 
-### Phase 5 — Test (Optional)
+### Phase 5 — Maintain Role Alias
+
+After writing the named `AVATAR-<NAME>.md`, create or update a role-based
+symlink alongside it so other skills can do generic lookups without
+resolving the agent / user name first.
+
+Based on the Phase 0 target:
+
+- **Agent target** → symlink `AVATAR-AGENT.md` → `AVATAR-<NAME>.md`
+- **User target** → symlink `AVATAR-USER.md` → `AVATAR-<NAME>.md`
+- **Named character** → no role alias. Named characters are referenced by
+  name only (e.g., `AVATAR-CLEO.md`); they are not the agent or the user.
+
+**Implementation (run from the workspace root, with fs-fallback):**
+
+The `cd` to workspace root is mandatory — bare relative paths in `ln -s`
+resolve from the agent's current working directory, not where SOUL.md
+lives. The `|| echo` clause handles filesystems that reject symlinks
+(Windows without dev mode, some cloud-mounted storage) without aborting
+Phase 5.
+
+```bash
+# Agent
+cd "$WORKSPACE_ROOT" && ln -sf AVATAR-<NAME>.md AVATAR-AGENT.md \
+  || echo "role alias skipped: fs doesn't support symlinks"
+
+# User
+cd "$WORKSPACE_ROOT" && ln -sf AVATAR-<NAME>.md AVATAR-USER.md \
+  || echo "role alias skipped: fs doesn't support symlinks"
+```
+
+Use a relative link target (just the filename, no path prefix) so the
+alias survives if the workspace is moved or copied.
+
+`ln -sf` is unlink-then-symlink under the hood, not strictly atomic.
+Fine for single-user workspaces; if concurrent agents ever write the
+same alias, expect interleaving and add explicit locking then.
+
+**Why symlink, not copy:** removes the duplicate-file drift class
+(content can never diverge between named file and alias). It does NOT
+remove staleness drift — if `IDENTITY.md` changes the agent name without
+re-running heygen-avatar, `AVATAR-AGENT.md` keeps pointing at the *old*
+named file. Phase 0 mismatch-and-re-alias handles this on the next
+invocation; until then, the alias is stale-but-pointing-somewhere-valid,
+not broken.
+
+**Multi-agent workspace caveat:** one role alias per workspace is
+last-writer-wins. If two agents ever share a workspace and both run
+heygen-avatar, only the most recent run's identity is reachable via
+`AVATAR-AGENT.md`. Named files for both still exist. We accept this
+limit — multi-agent shared workspaces are out of scope for v1.
+
+### Phase 6 — Test (Optional)
 
 If the user wants to see their avatar in action:
 
@@ -313,7 +391,18 @@ Each iteration updates the AVATAR file. The file is always the source of truth.
 
 ## Video Producer Integration
 
-`heygen-video` reads AVATAR files for group_id and voice_id. "Make a video with Eve" → reads `AVATAR-EVE.md` → gets Group ID + Voice ID → resolves fresh look_id at runtime. No AVATAR file → falls back to stock avatars or asks user.
+`heygen-video` reads AVATAR files for group_id and voice_id. Resolution
+order:
+
+1. **Named request** ("Make a video with Eve") → read `AVATAR-EVE.md`.
+2. **Agent self-reference** ("make a video of yourself", "give us a video
+update") → read `AVATAR-AGENT.md` (symlink to current agent's named file).
+3. **User self-reference** ("make a video of me", "my video update") → read
+`AVATAR-USER.md` (symlink to current user's named file).
+4. **No AVATAR file or symlink** → fall back to stock avatars or ask user.
+
+The alias targets are resolved by the OS at read time, so consumer skills
+simply `cat AVATAR-AGENT.md` and get whatever the current agent's avatar is.
 
 ## Error Handling
 

@@ -158,7 +158,11 @@ Default to Full Producer. Better to ask one smart question than generate a medio
 
 **Runs once before Discovery on the first video request in a session.**
 
-Check for any `AVATAR-*.md` files in the workspace root.
+Check for any `AVATAR-*.md` files in the workspace root. The directory may
+also contain role-based **symlinks** (`AVATAR-AGENT.md`, `AVATAR-USER.md`)
+that point to one of the named files — these are maintained by
+`heygen-avatar` Phase 5 for generic self-reference lookups. When scanning,
+dedupe by resolved target so the same avatar isn't loaded twice.
 
 - **Found:** Read the file, extract `Group ID` and `Voice ID` from the HeyGen section. Pre-load as defaults for Discovery. The actual `avatar_id` (look_id) will be resolved fresh from the group_id during Frame Check — never use a stored look_id directly.
 - **Not found:** The user (or agent) has no avatar yet. Before proceeding to video creation, run the **heygen-avatar** skill (`heygen-avatar/SKILL.md` in this repo) to create one. Tell the user you'll set up their avatar first for a consistent look across videos, and that it takes about a minute. Communicate in `user_language`.
