@@ -1,0 +1,136 @@
+name: Validate Skills
+
+on:
+  pull_request:
+    paths:
+      - "heygen-avatar/**"
+      - "heygen-video/**"
+      - ".github/workflows/validate-skills.yml"
+      - "SKILL.md"
+  push:
+    branches: [master]
+    paths:
+      - "heygen-avatar/**"
+      - "heygen-video/**"
+      - ".github/workflows/validate-skills.yml"
+      - "SKILL.md"
+
+jobs:
+  self-contained-bundles:
+    name: Skills install cleanly via gh skill (self-contained)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install latest gh
+        run: |
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+            | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+            | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install -y gh
+          gh --version
+
+      - name: Verify gh skill is available
+        run: |
+          if ! gh skill --help >/dev/null 2>&1; then
+            echo "::error::gh skill subcommand not available in installed gh"
+            exit 1
+          fi
+
+      - name: Stage skills under skills/ for from-local install
+        run: |
+          # gh skill install --from-local requires the skills/<name>/SKILL.md convention.
+          # Stage the in-repo subdir skills under a temporary skills/ root so we can validate.
+          mkdir -p _ghskill_test/skills
+          cp -R heygen-avatar _ghskill_test/skills/heygen-avatar
+          cp -R heygen-video  _ghskill_test/skills/heygen-video
+          ls -la _ghskill_test/skills/
+
+      - name: Install heygen-avatar from local
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p _install_test
+          cd _install_test
+          gh skill install ../_ghskill_test heygen-avatar --from-local --scope project
+          test -f .agents/skills/heygen-avatar/SKILL.md
+          echo "✓ heygen-avatar installed"
+
+      - name: Verify heygen-avatar installed bundle is self-contained
+        run: |
+          set -euo pipefail
+          cd _install_test/.agents/skills/heygen-avatar
+          # No parent-dir references in installed SKILL.md.
+          if grep -nE '\.\./' SKILL.md; then
+            echo "::error::heygen-avatar/SKILL.md contains parent-dir (../) references after install"
+            exit 1
+          fi
+          # Every relative reference in SKILL.md must exist inside the installed bundle.
+          fail=0
+          for ref in $(grep -oE '(references|scripts)/[a-zA-Z0-9_./-]+\.(md|sh)' SKILL.md | sort -u); do
+            if [ ! -f "$ref" ]; then
+              echo "::error::heygen-avatar references $ref but it's not in the installed bundle"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then exit 1; fi
+          echo "✓ heygen-avatar bundle is self-contained"
+
+      - name: Install heygen-video from local
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd _install_test
+          gh skill install ../_ghskill_test heygen-video --from-local --scope project
+          test -f .agents/skills/heygen-video/SKILL.md
+          echo "✓ heygen-video installed"
+
+      - name: Verify heygen-video installed bundle is self-contained
+        run: |
+          set -euo pipefail
+          cd _install_test/.agents/skills/heygen-video
+          if grep -nE '\.\./' SKILL.md; then
+            echo "::error::heygen-video/SKILL.md contains parent-dir (../) references after install"
+            exit 1
+          fi
+          fail=0
+          for ref in $(grep -oE '(references|scripts)/[a-zA-Z0-9_./-]+\.(md|sh)' SKILL.md | sort -u); do
+            if [ ! -f "$ref" ]; then
+              echo "::error::heygen-video references $ref but it's not in the installed bundle"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then exit 1; fi
+          echo "✓ heygen-video bundle is self-contained"
+
+  spec-validate-soft:
+    name: agentskills.io spec validation (advisory)
+    runs-on: ubuntu-latest
+    # Advisory only — fails are reported as warnings, not blocking.
+    # Root SKILL.md will fail validation today (name: heygen-skills doesn't match directory `.`).
+    # That's tracked as a known issue and is not a blocker for gh skill install.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install latest gh
+        run: |
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+            | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+            | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install -y gh
+
+      - name: Run gh skill publish --dry-run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh skill publish --dry-run || true
+          echo "::warning::Root SKILL.md does not satisfy gh skill publish naming rules (expected — gh skill publish to agentskills.io registry is a follow-up)."

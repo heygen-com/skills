@@ -7,7 +7,7 @@ the reference when you need exact arguments, edge cases, or alternative
 creation paths.
 
 For *avatar discovery* (finding an existing avatar at video time), see
-[`heygen-video/references/avatar-discovery.md`](../../heygen-video/references/avatar-discovery.md).
+[`heygen-video/references/avatar-discovery.md`](https://github.com/heygen-com/skills/blob/master/heygen-video/references/avatar-discovery.md).
 
 ---
 

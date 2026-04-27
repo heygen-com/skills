@@ -6,3 +6,8 @@ node_modules/
 
 evals/
 scripts/release.sh
+
+# Local CI fixtures
+.agents/
+_ghskill_test/
+_install_test/

@@ -3,7 +3,7 @@
 This guide covers *avatar discovery for video generation* — how heygen-video
 finds an appropriate presenter (or skips presenter entirely) before calling
 the Video Agent. For *avatar creation*, see `heygen-avatar` and
-[`heygen-avatar/references/avatar-creation.md`](../../heygen-avatar/references/avatar-creation.md).
+[`heygen-avatar/references/avatar-creation.md`](https://github.com/heygen-com/skills/blob/master/heygen-avatar/references/avatar-creation.md).
 
 ## Path 0: Resolve workspace AVATAR files first
 
@@ -112,7 +112,7 @@ After avatar is settled, confirm voice preferences (accent, delivery style, lang
 
 If no existing avatar fits and the user wants one created, route to the
 `heygen-avatar` skill. See
-[`heygen-avatar/references/avatar-creation.md`](../../heygen-avatar/references/avatar-creation.md)
+[`heygen-avatar/references/avatar-creation.md`](https://github.com/heygen-com/skills/blob/master/heygen-avatar/references/avatar-creation.md)
 for the full creation API surface (photo / prompt / digital twin), file
 input formats, and identity field mappings.
 
@@ -154,7 +154,7 @@ heygen voice list --type public --engine starfish --language en --gender female 
 
 For voice *design* (semantic search by description) and the full voice
 selection workflow during avatar setup, see
-[`heygen-avatar/references/avatar-creation.md`](../../heygen-avatar/references/avatar-creation.md).
+[`heygen-avatar/references/avatar-creation.md`](https://github.com/heygen-com/skills/blob/master/heygen-avatar/references/avatar-creation.md).
 
 ---
 
