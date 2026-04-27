@@ -5,30 +5,15 @@ on:
     paths:
       - "heygen-avatar/**"
       - "heygen-video/**"
-      - "references/**"
-      - "scripts/**"
       - ".github/workflows/validate-skills.yml"
-      - "SKILL.md"
   push:
     branches: [master]
     paths:
       - "heygen-avatar/**"
       - "heygen-video/**"
-      - "references/**"
-      - "scripts/**"
       - ".github/workflows/validate-skills.yml"
-      - "SKILL.md"
 
 jobs:
-  references-in-sync:
-    name: Root references/ stays in sync with subdir copies
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Verify references are in sync (no drift)
-        run: ./scripts/sync-references.sh --check
-
   self-contained-bundles:
     name: Skills install cleanly via gh skill (self-contained)
     runs-on: ubuntu-latest
@@ -144,12 +129,28 @@ jobs:
           if [ "$fail" -ne 0 ]; then exit 1; fi
           echo "✓ heygen-video bundle is self-contained, no orphans"
 
+      - name: Verify no parent-dir refs in heygen-avatar references/
+        run: |
+          set -euo pipefail
+          if grep -rnE '\.\./\.\.' heygen-avatar/references/ 2>/dev/null; then
+            echo "::error::heygen-avatar/references/ contains ../../ paths that will break inside an installed bundle"
+            exit 1
+          fi
+          echo "✓ heygen-avatar/references/ has no parent-dir refs"
+
+      - name: Verify no parent-dir refs in heygen-video references/
+        run: |
+          set -euo pipefail
+          if grep -rnE '\.\./\.\.' heygen-video/references/ 2>/dev/null; then
+            echo "::error::heygen-video/references/ contains ../../ paths that will break inside an installed bundle"
+            exit 1
+          fi
+          echo "✓ heygen-video/references/ has no parent-dir refs"
+
   spec-validate-soft:
     name: agentskills.io spec validation (advisory)
     runs-on: ubuntu-latest
     # Advisory only — fails are reported as warnings, not blocking.
-    # Root SKILL.md will fail validation today (name: heygen-skills doesn't match directory `.`).
-    # That's tracked as a known issue and is not a blocker for gh skill install.
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -167,6 +168,4 @@ jobs:
       - name: Run gh skill publish --dry-run
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh skill publish --dry-run || true
-          echo "::warning::Root SKILL.md does not satisfy gh skill publish naming rules (expected — gh skill publish to agentskills.io registry is a follow-up)."
+        run: gh skill publish --dry-run || true

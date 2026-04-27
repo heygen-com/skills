@@ -2,37 +2,52 @@
 
 ## What This Is
 
-The HeyGen Skills. Two skills that chain together: **heygen-avatar** (identity → avatar → voice) and **heygen-video** (idea → script → video). SKILL.md at root routes between them.
+The HeyGen Skills. Two independent, self-contained skills that chain together: **heygen-avatar** (identity → avatar → voice) and **heygen-video** (idea → script → video). Each ships its own bundle of references so it installs cleanly via `gh skill install`, ClawHub, the OpenClaw plugin, or direct git clone.
 
 ## Architecture
 
 ```
 heygen-skills/
-├── SKILL.md                    # Router: detects intent, dispatches to sub-skill
 ├── CLAUDE.md                   # This file. Structure, rules, conventions.
 ├── INSTALL.md                  # Installation instructions
+├── INSTALL_FOR_AGENTS.md       # Agent-driven install spec
 ├── README.md                   # Public-facing description
 ├── CONTRIBUTING.md             # PR workflow
+├── CHANGELOG.md
 ├── LICENSE
-├── heygen-avatar/
-│   └── SKILL.md                # Avatar creation workflow (identity → avatar → voice → AVATAR file)
-├── heygen-video/
-│   └── SKILL.md                # Video production workflow (7-stage pipeline)
-├── references/                 # Shared. Loaded on-demand by phase (NOT every turn)
-│   ├── avatar-discovery.md     # Discovery: avatar lookup, voice selection, curl examples
-│   ├── asset-routing.md        # Discovery: asset classification engine, upload flows
-│   ├── prompt-styles.md        # Prompt Craft: 6 prompt style templates
-│   ├── motion-vocabulary.md    # Prompt Craft: camera/transition vocabulary
-│   ├── prompt-craft.md         # Prompt Craft: prompt construction deep-dive
-│   ├── official-prompt-guide.md# Prompt Craft: HeyGen's own prompt research
-│   ├── frame-check.md          # Frame Check: aspect ratio correction prompts
-│   ├── troubleshooting.md      # Known issues, workarounds, duration variance
-│   └── reviewer-prompt.md      # Deliver: self-evaluation rubric
+├── VERSION
+├── .mcp.json + mcp.json        # MCP server config (root-level, used by plugin manifests)
+├── .claude-plugin/             # OpenClaw / Claude Code plugin manifest
+├── .codex-plugin/              # Codex plugin manifest
+├── .cursor-plugin/             # Cursor plugin manifest
+├── heygen-avatar/              # Self-contained skill
+│   ├── SKILL.md                # Avatar creation workflow (identity → avatar → voice → AVATAR file)
+│   └── references/             # On-demand docs, loaded per phase
+│       ├── asset-routing.md
+│       ├── avatar-creation.md
+│       └── troubleshooting.md
+├── heygen-video/               # Self-contained skill
+│   ├── SKILL.md                # Video production workflow (7-stage pipeline)
+│   ├── references/             # On-demand docs, loaded per phase
+│   │   ├── asset-routing.md
+│   │   ├── avatar-discovery.md
+│   │   ├── frame-check.md
+│   │   ├── motion-vocabulary.md
+│   │   ├── official-prompt-guide.md
+│   │   ├── prompt-craft.md
+│   │   ├── prompt-styles.md
+│   │   └── troubleshooting.md
+│   └── scripts/
+│       └── update-check.sh     # Self-contained version-check shell script
+├── platforms/                  # Platform-specific skill variants (e.g. nanoclaw)
+├── assets/                     # Logos, plugin assets
 └── evals/                      # Dev-only test infrastructure (not shipped to users)
-    ├── eval-runner-prompt.md   # Instructions for eval subagent
-    ├── autoresearch-loop.md    # Loop methodology docs
-    └── round-N-scenarios.md    # Per-round test scenarios
+    ├── eval-runner-prompt.md
+    ├── autoresearch-loop.md
+    └── round-N-scenarios.md
 ```
+
+*No root SKILL.md, no root references/.* The two skills are independent. If shared docs drift between them, that's acceptable — each skill is internally consistent and authored independently.
 
 ## The 300-Line Rule
 
@@ -43,7 +58,7 @@ Each SKILL.md must stay under 300 lines. Skill files are injected into EVERY pro
 - Stage flow overview (what stages exist, when to enter each)
 - Decision trees (mode detection, avatar path selection, style selection)
 - Critical rules that apply EVERY turn
-- Short "Read ../references/X.md for details" pointers at each stage
+- Short "Read references/X.md for details" pointers at each stage (relative to the skill's own SKILL.md — each skill bundles its own references/)
 
 **What moves to references/:**
 - Curl examples and API request/response shapes

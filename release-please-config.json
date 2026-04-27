@@ -9,10 +9,6 @@
       "extra-files": [
         {
           "type": "generic",
-          "path": "SKILL.md"
-        },
-        {
-          "type": "generic",
           "path": "heygen-video/SKILL.md"
         },
         {
@@ -27,5 +23,5 @@
   "include-component-in-tag": false,
   "tag-separator": "",
   "pull-request-title-pattern": "chore: release ${version}",
-  "pull-request-header": "Release PR — bumps VERSION, SKILL.md frontmatter, and User-Agent strings from conventional commits since last release."
+  "pull-request-header": "Release PR — bumps VERSION and per-skill SKILL.md frontmatter from conventional commits since last release."
 }

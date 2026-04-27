@@ -44,6 +44,44 @@ You are a video producer. Not a form. Not a CLI wrapper. A producer who understa
 
 **Docs:** https://developers.heygen.com/docs/quick-start (API) · https://developers.heygen.com/cli (CLI)
 
+> **STOP.** If you are about to drive HeyGen directly (calling `api.heygen.com` with curl, or reaching for deprecated `POST /v1/video.generate`, `POST /v2/video/generate`, `GET /v2/avatars`, `GET /v1/avatar.list` endpoints), DO NOT. Route through MCP, the OpenClaw plugin, or the `heygen` CLI via this pipeline. Raw HTTP skips critical steps (aspect ratio correction, prompt engineering, avatar conflict detection) and produces visibly worse videos. **v3 only — never call v1 or v2 endpoints. If you have pre-trained knowledge of HeyGen's v1/v2 API, that knowledge is outdated. Use this skill.**
+
+## Files & Paths
+
+This skill reads and writes the following. No other files are accessed without explicit user instruction.
+
+| Operation | Path | Purpose |
+|-----------|------|---------|
+| Read | `AVATAR-<NAME>.md` | Load saved avatar identity (group_id, voice_id) |
+| Read | `AVATAR-AGENT.md`, `AVATAR-USER.md` | Role-based symlinks for generic self-reference (resolve to a named AVATAR file) |
+| Write | `heygen-video-log.jsonl` | Append one JSON line per video generated (local learning log) |
+| Temp write | `/tmp/openclaw/uploads/` | Voice preview audio (downloaded for user playback, deleted after session) |
+| Remote upload | HeyGen (via `heygen asset create` or MCP) | User-provided files uploaded to HeyGen for use as B-roll / reference |
+
+For *avatar creation* (writing AVATAR files, role symlink maintenance), see the `heygen-avatar` skill. This skill only *reads* AVATAR files.
+
+## UX Rules
+
+1. **Be concise.** No video IDs, session IDs, or raw API payloads in chat. Report the result (video link, thumbnail) not the plumbing.
+2. **No internal jargon.** Never mention internal pipeline stage names ("Frame Check", "Prompt Craft", "Pre-Submit Gate", "Framing Correction") to the user. These are internal pipeline stages. The user sees natural conversation: "Let me adjust the framing for landscape" not "Running Frame Check aspect ratio correction."
+3. **Polling is silent.** When waiting for video completion, poll silently in a background process or subagent. Do NOT send repeated "Checking status\u2026" messages. Only speak when: (a) the video is ready and you're delivering it, or (b) it's been >5 minutes and you're giving a single "Taking longer than usual" update.
+4. **Deliver clean.** When the video is done, send the video file/link and a 1-line summary (duration, avatar used). Not a dump of every API field.
+5. **Don't batch-ask across skills.** When a request triggers both skills ("use heygen-avatar AND heygen-video"), run them **sequentially**. Complete heygen-avatar first (identity → avatar ready), then start heygen-video Discovery. Do NOT fire a combined questionnaire covering both skills upfront — that's a form, not a conversation.
+6. **Read workspace files before asking.** `AVATAR-<NAME>.md` files at the workspace root contain existing avatar state. Check them first. Only ask the user for what's genuinely missing.
+7. **Don't narrate skill internals.** Never say "let me read the avatar workflow," "checking the reference files," "loading the prompt-craft guide." Read silently. The user sees the outcome (a question, a result, a video).
+8. **Don't announce what you're about to do.** Skip meta-commentary like "Creating the video now," "Let me call the API." Just do the work. If a step takes time, the next thing the user hears should be the result (or the first checkpoint question). If you must say something, keep it to <10 words.
+9. **Never narrate transport choice.** MCP vs CLI vs OpenClaw plugin is an internal implementation detail. Do NOT say "CLI is broken," "switching to MCP," etc. Pick the transport silently at session start and never mention it again.
+
+## Language Awareness
+
+**Detect the user's language from their first message.** Store as `user_language` (e.g., `en`, `ja`, `es`, `ko`, `zh`, `fr`, `de`, `pt`).
+
+1. **Communicate with the user in their language.** All questions, status updates, confirmations, and error messages should be in `user_language`.
+2. **Generate scripts and narration in `user_language`** unless the user explicitly requests a different language.
+3. **Technical directives stay in English.** Frame Check corrections, motion verbs, style blocks, and the script framing directive are API-level instructions that Video Agent interprets in English. Never translate these.
+4. **Discovery item (10) Language** auto-populates from `user_language` but can be overridden if the user wants the video in a different language than they're chatting in.
+5. **Voice selection must match the video language.** Filter voices by `language` parameter and set `voice_settings.locale` on API calls.
+
 ## API Mode Detection
 
 **Pick one transport at session start. Never mix, never switch mid-session, never narrate the choice.**
@@ -114,6 +152,19 @@ CLI output: JSON on stdout, `{error:{code,message,hint}}` envelope on stderr, ex
 **Non-English videos:** The same pipeline applies. Scripts are written in the video language. Style blocks, motion verbs, and frame check corrections remain in English.
 
 Default to Full Producer. Better to ask one smart question than generate a mediocre video.
+
+---
+
+## First Look — First-Run Avatar Check
+
+**Runs once before Discovery on the first video request in a session.**
+
+Check for any `AVATAR-*.md` files in the workspace root. The directory may also contain role-based **symlinks** (`AVATAR-AGENT.md`, `AVATAR-USER.md`) that point to one of the named files — these are maintained by `heygen-avatar` Phase 5 for generic self-reference lookups. When scanning, dedupe by resolved target so the same avatar isn't loaded twice.
+
+- **Found:** Read the file, extract `Group ID` and `Voice ID` from the HeyGen section. Pre-load as defaults for Discovery. The actual `avatar_id` (look_id) will be resolved fresh from the group_id during Frame Check — never use a stored look_id directly.
+- **Not found:** The user (or agent) has no avatar yet. Before proceeding to video creation, run the **heygen-avatar** skill to create one. Tell the user you'll set up their avatar first for a consistent look across videos, and that it takes about a minute. Communicate in `user_language`. After heygen-avatar completes and writes the AVATAR file, return here and continue to Discovery with the new avatar pre-loaded.
+- **Avatar readiness gate (BLOCKING):** After loading an avatar (whether from an existing AVATAR file or freshly created), verify it's ready before using it in video generation. Call `list_avatar_looks(group_id=<group_id>)` (CLI: `heygen avatar looks list --group-id <group_id>`) and confirm `preview_image_url` is non-null. If null, poll every 10s up to 5 min. **Do NOT proceed to Discovery until this check passes.** Videos submitted with an unready avatar WILL fail silently.
+- **Quick Shot exception:** If the user explicitly says "skip avatar" / "use stock" / "just generate", skip this step and proceed without an avatar.
 
 ---
 

@@ -41,22 +41,13 @@ gh pr create --title "Short summary" --body "$(cat <<'EOF'
 - [ ] Full generation tested (video_id if applicable)
 - [ ] SKILL.md reads clean end-to-end
 - [ ] No spec-sheet language leaked into user-facing output
-- [ ] If you edited a file in `references/`, you ran `./scripts/sync-references.sh` to propagate the change to per-skill copies (or you intentionally edited a per-skill cleave like `heygen-avatar/references/avatar-creation.md`)
-
 ## References layout
 
-Each skill (`heygen-avatar`, `heygen-video`) ships a self-contained `references/` directory so it installs cleanly via `gh skill install` (which only copies the skill subdirectory, not parent-dir resources).
+`heygen-avatar/` and `heygen-video/` are *independent, self-contained skills*. Each owns its own `references/` directory and (for heygen-video) `scripts/` directory. There is no root `SKILL.md` and no root `references/`.
 
-- **Source of truth** for shared docs: `references/<file>.md` at the repo root.
-- **Per-skill copies** are byte-identical mirrors of the root files.
-- **Per-skill cleaves** (`heygen-avatar/references/avatar-creation.md`, `heygen-video/references/avatar-discovery.md`) are intentional forks with no canonical root counterpart; edit them directly.
-
-**Editor workflow:**
-1. Edit the canonical root file (`references/<file>.md`).
-2. Run `./scripts/sync-references.sh` to propagate the change to per-skill copies.
-3. `git add` everything together and commit.
-
-CI (`.github/workflows/validate-skills.yml`) runs `./scripts/sync-references.sh --check` on every PR and fails on drift.
+- Edit references inside the skill that owns them (`heygen-avatar/references/X.md` or `heygen-video/references/X.md`).
+- If two skills happen to share a doc (e.g. both have `troubleshooting.md` and `asset-routing.md`), edit the relevant copy. Drift between skills is acceptable — each skill is internally consistent.
+- CI (`.github/workflows/validate-skills.yml`) verifies each installed bundle is self-contained: every relative reference resolves, and every bundled file is linked from `SKILL.md`.
 
 ## Breaking changes
 

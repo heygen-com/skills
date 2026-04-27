@@ -17,9 +17,8 @@ If you fetched this file by URL without cloning yet, the companion files
 live at:
 
 - `https://raw.githubusercontent.com/heygen-com/skills/master/CLAUDE.md` — runtime contract for the skills
-- `https://raw.githubusercontent.com/heygen-com/skills/master/SKILL.md` — top-level skill (mode detection ladder, hard rules)
-- `https://raw.githubusercontent.com/heygen-com/skills/master/heygen-avatar/SKILL.md` — avatar creation sub-skill
-- `https://raw.githubusercontent.com/heygen-com/skills/master/heygen-video/SKILL.md` — video generation sub-skill
+- `https://raw.githubusercontent.com/heygen-com/skills/master/heygen-avatar/SKILL.md` — avatar creation skill (mode detection ladder, hard rules, full creation workflow)
+- `https://raw.githubusercontent.com/heygen-com/skills/master/heygen-video/SKILL.md` — video generation skill (mode detection ladder, hard rules, full producer pipeline)
 - `https://raw.githubusercontent.com/heygen-com/skills/master/INSTALL.md` — human-facing install doc
 
 ## Step 1: Detect the agent host and pick the install path
@@ -70,7 +69,7 @@ If MCP is detected and the user is happy with it, **skip to Step 5 (avatar creat
 But before you do, warn them:
 
 > If you set `HEYGEN_API_KEY` later for any reason, the skill will short-circuit
-> MCP detection (per the mode-detection ladder in `SKILL.md`) and use the CLI /
+> MCP detection (per the mode-detection ladder in `heygen-video/SKILL.md` or `heygen-avatar/SKILL.md`) and use the CLI /
 > direct-API route instead. MCP plan credits won't be touched. To switch back to
 > MCP, unset `HEYGEN_API_KEY`.
 
@@ -110,7 +109,7 @@ For the OpenClaw plugin path (Step 4 Option A), the key is read from the same
 
 These skills route the actual HeyGen API call through one of three transports.
 The skill auto-detects which transport is available at runtime via the
-mode-detection ladder in [`SKILL.md`](./SKILL.md):
+mode-detection ladder in each skill's SKILL.md (e.g. [`heygen-video/SKILL.md`](./heygen-video/SKILL.md) or [`heygen-avatar/SKILL.md`](./heygen-avatar/SKILL.md)):
 
 > 1. **OpenClaw plugin** if `video_generate` exposes `heygen/video_agent_v3`
 > 2. **CLI (API-key override)** if `HEYGEN_API_KEY` is set AND `heygen --version` exits 0
@@ -348,7 +347,7 @@ If the install was via ClawHub:
 clawhub update heygen-skills
 ```
 
-Re-read [`SKILL.md`](./SKILL.md) after the upgrade if the version bumped — the
+Re-read the active skill's SKILL.md (`heygen-avatar/SKILL.md` or `heygen-video/SKILL.md`) after the upgrade if the version bumped — the
 mode detection ladder occasionally adds new transports (e.g. when MCP support
 shipped, when the OpenClaw plugin shipped).
 
@@ -370,7 +369,7 @@ should always pass `mode: "generate"` for one-shot video creation. If you
 patched the sub-skill, you may have introduced this regression.
 
 **MCP tools listed but the skill is using the CLI / plugin instead.** The
-skill follows the mode-detection ladder in `SKILL.md`: plugin → CLI
+skill follows the mode-detection ladder in its SKILL.md (heygen-avatar or heygen-video): plugin → CLI
 (API-key override) → MCP → CLI (fallback). **`HEYGEN_API_KEY` being set
 short-circuits MCP detection.** If the user wants MCP to be the chosen
 transport, unset the env var (`unset HEYGEN_API_KEY`) and re-detect. If the
