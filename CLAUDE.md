@@ -60,6 +60,10 @@ Skills communicate through `AVATAR-<NAME>.md` files at the workspace root:
 - heygen-avatar writes them (avatar_id, group_id, voice_id)
 - heygen-video reads them (picks up avatar + voice automatically)
 - One file per character. Human-readable AND machine-readable.
+- heygen-avatar also maintains role-based symlinks (`AVATAR-AGENT.md`,
+  `AVATAR-USER.md`) pointing at the current agent / user named file, so
+  consumer skills can resolve generic self-references ("make a video of
+  yourself" / "my video update") without parsing identity files.
 
 ## API Conventions
 

@@ -152,6 +152,18 @@ Then check `AVATAR-<NAME>.md` at the workspace root:
 - **AVATAR file exists but HeyGen section empty** → skip to Phase 2.
 - **No AVATAR file** → proceed to Phase 1.
 
+**Role alias staleness check.** Before proceeding, also check whether the
+role alias for this target is already pointing at the right named file:
+
+- For **agent target**: read `AVATAR-AGENT.md` (follow symlink) and
+  compare to `AVATAR-<CURRENT-AGENT-NAME>.md`. If they differ (e.g.,
+  `AVATAR-AGENT.md` → `AVATAR-OLD-NAME.md` because the agent identity
+  changed since the last run), re-link in Phase 5 even if no other
+  changes are made. The named file is canonical, but the alias must
+  match the *current* identity, not the historical one.
+- For **user target**: same check on `AVATAR-USER.md`.
+- For **named character**: no alias to check.
+
 **Optional existing-avatar check** (only useful on the user path when the user might already have avatars in their HeyGen account). If Phase 0 target = **user** AND no `AVATAR-<USER>.md` exists, list their HeyGen avatars first:
 
 **MCP:** `list_avatar_groups(ownership=private)`
@@ -312,27 +324,44 @@ Based on the Phase 0 target:
 - **Named character** → no role alias. Named characters are referenced by
   name only (e.g., `AVATAR-CLEO.md`); they are not the agent or the user.
 
-**Implementation (atomic, replace-existing):**
+**Implementation (run from the workspace root, with fs-fallback):**
+
+The `cd` to workspace root is mandatory — bare relative paths in `ln -s`
+resolve from the agent's current working directory, not where SOUL.md
+lives. The `|| echo` clause handles filesystems that reject symlinks
+(Windows without dev mode, some cloud-mounted storage) without aborting
+Phase 5.
 
 ```bash
 # Agent
-ln -sf AVATAR-<NAME>.md AVATAR-AGENT.md
+cd "$WORKSPACE_ROOT" && ln -sf AVATAR-<NAME>.md AVATAR-AGENT.md \
+  || echo "role alias skipped: fs doesn't support symlinks"
 
 # User
-ln -sf AVATAR-<NAME>.md AVATAR-USER.md
+cd "$WORKSPACE_ROOT" && ln -sf AVATAR-<NAME>.md AVATAR-USER.md \
+  || echo "role alias skipped: fs doesn't support symlinks"
 ```
 
-`ln -sf` overwrites any existing symlink atomically. Always use a relative
-link target so the alias survives if the workspace is moved or copied.
+Use a relative link target (just the filename, no path prefix) so the
+alias survives if the workspace is moved or copied.
 
-**Why symlink, not copy:** drift impossible. The named file is canonical
-source of truth; the alias is a pointer. If the agent identity changes
-(rare — e.g., workspace reassignment), re-running this skill updates the
-symlink to the new named file.
+`ln -sf` is unlink-then-symlink under the hood, not strictly atomic.
+Fine for single-user workspaces; if concurrent agents ever write the
+same alias, expect interleaving and add explicit locking then.
 
-**Skip on platforms without symlink support.** If the underlying filesystem
-rejects the `ln -s` call, log a one-line note ("role alias skipped: fs
-doesn't support symlinks") and continue. The named file is still authoritative.
+**Why symlink, not copy:** removes the duplicate-file drift class
+(content can never diverge between named file and alias). It does NOT
+remove staleness drift — if `IDENTITY.md` changes the agent name without
+re-running heygen-avatar, `AVATAR-AGENT.md` keeps pointing at the *old*
+named file. Phase 0 mismatch-and-re-alias handles this on the next
+invocation; until then, the alias is stale-but-pointing-somewhere-valid,
+not broken.
+
+**Multi-agent workspace caveat:** one role alias per workspace is
+last-writer-wins. If two agents ever share a workspace and both run
+heygen-avatar, only the most recent run's identity is reachable via
+`AVATAR-AGENT.md`. Named files for both still exist. We accept this
+limit — multi-agent shared workspaces are out of scope for v1.
 
 ### Phase 6 — Test (Optional)
 
