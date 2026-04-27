@@ -284,7 +284,28 @@ Snap cuts, flash frames. Zero breathing room.
 
 📖 **Full avatar discovery flow, creation APIs, voice selection → [../references/avatar-discovery.md](../references/avatar-discovery.md)**
 
-**Decision flow:**
+**AVATAR file resolution (run before any external avatar lookup):**
+
+If the request implies a specific subject, try the matching AVATAR file at
+the workspace root before browsing HeyGen catalogs.
+
+| Request signal | File to read |
+|---|---|
+| Named subject ("video with Eve", "Cleo's update") | `AVATAR-<NAME>.md` |
+| Agent self-reference ("video of yourself", "give us your update") | `AVATAR-AGENT.md` |
+| User self-reference ("video of me", "my video update") | `AVATAR-USER.md` |
+| No subject in request | (skip; ask in step 1 below) |
+
+`AVATAR-AGENT.md` and `AVATAR-USER.md` are role-based **symlinks**
+maintained by `heygen-avatar` Phase 5; they resolve to the current
+agent's / user's named AVATAR file at read time. Treat them like any
+other AVATAR file once read.
+
+If the AVATAR file (named or alias) exists and has a populated HeyGen
+section, extract `group_id` + `voice_id` and proceed to Frame Check. Skip
+the rest of the discovery flow.
+
+**Discovery flow (when no AVATAR file applies):**
 1. Ask: "Visible presenter or voice-over only?"
 2. If voice-over → no `avatar_id`, state in prompt.
 3. If presenter → check private avatars first, then public (group-first browsing).

@@ -199,15 +199,21 @@ The skill will:
 3. Generate the avatar via the Avatar V pipeline (prompt-based by default;
    photo opt-in only for real-person digital twins).
 4. Save `AVATAR-<AGENT-NAME>.md` at the workspace root for future reuse.
-5. Return `avatar_id` + `voice_id` for use in Step 7 (defaults).
+5. Maintain the `AVATAR-AGENT.md` symlink (or `AVATAR-USER.md` for
+   user-target installs) pointing at the named file, so generic
+   self-reference requests ("make a video of yourself" / "my video
+   update") resolve without name lookup.
+6. Return `avatar_id` + `voice_id` for use in Step 7 (defaults).
 
-On the happy path, this step ends with a new file like `AVATAR-EVE.md`,
-`AVATAR-ADAM.md`, or `AVATAR-CLEO.md` at the workspace root. That file is
-the persistent identity — every future video reuses it automatically. Note
-that the heygen-avatar skill has a Phase 2 STOP gate before generation; if
-the user aborts there, no file is written and no credits are spent. That's
-the correct behavior — it's a confirmation gate, not a bug. Resume by
-re-invoking the sub-skill.
+On the happy path, this step ends with both a named file (e.g.
+`AVATAR-EVE.md`, `AVATAR-ADAM.md`, `AVATAR-CLEO.md`) and a role-based
+symlink (`AVATAR-AGENT.md` for agent target, `AVATAR-USER.md` for user
+target) at the workspace root. Named files are canonical; symlinks are
+pointers that consumer skills (heygen-video) can read for generic
+self-reference. Note that the heygen-avatar skill has a Phase 2 STOP gate
+before generation; if the user aborts there, no file is written and no
+credits are spent. That's the correct behavior — it's a confirmation gate,
+not a bug. Resume by re-invoking the sub-skill.
 
 ### If you are running outside an OpenClaw workspace (no `SOUL.md`)
 
