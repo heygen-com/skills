@@ -11,13 +11,15 @@ Works with Claude Code, OpenClaw, Codex, Cursor, and other AI coding agents.
 
 ## Install
 
-Paste this into your agent to get started:
+**Paste this into your agent.** It does the rest — clones the repo to the right path, asks for your HeyGen API key, picks the best transport, runs a verify test, and ends with a working video.
 
 ```
-Install HeyGen Skills from https://github.com/heygen-com/skills — clone the repo into your skills directory. Install the HeyGen CLI from https://static.heygen.ai/cli/install.sh and export HEYGEN_API_KEY=<your-key> (get one at https://app.heygen.com/api). Or, if you're on a HeyGen plan and already have MCP connected to your agent, skip the key step — MCP will be used automatically. Then use heygen-avatar and heygen-video to bring yourself to life — create your own avatar and make a short cinematic intro video of yourself introducing who you are. Ask me what you need before starting.
+Read https://raw.githubusercontent.com/heygen-com/skills/master/INSTALL_FOR_AGENTS.md and follow it. Ask me for any API keys you need.
 ```
 
-Or follow the steps below manually.
+That's it. The agent fetches [INSTALL_FOR_AGENTS.md](./INSTALL_FOR_AGENTS.md) and walks the rest of the install. Same prompt forever — the install spec lives in the repo, not in your clipboard.
+
+Want to install manually instead? Follow the steps below.
 
 ### Step 1 — Clone into your skills directory
 
