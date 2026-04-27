@@ -3,20 +3,24 @@
 Read this entire file, then follow the steps. Ask the user for API keys when needed.
 Target: ~5 minutes to a fully working HeyGen integration.
 
+This file is the agent-facing companion to [`INSTALL.md`](./INSTALL.md) (human-facing).
+Where they overlap, this file is canonical for agent-driven installs.
+
 ## Step 0: If you are not Claude Code
 
-Read `AGENTS.md` and `CLAUDE.md` at the repo root first. Both files describe the
-runtime contract for these skills (mode detection, hard rules, transport-only-once).
-Claude Code reads `CLAUDE.md` automatically and can skip ahead. Codex and Cursor
-read `AGENTS.md`.
+Read [`CLAUDE.md`](./CLAUDE.md) at the repo root first. It describes the
+runtime contract for these skills (mode detection, hard rules,
+transport-only-once). Claude Code reads it automatically; other agents
+should fetch it explicitly.
 
-If you fetched this file by URL without cloning yet, the companion files live at:
+If you fetched this file by URL without cloning yet, the companion files
+live at:
 
-- `https://raw.githubusercontent.com/heygen-com/skills/master/AGENTS.md` — start here for non-Claude agents
-- `https://raw.githubusercontent.com/heygen-com/skills/master/CLAUDE.md` — Claude Code project instructions
+- `https://raw.githubusercontent.com/heygen-com/skills/master/CLAUDE.md` — runtime contract for the skills
 - `https://raw.githubusercontent.com/heygen-com/skills/master/SKILL.md` — top-level skill (mode detection ladder, hard rules)
 - `https://raw.githubusercontent.com/heygen-com/skills/master/heygen-avatar/SKILL.md` — avatar creation sub-skill
 - `https://raw.githubusercontent.com/heygen-com/skills/master/heygen-video/SKILL.md` — video generation sub-skill
+- `https://raw.githubusercontent.com/heygen-com/skills/master/INSTALL.md` — human-facing install doc
 
 ## Step 1: Detect the agent host and pick the install path
 
@@ -24,14 +28,19 @@ Detect which agent is running before cloning. Each host expects skills at a
 different path. If you are not sure, ask the user "which AI coding agent are
 you running this from?"
 
-| Agent host    | Install path                                  | Notes                          |
-|---------------|-----------------------------------------------|--------------------------------|
-| Claude Code   | `~/.claude/skills/heygen-skills`              | Default, recommended           |
-| OpenClaw      | `~/.openclaw/workspace/skills/heygen-skills`  | Workspace-relative also works  |
-| Codex         | `~/.codex/skills/heygen-skills`               | Codex Plugin marketplace       |
-| Cursor        | `~/.cursor/skills/heygen-skills`              | Cursor Plugin marketplace      |
-| Hermes        | `~/.hermes/skills/heygen-skills`              |                                |
-| Other         | Whatever path the host loads skills from      | Ask the user                   |
+| Agent host    | Default install path                          |
+|---------------|-----------------------------------------------|
+| Claude Code   | `~/.claude/skills/heygen-skills`              |
+| OpenClaw      | `~/.openclaw/skills/heygen-skills`            |
+| Codex         | `~/.codex/skills/heygen-skills`               |
+| Cursor        | `~/.cursor/skills/heygen-skills`              |
+| Hermes        | `~/.hermes/skills/heygen-skills`              |
+| Other         | Whatever path the host loads skills from. Ask the user. |
+
+OpenClaw users running a workspace-scoped install may have skills under
+`~/.openclaw/workspace/skills/heygen-skills` instead — check the value of the
+host's `--dir` / `workdir` config. The default above is canonical for
+non-workspace installs and matches [`INSTALL.md`](./INSTALL.md).
 
 ```bash
 # Replace <install-path> with the row from the table above:
@@ -40,80 +49,105 @@ git clone --single-branch --depth 1 \
   <install-path>
 ```
 
-For OpenClaw users specifically, the **fastest install path is ClawHub**:
+For OpenClaw users, the **fastest install path is ClawHub** — it short-circuits
+Steps 1, 3, and 4 below (clones to the right path, registers with the host, and
+sets up the install metadata in one command):
 
 ```bash
 clawhub install heygen-skills
 ```
 
-ClawHub installs to your agent's default skills directory automatically and
-keeps the skill up to date. If the user wants ClawHub, do that and skip Step 1
-clone above.
+After ClawHub install, jump straight to **Step 2** (API key) and then
+**Step 5** (verify).
 
-## Step 2: Get the user's HeyGen API key
+## Step 2: Get the user's HeyGen API key (or detect MCP)
 
-Ask the user for their HeyGen API key. They get it from
-[app.heygen.com/api](https://app.heygen.com/api) (Settings → API → New Key).
-Tell them: *the key is shown once, copy it before closing the modal.*
+**First, detect whether the user already has the HeyGen MCP server connected.**
+If `mcp__heygen__*` tools are visible in the toolset, MCP is the path of least
+resistance — OAuth, no key handling, consumes the user's HeyGen plan credits.
 
-There is no free tier for the API as of 2026. Pricing is pay-as-you-go in
-credits. Avatar V costs ~6 credits per minute of generated video. Make sure
-the user has credits or is on a paid plan before proceeding.
+If MCP is detected and the user is happy with it, **skip to Step 5 (verify)**.
+But before you do, warn them:
 
-If the user is already on a HeyGen plan with the **HeyGen MCP server**
-connected to their agent (Claude Desktop, Claude Code with MCP, OpenClaw),
-they can skip the key step entirely. MCP uses OAuth and consumes plan credits.
-Detect this case by checking whether `mcp__heygen__*` tools are visible in the
-toolset. If yes, MCP is the path — go to Step 4.
+> If you set `HEYGEN_API_KEY` later for any reason, the skill will short-circuit
+> MCP detection (per the mode-detection ladder in `SKILL.md`) and use the CLI /
+> direct-API route instead. MCP plan credits won't be touched. To switch back to
+> MCP, unset `HEYGEN_API_KEY`.
+
+**If MCP is not connected**, ask the user for their HeyGen API key. They get
+it from [app.heygen.com/api](https://app.heygen.com/api) (Settings → API → New
+Key). Tell them: *the key is shown once, copy it before closing the modal.*
+
+The HeyGen API is currently pay-as-you-go in credits — no free tier. Avatar V
+costs roughly 6 credits per minute of generated video. Make sure the user has
+credits or is on a paid plan before proceeding. Pricing changes; if the user
+asks for current rates, point them at
+[help.heygen.com/api-pricing](https://help.heygen.com/en/articles/10060327-heygen-api-pricing-explained).
 
 ## Step 3: Save the API key in the standard location
 
-The key needs to be available to either the HeyGen CLI, the OpenClaw plugin,
-or both, depending on which transport the user picks in Step 4. The safe
-default is to set it as an environment variable in the user's shell profile.
+The key needs to be available to whichever transport the user picks in Step 4.
+The safe default is to set it as an environment variable in the user's shell
+profile.
 
 ```bash
 # In ~/.zshrc, ~/.bashrc, or wherever the user's shell loads env vars:
 export HEYGEN_API_KEY=hg_...
 ```
 
-Then ask the user to either restart their shell or `source` the file.
+Then ask the user to either restart their shell or `source` the file. The
+agent's process inherits the parent shell's env — if the agent runs in a
+separate process from the user's terminal, they'll need to restart the agent
+host, not just re-source the shell.
 
 If the user prefers a project-local key, drop it in `.env` and tell the user
 to never commit it. The `.env.example` file shows the expected variable name.
 
-For the OpenClaw plugin path (Step 4), the key can also live in OpenClaw
-config. We will configure it via `openclaw onboard` rather than touching the
-file directly.
+For the OpenClaw plugin path (Step 4 Option A), the key is read from the same
+`HEYGEN_API_KEY` env var. The plugin does not require a separate config step.
 
-## Step 4: Pick a transport and install it
+## Step 4: Pick a transport
 
 These skills route the actual HeyGen API call through one of three transports.
-Pick the **best-match** transport for the user's agent host. The skill itself
-auto-detects which transport is available and uses the most-preferred one at
-runtime.
+The skill auto-detects which transport is available at runtime via the
+mode-detection ladder in [`SKILL.md`](./SKILL.md):
+
+> 1. **OpenClaw plugin** if `video_generate` exposes `heygen/video_agent_v3`
+> 2. **CLI (API-key override)** if `HEYGEN_API_KEY` is set AND `heygen --version` exits 0
+> 3. **MCP** if no API key set AND `mcp__heygen__*` tools visible
+> 4. **CLI (fallback)** if MCP unavailable AND `heygen --version` exits 0
+
+The critical rule: **setting `HEYGEN_API_KEY` short-circuits MCP detection**.
+If the user wants MCP-credit billing, do not set the key.
+
+Pick a transport based on the user's host and preferences:
 
 ### Option A: OpenClaw plugin (preferred for OpenClaw users)
 
 Ships HeyGen as a first-class provider for OpenClaw's `video_generate` tool.
-Auth, polling, and error handling are native. This is the cleanest integration.
+Auth, polling, and error handling are native. Cleanest integration.
 
 ```bash
 openclaw plugins install openclaw-plugin-heygen
-openclaw onboard --auth-choice heygen-api-key   # paste the key from Step 2
+```
+
+The plugin reads `HEYGEN_API_KEY` from the environment (set in Step 3).
+Restart the gateway to pick up the new provider registration:
+
+```bash
 openclaw gateway restart
 ```
 
-Verify:
+Verify the plugin loaded:
 
 ```bash
 openclaw plugins list | grep heygen
 ```
 
 The skill detects the plugin by checking whether `video_generate` exposes
-`heygen/video_agent_v3` as a model. When detected, the `heygen-video` sub-skill
-routes the final video-generate call through `video_generate(...)` instead of
-spawning a CLI process.
+`heygen/video_agent_v3` as a model. When detected, the `heygen-video`
+sub-skill routes the final video-generate call through `video_generate(...)`
+instead of spawning a CLI process.
 
 ### Option B: HeyGen CLI (works with any agent that can shell out)
 
@@ -130,21 +164,23 @@ heygen auth login
 The CLI persists the key to `~/.heygen/credentials`. The skill detects the CLI
 via `heygen --version`.
 
-### Option C: HeyGen MCP server (zero-key path for Claude Desktop, Claude Code with MCP, OpenClaw)
+### Option C: HeyGen MCP server (Claude Desktop, Claude Code with MCP, OpenClaw with MCP)
 
-If MCP is already wired up the skill detects `mcp__heygen__*` tools and uses
+If MCP is already wired up, the skill detects `mcp__heygen__*` tools and uses
 them. No CLI install needed. Auth is OAuth; consumes the user's HeyGen plan
 credits (not API credits).
 
-To wire MCP if not already done, follow your agent's MCP setup docs and point
-it at `https://mcp.heygen.com/v1`. We can not configure that from inside this
-skill.
+To wire MCP from scratch, follow your agent's MCP setup docs and point it at
+`https://mcp.heygen.com/mcp/v1/`. We can not configure that from inside this
+skill. See [`INSTALL.md`](./INSTALL.md) for example configs.
 
-## Step 5: Verify the install end-to-end
+## Step 5: Verify the install (opt-in)
 
-Generate a real 5-second test video. This is the smoke test that confirms
-*everything* is connected: auth, transport, skill mode detection, video
-download.
+Ask the user: **"Want to run a 5-second smoke test? It generates a real
+video, costs roughly half a credit, and confirms the integration works
+end-to-end."**
+
+If yes:
 
 ```
 Use heygen-avatar to suggest a stock avatar I can use for a test video
@@ -153,25 +189,28 @@ Use heygen-avatar to suggest a stock avatar I can use for a test video
 ready to ship." Save the file locally and tell me the path.
 ```
 
-Expected outcome: a `.mp4` file roughly 1-3 MB, 5 seconds long, with the avatar
-speaking the test line. If this works, the integration is solid.
+Expected outcome: a `.mp4` file roughly 1-3 MB, 5 seconds long, with the
+avatar speaking the test line.
 
-If the verify step fails, the most common causes (in order):
+If the user declines, skip to Step 6. The skill works either way; the smoke
+test just removes uncertainty about whether everything is wired correctly.
+
+If the smoke test fails, the most common causes (in order):
 
 1. **`HEYGEN_API_KEY` not in current shell.** Re-source the shell profile or
-   restart the terminal.
+   restart the terminal / agent host.
 2. **No credits on the account.** Tell the user, then point them at
    [app.heygen.com/billing](https://app.heygen.com/billing).
 3. **Transport not detected.** Run `heygen --version` (Option B) or check
    `openclaw plugins list` (Option A) to confirm the path exists.
-4. **`waiting_for_input` state from the Video Agent.** This means the skill
-   set `mode` incorrectly — see the heygen-video sub-skill's review-checkpoint
+4. **`waiting_for_input` state from the Video Agent.** The skill set
+   `mode` incorrectly — see the heygen-video sub-skill's review-checkpoint
    handler. Re-read the sub-skill SKILL.md.
 
 ## Step 6: Set agent-wide defaults (optional)
 
-If the user always uses the same presenter, save defaults so they don't have
-to repeat the avatar_id / voice_id every time.
+If the user always uses the same presenter, save defaults so they don't
+have to repeat the avatar_id / voice_id every time.
 
 For the **OpenClaw plugin path** (Option A), use `openclaw config set`:
 
@@ -181,8 +220,8 @@ openclaw config set plugins.entries.heygen.config.defaultVoiceId  "<voice_id>"
 openclaw config set plugins.entries.heygen.config.defaultStyleId  "<style_id>"
 ```
 
-For the **CLI path** (Option B), defaults live in `~/.heygen/config` — the CLI
-will prompt you on first use.
+For the **CLI path** (Option B), defaults live in `~/.heygen/config` — the
+CLI will prompt on first use.
 
 For the **MCP path** (Option C), there are no per-skill defaults; the agent
 passes avatar / voice ids per call.
@@ -195,7 +234,7 @@ their webcam, generate a digital twin). After that flow returns the
 ## Step 7: Make HeyGen the default video provider (OpenClaw plugin path only)
 
 If the user wants `video_generate(...)` to default to HeyGen when no model is
-specified, set the primary:
+specified:
 
 ```bash
 openclaw config set agents.defaults.videoGenerationModel.primary "heygen/video_agent_v3"
@@ -208,7 +247,7 @@ Cursor users.
 
 The skills now have everything they need. Tell the user:
 
-> HeyGen Skills are installed and verified. Try:
+> HeyGen Skills are installed. Try:
 > - "Make a 30-second video of myself introducing what I'm working on this week"
 > - "Generate an avatar from my latest profile photo"
 > - "Send a video update to my team about today's progress"
@@ -229,32 +268,34 @@ If the install was via ClawHub:
 clawhub update heygen-skills
 ```
 
-Re-read `SKILL.md` after the upgrade if the version bumped — the mode
-detection ladder occasionally adds new transports (e.g. when MCP support
+Re-read [`SKILL.md`](./SKILL.md) after the upgrade if the version bumped — the
+mode detection ladder occasionally adds new transports (e.g. when MCP support
 shipped, when the OpenClaw plugin shipped).
 
 ## Troubleshooting
 
-**The agent says HEYGEN_API_KEY is not set, but the user already exported it.**
-The export only applies to the shell that ran it. If the agent is in a
+**The agent says HEYGEN_API_KEY is not set, but the user already exported
+it.** The export only applies to the shell that ran it. If the agent is in a
 separate process (most agents are), the export needs to be in `~/.zshrc` or
 `~/.bashrc` and either re-sourced or used in a fresh shell.
 
-**The CLI works in the terminal but the agent says it can't find it.**
-The agent's PATH is different from the user's interactive shell. Tell the
-user to add `~/.local/bin` (or wherever the CLI lands) to a PATH that the
-agent inherits.
+**The CLI works in the terminal but the agent says it can't find it.** The
+agent's PATH is different from the user's interactive shell. Tell the user
+to add `~/.local/bin` (or wherever the CLI lands) to a PATH that the agent
+inherits.
 
-**`waiting_for_input` from the Video Agent.**
-The skill is calling the Video Agent in chat mode by accident. Re-read the
-heygen-video sub-skill — it should always pass `mode: "generate"` for
-one-shot video creation. If you patched the sub-skill, you may have
-introduced this regression.
+**`waiting_for_input` from the Video Agent.** The skill is calling the Video
+Agent in chat mode by accident. Re-read the heygen-video sub-skill — it
+should always pass `mode: "generate"` for one-shot video creation. If you
+patched the sub-skill, you may have introduced this regression.
 
-**MCP tools listed but the skill is not using them.**
-The skill prefers OpenClaw plugin > CLI > MCP in that order. If the user
-wants MCP to be the chosen transport, uninstall the OpenClaw plugin and
-remove the CLI from PATH. Then re-detect.
+**MCP tools listed but the skill is using the CLI / plugin instead.** The
+skill follows the mode-detection ladder in `SKILL.md`: plugin → CLI
+(API-key override) → MCP → CLI (fallback). **`HEYGEN_API_KEY` being set
+short-circuits MCP detection.** If the user wants MCP to be the chosen
+transport, unset the env var (`unset HEYGEN_API_KEY`) and re-detect. If the
+plugin is also installed, uninstall it (`openclaw plugins uninstall
+openclaw-plugin-heygen`) so MCP wins detection.
 
 ## What this skill does NOT do
 
