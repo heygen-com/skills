@@ -22,20 +22,44 @@ That's it. The agent fetches [INSTALL_FOR_AGENTS.md](./INSTALL_FOR_AGENTS.md) an
 
 Want to install manually instead? Follow the steps below.
 
-### Step 1 — Clone into your skills directory
+### Step 1 — Install the skills
 
-Detect which agent you are and clone to the right path:
+The repo ships two skills, `heygen-avatar` and `heygen-video`. Pick the install path that matches your tooling.
+
+**Option A: `gh skill install`** (works across Claude Code, Cursor, Codex, Gemini CLI, Copilot, Junie, Goose, OpenHands, Amp, Cline, OpenCode, Warp, and more — [agentskills.io](https://agentskills.io)):
+
+```bash
+gh skill install heygen-com/skills heygen-avatar
+gh skill install heygen-com/skills heygen-video
+```
+
+Requires GitHub CLI v2.90+. The CLI writes to the right directory for your agent automatically.
+
+**Option B: ClawHub:**
+
+```bash
+clawhub install heygen-skills
+```
+
+**Option C: OpenClaw plugin** (bundles MCP support):
+
+```bash
+openclaw plugins install clawhub:@heygen/openclaw-plugin-heygen
+```
+
+**Option D: Git clone** (legacy path):
 
 | Agent | Install path |
 |-------|-------------|
 | **Claude Code** | `~/.claude/skills/heygen-skills` |
 | **OpenClaw** | `~/.openclaw/workspace/skills/heygen-skills` |
-| **ClawHub** | Run `clawhub install heygen-skills` and skip to Step 2 |
 | **Other** | Clone anywhere your agent loads skills from |
 
 ```bash
 git clone --single-branch --depth 1 https://github.com/heygen-com/skills.git <install-path>/heygen-skills
 ```
+
+After cloning, the two skills are auto-discovered at `heygen-avatar/SKILL.md` and `heygen-video/SKILL.md`.
 
 ### Step 2 — Get your HeyGen API key
 

@@ -2,15 +2,53 @@
 
 Grab an [API key](https://app.heygen.com/api) and set it in your shell. If you're already on a HeyGen plan with MCP connected to your agent, you can skip the key — MCP will be used automatically.
 
-## Option 1 — ClawHub (recommended)
+The repo ships *two* skills you can install:
+
+- **`heygen-avatar`** — build a persistent digital identity from a photo or description
+- **`heygen-video`** — generate identity-first presenter videos
+
+Most users want both. They chain together: `heygen-avatar` returns an avatar id that `heygen-video` consumes.
+
+## Option 1 — `gh skill install` (works across 12+ agents)
+
+If you have [GitHub CLI](https://cli.github.com) v2.90+ available, this is the most portable install. `gh skill` writes to the right directory for your agent automatically (Claude Code, Cursor, Codex, Gemini CLI, GitHub Copilot, Junie, Goose, OpenHands, Amp, Cline, OpenCode, Warp, and more):
+
+```bash
+gh skill install heygen-com/skills heygen-avatar
+gh skill install heygen-com/skills heygen-video
+```
+
+Project scope (current repo only) is the default. For user scope (every project on this machine):
+
+```bash
+gh skill install heygen-com/skills heygen-avatar --scope user
+gh skill install heygen-com/skills heygen-video  --scope user
+```
+
+Pin to a release tag for reproducibility:
+
+```bash
+gh skill install heygen-com/skills heygen-avatar@v2.3.1 --pin
+gh skill install heygen-com/skills heygen-video@v2.3.1  --pin
+```
+
+## Option 2 — ClawHub
 
 ```bash
 clawhub install heygen-skills
 ```
 
-ClawHub installs to your agent's default skills directory automatically.
+ClawHub installs both skills to your agent's default skills directory automatically.
 
-## Option 2 — Git clone
+## Option 3 — OpenClaw plugin
+
+For OpenClaw users who want bundled MCP support too:
+
+```bash
+openclaw plugins install clawhub:@heygen/openclaw-plugin-heygen
+```
+
+## Option 4 — Git clone
 
 Clone into your agent's skills directory:
 

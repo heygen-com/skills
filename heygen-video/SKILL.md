@@ -1,4 +1,5 @@
 ---
+version: 2.3.0 # x-release-please-version
 name: heygen-video
 description: |
   Generate HeyGen presenter videos via the v3 Video Agent pipeline — handles Frame Check
@@ -45,13 +46,53 @@ You are a video producer. Not a form. Not a CLI wrapper. A producer who understa
 
 ## API Mode Detection
 
-See the root [SKILL.md](../SKILL.md) for the canonical XOR rules — **pick MCP or CLI at session start, never mix, never switch, never cross-reference**.
+**Pick one transport at session start. Never mix, never switch mid-session, never narrate the choice.**
 
-Operation blocks throughout this skill show MCP tool name and CLI command side-by-side. **Read only the column for your detected mode.** If MCP is available, use the `mcp__heygen__*` tools; ignore the CLI column. If CLI is available, run `heygen ...` commands; ignore the MCP column. Never invoke anything from the other column.
+Detect in this order:
 
-**Do not look up API endpoints.** MCP tool names are the contract in MCP mode. `heygen <noun> <verb> --help` is the contract in CLI mode. If you find yourself searching for a REST endpoint, stop — you're in the wrong mental model.
+1. **OpenClaw plugin mode** — If running inside OpenClaw and the `video_generate` tool exposes a `heygen/video_agent_v3` model (i.e. the user has [`@heygen/openclaw-plugin-heygen`](https://github.com/heygen-com/openclaw-plugin-heygen) installed), prefer calling `video_generate({ model: "heygen/video_agent_v3", ... })` directly for video generation. The plugin handles auth (`HEYGEN_API_KEY`), session creation, polling, three-tier backoff, and error surfacing natively. Avatar discovery, voice listing, and avatar creation still go through MCP or CLI — only the final video-generate call routes through `video_generate`. Frame Check still runs before submission.
+2. **CLI mode (API-key override)** — If `HEYGEN_API_KEY` is set in the environment AND `heygen --version` exits 0, use CLI. API-key presence is an explicit user signal that they want direct API access; it short-circuits MCP detection. No question asked.
+3. **MCP mode** — No `HEYGEN_API_KEY` set AND HeyGen MCP tools are visible in the toolset (tools matching `mcp__heygen__*`). OAuth auth, uses existing plan credits.
+4. **CLI mode (fallback)** — MCP tools NOT available AND `heygen --version` exits 0. Auth via `heygen auth login` (persists to `~/.heygen/credentials`).
+5. **Neither** — tell the user once: "To use this skill, connect the HeyGen MCP server or install the HeyGen CLI: `curl -fsSL https://static.heygen.ai/cli/install.sh | bash` then `heygen auth login`."
 
-CLI output: JSON on stdout, structured error envelope on stderr, stable exit codes (0 ok · 1 API · 2 usage · 3 auth · 4 timeout). See [../references/troubleshooting.md](../references/troubleshooting.md) for error → action mapping and polling cadence. Add `--wait` on creation commands to block on completion instead of hand-rolling a poll loop.
+**Hard rules:**
+- **Never call `curl api.heygen.com/...`** — every mode routes through its own surface.
+- **OpenClaw plugin mode: only use `video_generate` for the generate step.** Never run `heygen ...` CLI for the generate call when the plugin is available. Avatar/voice discovery still uses MCP or CLI.
+- **MCP mode: only use `mcp__heygen__*` tools.** Never run `heygen ...` CLI commands. The MCP tool name IS the API.
+- **CLI mode: only use `heygen ...` commands.** Run `heygen <noun> <verb> --help` to discover arguments.
+- **Never cross over.** Operation blocks below show MCP and CLI side-by-side — read only the column for your detected mode, don't invoke anything from the other. If something isn't exposed in your current mode, tell the user; don't switch transports.
+
+### OpenClaw plugin-mode generate call
+
+```ts
+await video_generate({
+  model: "heygen/video_agent_v3",
+  prompt: scriptWithFrameCheckNotes,
+  aspectRatio: "16:9", // or "9:16"
+  providerOptions: {
+    avatar_id,
+    voice_id,
+    style_id,        // optional
+    callback_url,    // optional async webhook
+    callback_id,     // optional correlation id
+  },
+});
+```
+
+Plugin install (one-time, by the user): `openclaw plugins install clawhub:@heygen/openclaw-plugin-heygen`. Plugin docs: <https://github.com/heygen-com/openclaw-plugin-heygen>.
+
+### MCP tool names (MCP mode only)
+
+`create_video_agent`, `get_video_agent_session`, `get_video`, `list_avatar_groups`, `list_avatar_looks`, `get_avatar_look`, `create_photo_avatar`, `create_prompt_avatar`, `create_digital_twin`, `list_voices`, `design_voice`, `create_speech`, `list_video_agent_styles`, `create_video_translation`
+
+### CLI command groups (CLI mode only)
+
+`heygen video-agent {create,get,send,stop,styles,resources,videos}`, `heygen video {get,list,download,delete}`, `heygen avatar {list,get,consent,create,looks}` (with `heygen avatar looks {list,get,update}`), `heygen voice {list,create,speech}`, `heygen video-translate {create,get,languages}`, `heygen lipsync {create,get}`, `heygen asset create`, `heygen user`, `heygen auth {login,logout,status}`. Every subcommand supports `--help` — that's your reference. Run `heygen --help` to see the full noun list.
+
+**Do not look up API endpoints.** There is no `api-reference.md` lookup step. MCP mode uses tool names. CLI mode uses `heygen ... --help`. If you find yourself searching for a REST endpoint, stop — you're in the wrong mental model.
+
+CLI output: JSON on stdout, `{error:{code,message,hint}}` envelope on stderr, exit codes `0` ok · `1` API · `2` usage · `3` auth · `4` timeout. See [references/troubleshooting.md](references/troubleshooting.md) for error → action mapping and polling cadence. Add `--wait` on creation commands to block on completion instead of hand-rolling a poll loop.
 
 ---
 
@@ -91,7 +132,7 @@ Two paths for every asset:
 - **Path B (Attach):** Upload to HeyGen via `heygen asset create --file <path>` (or include as `files[]` entries on video-agent create). For visuals the viewer should see.
 - **A+B (Both):** Summarize for script AND attach original.
 
-📖 **Full routing matrix and upload examples → [../references/asset-routing.md](../references/asset-routing.md)**
+📖 **Full routing matrix and upload examples → [references/asset-routing.md](references/asset-routing.md)**
 
 **Key rules:**
 - HTML URLs cannot go in `files[]` (Video Agent rejects `text/html`). Web pages are always Path A.
@@ -282,7 +323,7 @@ Snap cuts, flash frames. Zero breathing room.
 
 ### Avatar
 
-📖 **Full avatar discovery flow, creation APIs, voice selection → [../references/avatar-discovery.md](../references/avatar-discovery.md)**
+📖 **Full avatar discovery flow, creation APIs, voice selection → [references/avatar-discovery.md](references/avatar-discovery.md)**
 
 **AVATAR file resolution (run before any external avatar lookup):**
 
@@ -388,7 +429,7 @@ Include an intro sequence, outro sequence, and chapter breaks using Motion Graph
 
 **Brand-specific:** Include hex codes (`#1E40AF`), font families (`Inter`), and which media types to prefer per scene type.
 
-📖 **Style presets (Minimalistic, Cinematic, Bold, etc.) → [../references/official-prompt-guide.md](../references/official-prompt-guide.md)**
+📖 **Style presets (Minimalistic, Cinematic, Bold, etc.) → [references/official-prompt-guide.md](references/official-prompt-guide.md)**
 
 ### Media Type Selection
 
@@ -402,9 +443,9 @@ Video Agent supports three media types. Guide it explicitly or it guesses (often
 
 Be explicit in the prompt: "Use motion graphics for the statistics, stock footage for the office scene, AI-generated visuals for the futuristic concept."
 
-📖 **Full media type matrix, scene-by-scene template, advanced prompt anatomy → [../references/prompt-craft.md](../references/prompt-craft.md)**
-📖 **Named styles (Deconstructed, Swiss Pulse, etc.) → inlined in Style Selection above**
-📖 **Motion vocabulary and B-roll → [../references/motion-vocabulary.md](../references/motion-vocabulary.md)**
+📖 **Full media type matrix, scene-by-scene template, advanced prompt anatomy → [references/prompt-craft.md](references/prompt-craft.md)**
+📖 **20 named visual styles (mood-first selection, copy-paste STYLE blocks) → [references/prompt-styles.md](references/prompt-styles.md)**
+📖 **Motion vocabulary and B-roll → [references/motion-vocabulary.md](references/motion-vocabulary.md)**
 
 ### Orientation
 
@@ -467,7 +508,7 @@ FRAMING NOTE: The selected avatar image is in {source} orientation but this vide
 BACKGROUND NOTE: The selected avatar has no background or a transparent backdrop. Place the presenter in a clean, professional environment appropriate to the video's tone. For business/tech content: modern studio with soft lighting and subtle depth. For casual content: bright, minimal space with natural light. The background should complement the presenter without distracting from the message.
 ```
 
-📖 **Full correction templates and stacking matrix → [../references/frame-check.md](../references/frame-check.md)**
+📖 **Full correction templates and stacking matrix → [references/frame-check.md](references/frame-check.md)**
 
 ---
 
@@ -571,4 +612,4 @@ If user wants changes: adjust prompt based on feedback, re-generate. Never retry
 - **One idea per video.** Single-topic produces dramatically better results.
 - **Write for the ear.** If you wouldn't say it to a friend, rewrite it.
 
-📖 **Known issues → [../references/troubleshooting.md](../references/troubleshooting.md)**
+📖 **Known issues → [references/troubleshooting.md](references/troubleshooting.md)**

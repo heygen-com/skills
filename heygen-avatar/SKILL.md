@@ -1,4 +1,5 @@
 ---
+version: 2.3.0 # x-release-please-version
 name: heygen-avatar
 description: |
   Create a persistent HeyGen avatar — a reusable face + voice identity for the agent,
@@ -204,6 +205,8 @@ For agents and named characters, skip this entire step — go straight to Type A
 
 ### Phase 2 — Avatar Creation
 
+📖 **Full creation API surface (photo / prompt / digital twin), file input formats, identity field → enum mapping, response shape → [references/avatar-creation.md](references/avatar-creation.md)**
+
 Two modes:
 
 **Mode 1 — New character** (omit `avatar_group_id`):
@@ -230,6 +233,8 @@ File options for Type B:
 - `{ "type": "url", "url": "https://..." }` — public image URL
 - `{ "type": "asset_id", "asset_id": "<id>" }` — from `heygen asset create --file <path>`
 - `{ "type": "base64", "media_type": "image/png", "data": "<base64>" }` — inline
+
+📖 **When to use each (URL vs asset_id vs base64), upload routing, and edge cases → [references/asset-routing.md](references/asset-routing.md)**
 
 **Response:** Returns `avatar_item.id` (look ID) and `avatar_item.group_id` (character identity).
 
@@ -411,3 +416,5 @@ simply `cat AVATAR-AGENT.md` and get whatever the current agent's avatar is.
 - Voice match poor → show all available voices, let user browse
 - Asset upload fails → skip reference image, try prompt-only creation
 - Existing avatar file with stale HeyGen IDs → offer to regenerate or keep
+
+📖 **Known issues, retry patterns, broken voice previews, error → action mapping → [references/troubleshooting.md](references/troubleshooting.md)**
