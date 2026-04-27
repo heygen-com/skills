@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.0](https://github.com/heygen-com/skills/compare/v3.0.0...v3.1.0) (2026-04-27)
+
+
+### Features
+
+* reference HeyGen ChatGPT app for Codex plugin (replaces bundled MCP) ([10533a9](https://github.com/heygen-com/skills/commit/10533a9e682b59401abd021b9c0b41a4d102139f))
+
 ## [3.0.0](https://github.com/heygen-com/skills/compare/v2.3.1...v3.0.0) (2026-04-27)
 
 
