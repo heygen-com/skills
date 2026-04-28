@@ -2,12 +2,13 @@
 
 Grab an [API key](https://app.heygen.com/api) and set it in your shell. If you're already on a HeyGen plan with MCP connected to your agent, you can skip the key — MCP will be used automatically.
 
-The repo ships *two* skills you can install:
+The repo ships *three* skills you can install:
 
 - **`heygen-avatar`** — build a persistent digital identity from a photo or description
 - **`heygen-video`** — generate identity-first presenter videos
+- **`heygen-translate`** — translate / dub existing videos into 175+ languages with voice cloning and lip-sync
 
-Most users want both. They chain together: `heygen-avatar` returns an avatar id that `heygen-video` consumes.
+Most users want avatar + video together. They chain: `heygen-avatar` returns an avatar id that `heygen-video` consumes. `heygen-translate` is independent — install it whenever you need to localize finished videos.
 
 ## Option 1 — `gh skill install` (works across 12+ agents)
 
@@ -16,20 +17,23 @@ If you have [GitHub CLI](https://cli.github.com) v2.90+ available, this is the m
 ```bash
 gh skill install heygen-com/skills heygen-avatar
 gh skill install heygen-com/skills heygen-video
+gh skill install heygen-com/skills heygen-translate
 ```
 
 Project scope (current repo only) is the default. For user scope (every project on this machine):
 
 ```bash
-gh skill install heygen-com/skills heygen-avatar --scope user
-gh skill install heygen-com/skills heygen-video  --scope user
+gh skill install heygen-com/skills heygen-avatar    --scope user
+gh skill install heygen-com/skills heygen-video     --scope user
+gh skill install heygen-com/skills heygen-translate --scope user
 ```
 
 Pin to a release tag for reproducibility:
 
 ```bash
-gh skill install heygen-com/skills heygen-avatar@v2.3.1 --pin
-gh skill install heygen-com/skills heygen-video@v2.3.1  --pin
+gh skill install heygen-com/skills heygen-avatar@v3.1.0    --pin
+gh skill install heygen-com/skills heygen-video@v3.1.0     --pin
+gh skill install heygen-com/skills heygen-translate@v3.1.0 --pin
 ```
 
 ## Option 2 — ClawHub
@@ -38,7 +42,7 @@ gh skill install heygen-com/skills heygen-video@v2.3.1  --pin
 clawhub install heygen-skills
 ```
 
-ClawHub installs both skills to your agent's default skills directory automatically.
+ClawHub installs all three skills to your agent's default skills directory automatically.
 
 ## Option 3 — OpenClaw plugin
 

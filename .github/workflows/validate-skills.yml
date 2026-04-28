@@ -5,12 +5,14 @@ on:
     paths:
       - "heygen-avatar/**"
       - "heygen-video/**"
+      - "heygen-translate/**"
       - ".github/workflows/validate-skills.yml"
   push:
     branches: [master]
     paths:
       - "heygen-avatar/**"
       - "heygen-video/**"
+      - "heygen-translate/**"
       - ".github/workflows/validate-skills.yml"
 
 jobs:
@@ -43,8 +45,9 @@ jobs:
           # gh skill install --from-local requires the skills/<name>/SKILL.md convention.
           # Stage the in-repo subdir skills under a temporary skills/ root so we can validate.
           mkdir -p _ghskill_test/skills
-          cp -R heygen-avatar _ghskill_test/skills/heygen-avatar
-          cp -R heygen-video  _ghskill_test/skills/heygen-video
+          cp -R heygen-avatar    _ghskill_test/skills/heygen-avatar
+          cp -R heygen-video     _ghskill_test/skills/heygen-video
+          cp -R heygen-translate _ghskill_test/skills/heygen-translate
 
       - name: Init isolated install project
         run: |
@@ -146,6 +149,50 @@ jobs:
             exit 1
           fi
           echo "✓ heygen-video/references/ has no parent-dir refs"
+
+      - name: Install heygen-translate from local
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd _install_test
+          gh skill install ../_ghskill_test heygen-translate --from-local --scope project
+          test -f .agents/skills/heygen-translate/SKILL.md
+          echo "✓ heygen-translate installed at _install_test/.agents/skills/heygen-translate/"
+
+      - name: Verify heygen-translate installed bundle is self-contained
+        run: |
+          set -euo pipefail
+          cd _install_test/.agents/skills/heygen-translate
+          if grep -nE '\.\./' SKILL.md; then
+            echo "::error::heygen-translate/SKILL.md contains parent-dir (../) references after install"
+            exit 1
+          fi
+          fail=0
+          for ref in $(grep -oE '(references|scripts)/[a-zA-Z0-9_./-]+\.(md|sh)' SKILL.md | sort -u); do
+            if [ ! -f "$ref" ]; then
+              echo "::error::heygen-translate references $ref but it's not in the installed bundle"
+              fail=1
+            fi
+          done
+          while IFS= read -r f; do
+            base=$(basename "$f")
+            if ! grep -q "$base" SKILL.md; then
+              echo "::error::orphaned bundled file (not linked from SKILL.md): $f"
+              fail=1
+            fi
+          done < <(find references scripts -type f 2>/dev/null)
+          if [ "$fail" -ne 0 ]; then exit 1; fi
+          echo "✓ heygen-translate bundle is self-contained, no orphans"
+
+      - name: Verify no parent-dir refs in heygen-translate references/
+        run: |
+          set -euo pipefail
+          if grep -rnE '\.\./\.\.' heygen-translate/references/ 2>/dev/null; then
+            echo "::error::heygen-translate/references/ contains ../../ paths that will break inside an installed bundle"
+            exit 1
+          fi
+          echo "✓ heygen-translate/references/ has no parent-dir refs"
 
   spec-validate-soft:
     name: agentskills.io spec validation (advisory)
