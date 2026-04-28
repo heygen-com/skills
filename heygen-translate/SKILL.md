@@ -245,30 +245,45 @@ Polling cadence: 30s for the first 3 minutes, then 60s. Most translations comple
 For high-stakes content, run a proofread session first so the user can review/edit the translated subtitles before the engine commits to a final render.
 
 ```bash
-# 1. Create proofread session — extracts editable subtitles per language
+# 1. Create proofread session — returns proofread_ids (one per language)
 heygen video-translate proofreads create \
-  -d '{"video":{"type":"url","url":"https://..."},"output_languages":["Spanish (Spain)"]}' \
+  -d '{"video":{"type":"url","url":"https://..."}}' \
+  --output-languages "Spanish (Spain)" \
   --mode precision \
   --enable-speech-enhancement \
   --keep-the-same-format \
-  --title "<short title>"
+  --speaker-num 1 \
+  --title "<short fileNAME-safe title>"
+# → status: processing  (3–5 min for short videos)
 
-# 2. Wait for the session to extract subtitles
+# 2. Poll until completed (or failed + failure_message)
 heygen video-translate proofreads get <proofread-id>
+# → status: completed
 
-# 3. Download the SRT for review
-heygen video-translate proofreads srt get <proofread-id> > /tmp/proofread.srt
+# 3. Fetch presigned URLs for editable + original SRTs
+heygen video-translate proofreads srt get <proofread-id> > /tmp/srt-resp.json
+SRT_URL=$(jq -r '.data.srt_url'          /tmp/srt-resp.json)  # target-lang, edit this
+ORIG_URL=$(jq -r '.data.original_srt_url' /tmp/srt-resp.json) # source-lang transcript
+curl -s "$SRT_URL" -o /tmp/proofread.srt
 
-# 4. User edits /tmp/proofread.srt (or you assist with glossary corrections,
-#    name preservation, register fixes — see references/proofreads-workflow.md)
+# 4. Edit /tmp/proofread.srt by hand or sed (glossary, register, names)
+#    See references/proofreads-workflow.md for the full edit playbook.
 
-# 5. Upload the corrected SRT
+# 5. Host the edited SRT at a public URL, then upload by reference.
+#    ⚠️  asset_id route is currently BLOCKED for SRTs —
+#       `heygen asset create` only accepts png/jpeg/mp4/webm/mp3/wav/pdf.
+#       Use the URL route. (gist raw, S3 public-read, presigned ≥2h, etc.)
+EDITED_URL="https://example.com/proofread-edited.srt"
 heygen video-translate proofreads srt update <proofread-id> \
-  -d '{"srt":{"type":"url","url":"file:///tmp/proofread.srt"}}'
-# (or upload via heygen asset create then reference asset_id)
+  -d "{\"srt\":{\"type\":\"url\",\"url\":\"$EDITED_URL\"}}"
 
-# 6. Render final
+# 6. Kick off final render — returns a video_translation_id
 heygen video-translate proofreads generate <proofread-id> --captions
+# → {"data":{"video_translation_id":"<vid-id>","status":"processing"}}
+
+# 7. Poll the translation to completion (NOT proofreads get — graduates here)
+heygen video-translate get <vid-id>
+# → status: running → succeeded; data.video_url has the final mp4
 ```
 
 📖 **When to insist on proofread, common SRT edits, glossary discipline → [references/proofreads-workflow.md](references/proofreads-workflow.md)**

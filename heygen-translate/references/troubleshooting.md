@@ -165,10 +165,12 @@ Present the closest matches. Common mismatches:
 
 ### Submission errors
 
-**`failed` status with `failure_reason: "audio extraction failed"`:**
+**`failed` with `failure_message: "Your video's audio is missing or corrupted, please try with another video"`** (verified empirically):
 The source has no audible speech, very corrupted audio, or unsupported codec.
-Verify by previewing the source. If the user says speech is present, try
-re-encoding to a clean MP4 with AAC audio.
+Fails fast (~30 s after submit). Verify by previewing the source. If the user says speech is present, try re-encoding to a clean MP4 with AAC audio (`ffmpeg -i input.mp4 -c:v libx264 -c:a aac -b:a 128k output.mp4`). For animation / b-roll / silent sources, video translation is the wrong tool — route to a different workflow.
+
+**`failed` with `failure_message: "Failed to download video from url, please check the url is valid or the video is public"`** (verified empirically):
+Fails almost instantly on submit. Source URL was 401/403/404, returned HTML instead of a video, redirected to a login page, or had a presigned URL that already expired. HEAD-check first with `curl -sI "$URL"` — expect `200` + `Content-Type: video/...`. Ask the user for a public URL or fall back to local-file upload.
 
 **`failed` with `failure_reason: "speaker detection"`:**
 `speaker_num` mismatched the actual speakers, or audio was too noisy for
@@ -194,6 +196,20 @@ long source videos or batched languages. Beyond 60 min, treat as stuck:
    Backend may be stuck. Want me to delete the job and re-submit, or wait
    another 30 minutes?"*
 3. If they re-submit, `heygen video-translate delete <id>` first.
+
+### SRT upload errors (proofreads workflow)
+
+**`heygen asset create` returns `Content type not supported application/x-subrip` when uploading an edited SRT** (verified):
+The asset upload endpoint only accepts `png/jpeg/mp4/webm/mp3/wav/pdf`. SRT files are not supported regardless of extension (server sniffs content; renaming `.srt` to `.txt` or `.mp3` does NOT bypass it). The `asset_id` shape is in the `srt update` request schema for forward-compatibility but the upload path is currently blocked.
+
+**Fix:** host the edited SRT at a public URL and use the URL route:
+
+```bash
+heygen video-translate proofreads srt update <proofread-id> \
+  -d '{"srt":{"type":"url","url":"https://example.com/proofread-edited.srt"}}'
+```
+
+Working host options: GitHub gists (raw URL), GitHub repo files (raw URL), S3/GCS with public-read or a presigned URL ≥2 h, Vercel/static hosts. The URL must serve `application/x-subrip` or `text/plain` with the SRT body — verify with `curl -sI`.
 
 ### Output / delivery errors
 
