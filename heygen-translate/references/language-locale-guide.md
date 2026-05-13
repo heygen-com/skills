@@ -46,11 +46,7 @@ Translated speech rarely matches the source's exact duration. `enable_dynamic_du
 | Japanese → English | ~25–40% LONGER | Japanese drops subjects/objects English must restate. |
 | Spanish → English | ~5–10% shorter | |
 
-**Always `enable_dynamic_duration: true` for visual translation.** The only
-time to consider turning it off: very strict timing constraints (lip-sync to
-existing background music beats, or commercial slot duration locks) — but in
-those cases, you're better off in the proofread workflow with manual SRT
-adjustment.
+**Recommend `enable_dynamic_duration: true` for visual translation** (this is the Phase 1 "duration flexibility" question). The only time to set it `false`: the user explicitly needs fixed-length output (e.g., ad slot, synced timeline, music beats). If they choose fixed-length on a high-compression pair (en→zh, en→ja), warn that quality will degrade — the proofread workflow with manual SRT adjustment is the better path for those cases.
 
 ---
 
