@@ -70,6 +70,18 @@ Detect in this order:
 4. **CLI mode (fallback)** — MCP tools not available AND `heygen --version` exits 0. Auth via `heygen auth login`.
 5. **Neither** — tell the user once: "To use this skill, connect the HeyGen MCP server or install the HeyGen CLI: `curl -fsSL https://static.heygen.ai/cli/install.sh | bash` then `heygen auth login`."
 
+### Auth verification (run before any API call)
+
+After mode detection, verify auth actually works before entering Phase 1. This avoids wasting the user's time gathering inputs only to hit an auth error on submit.
+
+- **MCP mode:** auth is handled by OAuth — no check needed.
+- **CLI mode:** run `heygen auth status` (silent). If it exits 0, proceed. If it exits non-zero (no key, expired, invalid):
+  1. Ask the user: *"I need your HeyGen API key to proceed. You can grab one from https://app.heygen.com/settings?nav=API — paste it here."*
+  2. Once they provide it, persist it: `echo "<key>" | heygen auth login` (writes to `~/.heygen/credentials`, survives across sessions).
+  3. Verify: `heygen auth status`. If still failing, surface the error and stop.
+
+This is a **one-time setup**. Once `heygen auth login` persists the key, future sessions pick it up automatically. Don't ask again if `heygen auth status` passes.
+
 **Hard rules:**
 
 - **Never call `curl api.heygen.com/...`** Every operation in this skill has a CLI command and (where supported) an MCP tool. Use those.
@@ -126,19 +138,20 @@ Ask only what you don't already have. Communicate in the user's language. **Neve
 **Required inputs (block until you have these):**
 
 1. **Source video.** Public URL, local file path, or a HeyGen asset_id from a previous step. If the user hasn't supplied it, ask: *"What's the source video — a URL, file path, or an existing HeyGen asset?"*
-2. **Target language(s).** Ask in the user's language: *"Which language should I translate it into?"* If they want multiple, accept a list. Validate each against the canonical languages list (see Phase 2).
+2. **Target language(s).** Ask as an open-ended question in the user's language: *"Which language should I translate it into?"* Do NOT present a picker or pre-assigned choices — let the user type freely. They may want one language, multiple, or a region-specific variant. Accept whatever they give and validate against the canonical languages list in Phase 2.
 
 **Important inputs (ask if not provided, with smart defaults):**
 
 3. **Speaker count.** Single speaker is the default and what most users have. Ask once when ambiguous: *"How many distinct speakers are in the video?"* Wrong speaker count is the #1 quality killer — speaker confusion creates voice swaps mid-translation. Don't skip this for multi-person content.
 4. **Content type.** You usually don't need to ask — infer from the video and confirm. The five profiles below cover ~95% of cases. Only ask if genuinely ambiguous.
 5. **Caption preference.** Default ON for talking-head and corporate; default OFF for podcast/audio-only. If you flip the default, mention it briefly in Phase 4.
+6. **Duration flexibility.** Ask: *"Does the translated video need to be exactly the same length as the original, or can it be slightly longer/shorter? Allowing flexibility usually sounds more natural — the translated speech gets enough room to be spoken at a comfortable pace instead of being sped up or compressed."* Default recommendation: flexible (`enable_dynamic_duration: true`). Only set to `false` when the user needs frame-exact timing (e.g., syncing to a timeline, ad slot, or external audio track).
 
 **Optional (ask only if relevant):**
 
-6. **Glossary / do-not-translate terms.** For corporate or technical content, ask: *"Any product names, company names, or jargon I should keep in the original language?"* HeyGen doesn't currently accept a hard glossary, so this becomes guidance for the proofread step (Phase 3-Proofread) when stakes are high.
-7. **Partial translation.** If the user mentions a specific segment ("just the intro", "from 1:30 to 4:00"), capture `start_time` and `end_time` in seconds.
-8. **Proofread before final render?** Default OFF (faster, fewer approvals). Default ON for: long videos (>3 min), corporate/branded content, high-stakes legal/medical/educational, languages the user reads natively (so they can verify). Ask: *"Want to review and edit the subtitles before final render? Adds about 5 minutes but lets you fix any wrong terms."*
+7. **Glossary / do-not-translate terms.** For corporate or technical content, ask: *"Any product names, company names, or jargon I should keep in the original language?"* HeyGen doesn't currently accept a hard glossary, so this becomes guidance for the proofread step (Phase 3-Proofread) when stakes are high.
+8. **Partial translation.** If the user mentions a specific segment ("just the intro", "from 1:30 to 4:00"), capture `start_time` and `end_time` in seconds.
+9. **Proofread before final render?** Default OFF (faster, fewer approvals). Default ON for: long videos (>3 min), corporate/branded content, high-stakes legal/medical/educational, languages the user reads natively (so they can verify). Ask: *"Want to review and edit the subtitles before final render? Adds about 5 minutes but lets you fix any wrong terms."*
 
 📖 **Locale-pair gotchas (formality registers, RTL languages, tonal compression, lip-sync ceiling) → [references/language-locale-guide.md](references/language-locale-guide.md)**
 
@@ -178,7 +191,7 @@ Pick one profile based on the source. Don't list all five to the user — propos
 
 **Always:**
 - `mode: "precision"` unless the user explicitly asks for "fast" / "quick" / "speed".
-- `enable_dynamic_duration: true` for visual translations — lets translated speech breathe instead of being crammed into the source's exact timing. Tonal compression makes this critical for en→zh, en→ja, en→ko (Asian languages run shorter); de→en, ja→en (run longer); ar/he/ur (RTL + register shifts).
+- `enable_dynamic_duration`: set based on the user's answer to the duration flexibility question in Phase 1. Default `true` (recommended) — lets translated speech breathe instead of being crammed into the source's exact timing. Set `false` only when the user explicitly needs fixed-length output. Tonal compression makes flexibility especially important for en→zh, en→ja, en→ko (Asian languages run shorter); de→en, ja→en (run longer); ar/he/ur (RTL + register shifts).
 - `keep_the_same_format: true` for visual translations — preserves the source's resolution and bitrate so the dubbed video matches the original's encoding.
 - `enable_watermark: false` (the default).
 
@@ -319,7 +332,7 @@ A 30-second triage in Phase 2 saves 10–30 minutes of bad translation. Watch/li
 
 ### Locale-pair gotchas
 
-- **Tonal compression / expansion.** en→zh, en→ja, en→ko run ~30% shorter; de→en, ja→en run longer; en→ar/he typically expands. Always `enable_dynamic_duration: true` so the dub doesn't feel rushed or stretched. Without this flag, en→zh sounds artificially slow (speech crammed to fit a 30%-too-long timeline).
+- **Tonal compression / expansion.** en→zh, en→ja, en→ko run ~30% shorter; de→en, ja→en run longer; en→ar/he typically expands. Dynamic duration (the Phase 1 duration flexibility question) is especially important for these pairs — without it, en→zh sounds artificially slow (speech crammed to fit a 30%-too-long timeline). If the user opted for fixed-length output, warn them that quality will degrade on high-compression pairs.
 - **Formality / register.** ja-JP (敬語/keigo), ko-KR (honorifics), de-DE (Sie vs du), th-TH (royal/polite/casual), id-ID (formal vs colloquial) — the engine picks neutral-formal by default. If the source is conversational and the user wants matching register in target, flag it in proofread or pre-warn that it'll sound slightly more formal than the original.
 - **RTL languages.** Arabic, Hebrew, Urdu, Persian — captions render right-to-left. Burned-in captions can collide with the source video's lower-third graphics on the wrong side. If the source has on-screen text or graphics in the lower-third, propose audio-only translation OR proofread with caption styling review.
 - **Regional variants matter.** Spanish (Spain) vs Spanish (Mexico) vs Spanish (Argentina) have distinctly different vocabulary, intonation, and speech rate. Latin American audiences often perceive Castilian Spanish as foreign. Default to the user's stated audience region; if unspecified for Spanish, ask once. Same for Portuguese (Portugal vs Brazil), French (France vs Canada vs Switzerland), Arabic (which has 19 region variants).
