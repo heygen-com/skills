@@ -8,7 +8,7 @@
     {
       "name": "heygen",
       "source": "./",
-      "description": "HeyGen skills for avatar creation, identity-first video, and personalized video messages. Invoke as /heygen:avatar or /heygen:video.",
+      "description": "HeyGen skills for avatar creation, identity-first video generation, personalized video messages, and video translation / dubbing. Invoke as /heygen:avatar, /heygen:video, or /heygen:translate.",
       "version": "1.3.2",
       "skills": [
         {
@@ -20,6 +20,11 @@
           "name": "video",
           "path": "heygen-video",
           "invoke": "/heygen:video"
+        },
+        {
+          "name": "translate",
+          "path": "heygen-translate",
+          "invoke": "/heygen:translate"
         }
       ]
     }

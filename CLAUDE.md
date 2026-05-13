@@ -2,7 +2,13 @@
 
 ## What This Is
 
-The HeyGen Skills. Two independent, self-contained skills that chain together: **heygen-avatar** (identity → avatar → voice) and **heygen-video** (idea → script → video). Each ships its own bundle of references so it installs cleanly via `gh skill install`, ClawHub, the OpenClaw plugin, or direct git clone.
+The HeyGen Skills. Three independent, self-contained skills:
+
+- **heygen-avatar** — identity → avatar → voice. Output is reused by heygen-video.
+- **heygen-video** — idea → script → video. Consumes avatars from heygen-avatar.
+- **heygen-translate** — existing video → dubbed and lip-synced video in another language. Independent of the other two.
+
+Each ships its own bundle of references so it installs cleanly via `gh skill install`, ClawHub, the OpenClaw plugin, or direct git clone.
 
 ## Architecture
 
@@ -39,6 +45,13 @@ heygen-skills/
 │   │   └── troubleshooting.md
 │   └── scripts/
 │       └── update-check.sh     # Self-contained version-check shell script
+├── heygen-translate/           # Self-contained skill
+│   ├── SKILL.md                # Translation / dubbing workflow (4-phase pipeline)
+│   └── references/             # On-demand docs, loaded per phase
+│       ├── asset-routing.md
+│       ├── language-locale-guide.md
+│       ├── proofreads-workflow.md
+│       └── troubleshooting.md
 ├── platforms/                  # Platform-specific skill variants (e.g. nanoclaw)
 ├── assets/                     # Logos, plugin assets
 └── evals/                      # Dev-only test infrastructure (not shipped to users)
@@ -47,7 +60,7 @@ heygen-skills/
     └── round-N-scenarios.md
 ```
 
-*No root SKILL.md, no root references/.* The two skills are independent. If shared docs drift between them, that's acceptable — each skill is internally consistent and authored independently.
+*No root SKILL.md, no root references/.* The three skills are independent. If shared docs drift between them, that's acceptable — each skill is internally consistent and authored independently.
 
 ## The 300-Line Rule
 
