@@ -1,5 +1,5 @@
 ---
-version: 3.1.0 # x-release-please-version
+version: 3.2.0 # x-release-please-version
 name: heygen-translate
 description: |
   Translate and dub a video into another language with voice cloning and lip-sync,
