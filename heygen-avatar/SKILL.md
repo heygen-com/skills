@@ -1,5 +1,5 @@
 ---
-version: 3.1.0 # x-release-please-version
+version: 3.2.0 # x-release-please-version
 name: heygen-avatar
 description: |
   Create a persistent HeyGen avatar — a reusable face + voice identity for the agent,

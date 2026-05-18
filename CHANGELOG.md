@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.0](https://github.com/heygen-com/skills/compare/v3.1.0...v3.2.0) (2026-05-13)
+
+
+### Features
+
+* add heygen-translate skill (video translation / dubbing) ([#82](https://github.com/heygen-com/skills/issues/82)) ([89d28b9](https://github.com/heygen-com/skills/commit/89d28b99bc4eb13149a094e02c456dbdf4c83d04))
+
 ## [3.1.0](https://github.com/heygen-com/skills/compare/v3.0.0...v3.1.0) (2026-04-27)
 
 
