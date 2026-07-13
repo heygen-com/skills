@@ -18,15 +18,15 @@ NOT for: image generation, audio-only TTS, video translation, or cinematic b-rol
 ### Step 1: Discover Available Avatars
 
 ```bash
-heygen avatar list --ownership public --limit 5 | jq '.data[] | {group_id, avatar_name}'
+heygen avatar list --ownership public --limit 5 | jq '.data[] | {group_id: .id, avatar_name: .name}'
 ```
 
-Pick an `avatar_id`. If the user has a specific avatar, use that ID. To see looks for a group: `heygen avatar looks list --group-id <group_id>`.
+`avatar list` returns avatar **groups** — each `.id` is a `group_id`, not an `avatar_id`. The `avatar_id` you pass to generation is a specific **look**: list looks with `heygen avatar looks list --group-id <group_id> | jq '.data[] | {avatar_id: .id, preview_image_url}'` and pick a look's `.id`. If the user already has a specific look id, use it directly.
 
 ### Step 2: Find a Voice
 
 ```bash
-heygen voice list --limit 10 | jq '.data.voices[] | {voice_id, display_name, language}'
+heygen voice list --limit 10 | jq '.data[] | {voice_id, name, language}'
 ```
 
 Pick a `voice_id` matching the desired language and tone.
@@ -57,12 +57,12 @@ With `--wait`, the CLI blocks until the video completes and emits the final stat
 ### Step 5: Poll for Completion (only without `--wait`)
 
 ```bash
-heygen video-agent get SESSION_ID | jq '{status: .data.status, video_url: .data.video_url}'
+heygen video-agent get SESSION_ID | jq '{status: .data.status, video_id: .data.video_id}'
 ```
 
-Poll every 15 seconds. Status progression: `pending` → `processing` → `completed`.
+Poll every 15 seconds. Session `status` is one of `thinking`, `waiting_for_input`, `reviewing`, `generating`, `completed`, `failed` — not a strict linear sequence (`waiting_for_input` only occurs in chat mode). Terminal states are `completed` and `failed`.
 
-When status is `completed`, the `video_url` field contains the download URL.
+Once `.data.video_id` is present, run `heygen video get <video_id>` and read `.data.video_url` for the download URL (and `.data.failure_message` on failure).
 
 ### Step 6: Deliver
 
@@ -77,9 +77,9 @@ Writes the MP4 to disk and emits `{"asset", "message", "path"}` on stdout — ch
 ## Verification
 
 After generating a video, confirm:
-1. CLI exits `0` and stdout contains `session_id` (generation accepted)
+1. CLI exits `0` (generation accepted). Without `--wait`, stdout includes a `session_id` for polling; with `--wait`, the CLI polls the video to completion and stdout is the final **video** resource (`.data.id`, `.data.video_url`).
 2. Polling (or `--wait`) returns `status: "completed"` within 5 minutes
-3. `video_url` / `video_page_url` is a valid HTTPS URL
+3. `heygen video get <video_id>` returns a valid HTTPS `.data.video_url`
 4. Downloaded file is a playable MP4
 
 ## Troubleshooting
@@ -88,8 +88,8 @@ After generating a video, confirm:
 |-------|-----|
 | Exit code `3` / auth error on stderr | Check `heygen auth status`; run `heygen auth login` or set `HEYGEN_API_KEY` |
 | Exit code `2` / usage error | Run `heygen video-agent create --help` — verify flag names and required args |
-| Status stuck on "processing" | Wait up to 5 minutes. Videos over 60s take longer. |
-| Empty `video_url` | Video may have failed. Check `error` field in poll response. |
+| Status stuck on `thinking` / `generating` | Wait up to 5 minutes. Videos over 60s take longer. |
+| Missing `video_id` | Session may have failed. Check `.data.status`; if `failed`, inspect the full `heygen video-agent get <session_id>` response for the failure detail. |
 
 ## Limits
 

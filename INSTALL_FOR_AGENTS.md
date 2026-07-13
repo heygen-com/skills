@@ -300,8 +300,10 @@ openclaw config set plugins.entries.heygen.config.defaultVoiceId  "<voice_id>"
 openclaw config set plugins.entries.heygen.config.defaultStyleId  "<style_id>"
 ```
 
-For the **CLI path** (Option B), defaults live in `~/.heygen/config` — the
-CLI will prompt on first use, or you can run `heygen config set` directly.
+For the **CLI path** (Option B), there are no avatar / voice / style config
+defaults: `heygen config set <key> <value>` only supports the keys `analytics`
+and `output`. Keep the ids in the `AVATAR-<NAME>.md` file (or your own notes)
+and pass them to each command.
 
 For the **MCP path** (Option C), there are no per-skill defaults; the agent
 passes avatar / voice ids per call. If Step 5 ran, the `AVATAR-<NAME>.md`
