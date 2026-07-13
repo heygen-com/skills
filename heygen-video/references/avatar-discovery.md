@@ -61,7 +61,7 @@ heygen avatar looks list --group-id <group_id> --limit 50
 
 Each look has an `id` — this is the `avatar_id` you pass downstream.
 
-Avatar types: `studio_avatar`, `video_avatar`, `photo_avatar`. Photo avatars support `motion_prompt` and `expressiveness`.
+Avatar types: `studio_avatar`, `digital_twin`, `photo_avatar`. Photo avatars support `motion_prompt` and `expressiveness`.
 
 **ALWAYS show the preview image** when presenting an avatar look. Each look response includes `preview_image_url` — display inline.
 
@@ -96,7 +96,7 @@ Show group names + one representative image. Let the user pick a person.
 heygen avatar looks list --group-id <group_id> --limit 10
 ```
 
-**Why group-first:** The flat `heygen avatar looks list --ownership public` call returns 50+ results for only 3 unique people per page. Group-level browsing (2 calls) gives much better discovery UX.
+**Why group-first:** The flat `heygen avatar looks list --ownership public` call returns up to 50 looks per page (default 20) for only a few unique people. Group-level browsing (2 calls) gives much better discovery UX.
 
 ### A4: Voice direction
 
@@ -104,7 +104,7 @@ After avatar is settled, confirm voice preferences (accent, delivery style, lang
 
 **ALWAYS show a playable voice preview.** Each voice response includes `preview_audio_url` — share it.
 
-**Handling missing/broken previews:** Some voices return bare `s3://` paths or `null`. When this happens: note "(no preview available)" and offer to generate a short TTS sample via `create_speech` (MCP) or `heygen voice speech create --text "<sample>" --voice-id <id> --input-type plain_text --language en --locale en-US` (CLI).
+**Handling missing/broken previews:** Some voices return bare `s3://` paths or `null`. When this happens: note "(no preview available)" and offer to generate a short TTS sample via `create_speech` (MCP) or `heygen voice speech create --text "<sample>" --voice-id <id> --input-type text --language en --locale en-US` (CLI).
 
 ---
 
@@ -123,19 +123,20 @@ heygen-video resumes here at Path 0 to pick it up.
 
 ## Path C: Direct Image (Simplest for One-Off)
 
-Skip avatar creation. Pass `image_url` directly:
+Skip avatar creation. Pass the image directly:
 
-**MCP:** `create_video_from_image(image_url=<url>, script=<script>, voice_id=<voice_id>, aspect_ratio="16:9")`
+**MCP:** `create_video_from_image(image={"type": "url", "url": "<url>"}, script=<script>, voice_id=<voice_id>, aspect_ratio="16:9")` (for a pre-uploaded asset: `image={"type": "asset_id", "asset_id": "<id>"}`)
 **CLI:**
 ```bash
 heygen video create -d '{
-  "image_url": "https://example.com/headshot.jpg",
+  "type": "image",
+  "image": {"type": "url", "url": "https://example.com/headshot.jpg"},
   "script": "<script>",
   "voice_id": "<voice_id>",
   "aspect_ratio": "16:9"
 }'
 ```
-Also accepts `image_asset_id`. Fastest path for one-off talking-head video.
+For a pre-uploaded asset, use `"image": {"type": "asset_id", "asset_id": "<id>"}`. Fastest path for one-off talking-head video.
 
 ---
 

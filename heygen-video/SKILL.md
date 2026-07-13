@@ -126,7 +126,7 @@ Plugin install (one-time, by the user): `openclaw plugins install clawhub:@heyge
 
 ### CLI command groups (CLI mode only)
 
-`heygen video-agent {create,get,send,stop,styles,resources,videos}`, `heygen video {get,list,download,delete}`, `heygen avatar {list,get,consent,create,looks}` (with `heygen avatar looks {list,get,update}`), `heygen voice {list,create,speech}`, `heygen video-translate {create,get,languages}`, `heygen lipsync {create,get}`, `heygen asset create`, `heygen user`, `heygen auth {login,logout,status}`. Every subcommand supports `--help` — that's your reference. Run `heygen --help` to see the full noun list.
+`heygen video-agent {create,get,send,stop,styles,resources,videos}`, `heygen video {get,list,download,delete}`, `heygen avatar {list,get,consent,create,looks}` (with `heygen avatar looks {list,get,update}`), `heygen voice {list,create,speech}`, `heygen video-translate {create,get,languages}`, `heygen lipsync {create,get}`, `heygen asset create`, `heygen user me get`, `heygen auth {login,logout,status}`. Every subcommand supports `--help` — that's your reference. Run `heygen --help` to see the full noun list.
 
 **Do not look up API endpoints.** There is no `api-reference.md` lookup step. MCP mode uses tool names. CLI mode uses `heygen ... --help`. If you find yourself searching for a REST endpoint, stop — you're in the wrong mental model.
 
@@ -525,7 +525,7 @@ From the response, pick the look matching the target orientation. Use the first 
 
 1. **Fetch avatar look metadata:** `get_avatar_look(look_id=<avatar_id>)` (CLI: `heygen avatar looks get <avatar_id>`) → extract `avatar_type`, `preview_image_url`, `image_width`, `image_height`
 2. **Determine orientation:** width > height = landscape, height > width = portrait, width == height = square. Fetch fails = assume portrait.
-3. **Determine background:** `photo_avatar` → Video Agent handles environment. `studio_avatar` → check if transparent/solid/empty. `video_avatar` → always has background.
+3. **Determine background:** `photo_avatar` → Video Agent handles environment. `studio_avatar` → check if transparent/solid/empty. `digital_twin` → always has background.
 4. **Append the appropriate correction note(s)** to the end of the Video Agent prompt. That's it. No image generation, no new looks.
 
 ### Correction Matrix
@@ -538,8 +538,8 @@ From the response, pick the look matching the target orientation. Use the first 
 | `studio_avatar` | ✅ matched | ❌ No | Background note |
 | `studio_avatar` | ❌ mismatched or ◻ square | ✅ Yes | Framing note |
 | `studio_avatar` | ❌ mismatched or ◻ square | ❌ No | Framing note + Background note |
-| `video_avatar` | ✅ matched | ✅ Yes | None |
-| `video_avatar` | ❌ mismatched or ◻ square | ✅ Yes | Framing note |
+| `digital_twin` | ✅ matched | ✅ Yes | None |
+| `digital_twin` | ❌ mismatched or ◻ square | ✅ Yes | Framing note |
 
 ### Framing Note (append to prompt)
 
@@ -617,7 +617,7 @@ heygen video-agent create \
 
 The CLI returns JSON on stdout: `{"data": {"video_id": "...", "session_id": "..."}}` after submission. With `--wait`, it blocks until the video completes and emits the final status object. Without `--wait`, submit returns immediately — poll with `heygen video-agent get <id>`.
 
-**⚠️ Always capture `session_id` immediately.** Session URL: `https://app.heygen.com/video-agent/{session_id}`. Cannot be recovered later.
+**⚠️ Always capture `session_id` immediately.** Session URL: `https://app.heygen.com/video-agent/{session_id}`. If lost, it is recoverable via `heygen video-agent list` (items include `session_id`, `created_at`, and `title`), but immediate capture is still preferred.
 
 ### Polling
 
@@ -650,7 +650,7 @@ Always report duration accuracy. Clean up downloaded files after sending.
 After EVERY generation, append to `heygen-video-log.jsonl`:
 
 ```json
-{"timestamp":"ISO-8601","video_id":"...","session_id":"...","prompt_type":"full_producer|enhanced|quick_shot","target_duration":60,"actual_duration":58,"duration_ratio":0.97,"avatar_id":"...","voice_id":"...","style_id":"...","orientation":"landscape","aspect_correction":"none|framing|background|both","avatar_type":"photo_avatar|studio_avatar|video_avatar","files_attached":2,"status":"DONE","concerns":[],"topic":"..."}
+{"timestamp":"ISO-8601","video_id":"...","session_id":"...","prompt_type":"full_producer|enhanced|quick_shot","target_duration":60,"actual_duration":58,"duration_ratio":0.97,"avatar_id":"...","voice_id":"...","style_id":"...","orientation":"landscape","aspect_correction":"none|framing|background|both","avatar_type":"photo_avatar|studio_avatar|digital_twin","files_attached":2,"status":"DONE","concerns":[],"topic":"..."}
 ```
 
 If user wants changes: adjust prompt based on feedback, re-generate. Never retry with the exact same prompt.
