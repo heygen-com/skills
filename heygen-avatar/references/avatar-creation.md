@@ -20,7 +20,7 @@ the user provides:
 |---|---|---|
 | A photo of a real person | `photo` | `create_photo_avatar` |
 | A description of an appearance | `prompt` | `create_prompt_avatar` |
-| A short video recording of a real person | `video` | `create_digital_twin` |
+| A short video recording of a real person | `digital_twin` | `create_digital_twin` |
 
 All three accept an optional `avatar_group_id`:
 - **Omit it** to create a new character (new group).
@@ -77,7 +77,7 @@ Optional: up to 3 `reference_images` to anchor the generated appearance.
 **CLI:**
 ```bash
 heygen avatar create -d '{
-  "type": "video",
+  "type": "digital_twin",
   "name": "My Video Avatar",
   "file": {"type": "asset_id", "asset_id": "<uploaded_asset_id>"},
   "avatar_group_id": "<optional>"
@@ -98,7 +98,7 @@ heygen avatar create -d '{
 { "type": "asset_id", "asset_id": "<id>" }
 
 // Inline base64
-{ "type": "base64", "data": "<base64>", "content_type": "image/png" }
+{ "type": "base64", "data": "<base64>", "media_type": "image/png" }
 ```
 
 For when each is appropriate, see
@@ -111,9 +111,12 @@ For when each is appropriate, see
 All three types return:
 ```jsonc
 {
-  "avatar_item": {
-    "id": "<look_id>",         // ephemeral — the specific look
-    "group_id": "<group_id>"   // stable — the character identity
+  "data": {
+    "avatar_item": {
+      "id": "<look_id>",         // ephemeral — the specific look
+      "group_id": "<group_id>"   // stable — the character identity
+    },
+    "avatar_group": { /* ... */ }
   }
 }
 ```
@@ -175,4 +178,4 @@ heygen voice list --type public --engine starfish --language en --gender female 
 paths or `null`. When this happens: note "(no preview available)" and
 offer to generate a short TTS sample via `create_speech` (MCP) or
 `heygen voice speech create --text "<sample>" --voice-id <id>
---input-type plain_text --language en --locale en-US` (CLI).
+--input-type text --language en --locale en-US` (CLI).
