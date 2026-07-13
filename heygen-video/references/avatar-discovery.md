@@ -70,7 +70,7 @@ Avatar types: `studio_avatar`, `video_avatar`, `photo_avatar`. Photo avatars sup
 Check `heygen-video-log.jsonl` for last used avatar_id. If found:
 
 **MCP:** `get_avatar_look(look_id=<look_id>)`
-**CLI:** `heygen avatar looks get --look-id <look_id>`
+**CLI:** `heygen avatar looks get <look_id>`
 
 Show preview image: "Last time you used [Avatar Name]. Use her again?"
 

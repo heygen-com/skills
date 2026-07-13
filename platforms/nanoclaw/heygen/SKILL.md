@@ -57,7 +57,7 @@ With `--wait`, the CLI blocks until the video completes and emits the final stat
 ### Step 5: Poll for Completion (only without `--wait`)
 
 ```bash
-heygen video-agent get --session-id SESSION_ID | jq '{status: .data.status, video_url: .data.video_url}'
+heygen video-agent get SESSION_ID | jq '{status: .data.status, video_url: .data.video_url}'
 ```
 
 Poll every 15 seconds. Status progression: `pending` → `processing` → `completed`.
