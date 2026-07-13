@@ -165,24 +165,19 @@ Busco a alguien.
 - `proofread-id` as positional argument
 - `srt` body: `{type: "url", url: "..."}` or `{type: "asset_id", asset_id: "..."}`
 
-**Verified upload behavior:**
+**Upload behavior:**
 
-✅ **URL route works.** Host the edited SRT at any publicly reachable URL and pass `{type:"url", url:"..."}`.
+✅ **`asset_id` route works (preferred).** `heygen asset create` accepts SRT (supported types: `png, jpeg, mp4, webm, mp3, wav, pdf, srt`). Upload the edited SRT, capture `.data.asset_id`, and pass `{type:"asset_id", asset_id:"..."}`:
 
-⚠️ **`asset_id` route is currently blocked for SRT files.** `heygen asset create` only accepts `png, jpeg, mp4, webm, mp3, wav, pdf` — uploading an SRT (MIME `application/x-subrip`) returns:
-
-```json
-{
-  "error": {
-    "code": "invalid_parameter",
-    "message": "Content type not supported application/x-subrip"
-  }
-}
+```bash
+ASSET_ID=$(heygen asset create --file /tmp/proofread.srt | jq -r '.data.asset_id')
+heygen video-translate proofreads srt update <proofread-id> \
+  -d "{\"srt\":{\"type\":\"asset_id\",\"asset_id\":\"$ASSET_ID\"}}"
 ```
 
-This is true regardless of file extension (renaming `.srt` to `.txt` or `.mp3` does not bypass it — the server sniffs content). The `asset_id` route is in the request schema but you cannot currently produce a HeyGen `asset_id` for an SRT through the standard upload path. **Use the URL route.**
+✅ **URL route works (fallback).** Host the edited SRT at any publicly reachable URL and pass `{type:"url", url:"..."}`. (Non-subtitle content-type mismatches still error on upload.)
 
-**Practical patterns for hosting the edited SRT:**
+**Practical patterns for hosting the edited SRT (URL route):**
 
 | Where the SRT lives | How to make it reachable |
 |---------------------|--------------------------|
@@ -264,10 +259,11 @@ curl -s "$ORIG_URL" -o /tmp/proofread-original.srt
 sed -i 's/Centro Garra/ClawHub/g'        /tmp/proofread.srt
 sed -i 's/José Joshua/Joshua Xu/g'       /tmp/proofread.srt
 
-# 5. Host the edited SRT at a public URL, then upload by reference
-EDITED_URL="https://example.com/proofread-edited.srt"
+# 5. Upload the edited SRT as an asset, then reference it by asset_id
+#    (fallback: host at a public URL and use {"type":"url","url":"..."})
+ASSET_ID=$(heygen asset create --file /tmp/proofread.srt | jq -r '.data.asset_id')
 heygen video-translate proofreads srt update <proofread-id> \
-  -d "{\"srt\":{\"type\":\"url\",\"url\":\"$EDITED_URL\"}}"
+  -d "{\"srt\":{\"type\":\"asset_id\",\"asset_id\":\"$ASSET_ID\"}}"
 # → returns the proofread resource (status still completed)
 
 # 6. Kick off the final render with the corrected captions
@@ -276,7 +272,7 @@ heygen video-translate proofreads generate <proofread-id> --captions
 
 # 7. Poll the resulting translation to completion
 heygen video-translate get <vid-id>
-# → status: running → succeeded; data.video_url has the final mp4
+# → status: running → completed; data.video_url has the final mp4
 ```
 
 ---
@@ -395,7 +391,7 @@ Cost: HeyGen bills the final render the same as a non-proofread translation. The
 |---------|----------------------------|-------|-----|
 | `failed` immediately on submit | `Failed to download video from url, please check the url is valid or the video is public` | Source URL was 401/403/404, returned HTML, redirected to a login page, or had wrong MIME | HEAD-check the URL with `curl -sI`; ask user for public URL or local file → upload route |
 | `failed` after ~30 s of `processing` | `Your video's audio is missing or corrupted, please try with another video` | Source has no audible speech, audio track is silent / missing, or codec is unparseable | Verify the source has speech; consider re-encoding to MP4 + AAC; for silent / animation-only sources, route to a different workflow (this skill won't help) |
-| SRT update returns `Content type not supported application/x-subrip` | (CLI error envelope, not API status) | You tried to upload the edited SRT via `heygen asset create` — that endpoint only accepts png/jpeg/mp4/webm/mp3/wav/pdf | Host the SRT at a public URL and use `srt update -d '{"srt":{"type":"url","url":"..."}}'` |
+| `asset create` returns `Content type not supported ...` | (CLI error envelope, not API status) | The uploaded file's sniffed content type isn't a supported type (`png/jpeg/mp4/webm/mp3/wav/pdf/srt`) — e.g. a mislabeled or non-subtitle file | Upload a real `.srt` via `heygen asset create --file <x.srt>` and pass `{type:"asset_id",...}`, or use the URL route |
 | Uploaded SRT timing is off | n/a — bad render result | SRT timecodes were edited or shifted | Re-download the SRT from `proofreads srt get` and edit text only, never timecodes; re-upload |
 | `generate` runs but final render uses old text | n/a | `srt update` didn't take or you forgot to call it before `generate` | Re-upload, then re-call `proofreads generate` |
 | Proofread session expired | session not found | Sessions have a TTL (typically 24 h) | Re-create the proofread; don't try to revive an expired one |
@@ -406,9 +402,9 @@ For other failure_message strings, see [troubleshooting.md](troubleshooting.md#e
 
 ## Caveats and known quirks (verified)
 
-- **`heygen asset create` does not accept SRT files.** Only `png/jpeg/mp4/webm/mp3/wav/pdf`. Renaming the extension does not bypass it (server sniffs content). The `asset_id` shape is in the request schema for `srt update` for forward-compatibility, but the upload path is currently blocked. Use the URL route.
+- **`heygen asset create` accepts SRT files.** Supported types: `png/jpeg/mp4/webm/mp3/wav/pdf/srt`. Upload the edited SRT, capture `.data.asset_id`, and pass `{type:"asset_id",...}` to `srt update` (preferred); the URL route remains a fallback.
 - **`proofreads create` returns `proofread_ids` (plural, one per language) and a `status` at the SESSION level.** The session-level `status` is just the submit ack; per-id status comes from `proofreads get`.
-- **`status` enum is `processing | completed | failed`.** Not `pending` / `running`. (The translation-render endpoint uses `pending | running | succeeded | failed` — these are different state machines.)
+- **`status` enum is `processing | completed | failed`.** Not `pending` / `running`. (The translation-render endpoint uses `pending | running | completed | failed` — these are different state machines.)
 - **`original_srt_url`** is auto-populated even when no SRT was provided at create time. It's the engine's source-language transcription, not a copy of an SRT you uploaded. Useful for verification, never re-upload as a target-language SRT.
 - **SRT filenames carry the title.** The downloaded SRTs are named `<title>_proofread.srt` and `<title>_proofread_original.srt`. Pick a clean, fileNAME-safe `--title`.
 - **Polling shifts after `generate`.** Up through `srt update`, you poll `heygen video-translate proofreads get`. After `generate` returns a `video_translation_id`, you poll `heygen video-translate get` instead — same translation poll loop as a non-proofread workflow.

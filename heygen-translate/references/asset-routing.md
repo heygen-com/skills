@@ -72,10 +72,10 @@ Red flags:
 
 ```bash
 heygen asset create --file /path/to/video.mp4
-# returns {"data":{"id":"<asset-id>","name":"...","url":"https://..."}}
+# returns {"data":{"asset_id":"<asset-id>","url":"https://...","mime_type":"...","size_bytes":123}}
 ```
 
-Capture `data.id` and pass as:
+Capture `.data.asset_id` and pass as:
 
 ```json
 { "type": "asset_id", "asset_id": "<id>" }
@@ -149,7 +149,7 @@ source video, use it directly:
 To verify an asset exists:
 
 ```bash
-heygen asset list 2>/dev/null | jq -r --arg id "abc123..." '.data[] | select(.id == $id) | .name'
+heygen asset get "abc123..." 2>/dev/null | jq -r '.data.name'
 ```
 
 If the asset is not in the user's account (different account, deleted), re-upload.
