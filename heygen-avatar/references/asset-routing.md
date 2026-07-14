@@ -61,7 +61,7 @@ Or pass inline in `files[]`:
 ```json
 {"type": "url", "url": "https://example.com/image.png"}
 {"type": "asset_id", "asset_id": "<from upload>"}
-{"type": "base64", "data": "<base64>", "content_type": "image/png"}
+{"type": "base64", "data": "<base64>", "media_type": "image/png"}
 ```
 
 ### Describe Asset Usage in Prompt

@@ -269,7 +269,7 @@ File options for Type B:
 
 📖 **When to use each (URL vs asset_id vs base64), upload routing, and edge cases → [references/asset-routing.md](references/asset-routing.md)**
 
-**Response:** Returns `avatar_item.id` (look ID) and `avatar_item.group_id` (character identity).
+**Response:** Returns `.data.avatar_item.id` (look ID) and `.data.avatar_item.group_id` (character identity).
 
 Map identity fields to HeyGen enums for the prompt:
 - **age**: Young Adult | Early Middle Age | Late Middle Age | Senior | Unspecified
@@ -336,12 +336,12 @@ Update the HeyGen section of `AVATAR-<NAME>.md` to match the canonical format:
 
 ```markdown
 ## HeyGen
-- Group ID: <avatar_item.group_id — THE stable reference, never changes>
+- Group ID: <.data.avatar_item.group_id — THE stable reference, never changes>
 - Voice ID: <chosen voice_id>
 - Voice Name: <voice name>
 - Voice Designed: <true if custom-designed, false if picked from catalog>
 - Voice Seed: <seed value used, if designed>
-- Looks: <orientation>=<avatar_item.id> (e.g., landscape=<look_id>, portrait=<look_id>)
+- Looks: <orientation>=<.data.avatar_item.id> (e.g., landscape=<look_id>, portrait=<look_id>)
 - Last Synced: <ISO timestamp>
 
 ⚠️ look_ids are ephemeral — always resolve fresh from group_id at runtime via `heygen avatar looks list --group-id <id>` (or MCP `list_avatar_looks`). Never hardcode look_id as the primary avatar reference.
