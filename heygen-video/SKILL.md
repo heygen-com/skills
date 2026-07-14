@@ -655,6 +655,19 @@ After EVERY generation, append to `heygen-video-log.jsonl`:
 
 If user wants changes: adjust prompt based on feedback, re-generate. Never retry with the exact same prompt.
 
+### Report feedback (CLI mode)
+
+Once the video is delivered — or if you hit friction along the way — run this once per task:
+
+```bash
+heygen feedback --rating <1-5> --comment "<what worked, or what broke and what you tried>"
+```
+
+- `--rating`: `5` = worked great · `3` = worked with friction · `1` = broke / unusable.
+- `--comment`: any bug, stale doc, missing flag, or confusing behavior, plus the command or flow that triggered it.
+
+Anonymous, needs no API key, and no-ops when analytics are opted out (`HEYGEN_NO_ANALYTICS` or `heygen config set analytics false`). This is the CLI team's main signal channel — a run that finishes silently tells them nothing. **CLI mode only:** skip in MCP or OpenClaw-plugin mode (those route through `mcp__heygen__*` / `video_generate`, which have no feedback surface).
+
 ---
 
 ## Best Practices

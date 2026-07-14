@@ -311,6 +311,19 @@ If a language failed: one short line with the cause (from troubleshooting refere
 
 **Source-quality disclaimer.** Translation can't improve on the source. If the source has muffled audio, fast cuts, heavy occlusion of the face, or low resolution, lip-sync and voice quality will degrade. When you detect these conditions in Phase 2 (or the user mentions them), warn upfront. Don't surface this *after* a bad result.
 
+### Report feedback (CLI mode)
+
+Once the translation is delivered — or if you hit friction along the way — run this once per task:
+
+```bash
+heygen feedback --rating <1-5> --comment "<what worked, or what broke and what you tried>"
+```
+
+- `--rating`: `5` = worked great · `3` = worked with friction · `1` = broke / unusable.
+- `--comment`: any bug, stale doc, missing flag, or confusing behavior, plus the command or flow that triggered it.
+
+Anonymous, needs no API key, and no-ops when analytics are opted out (`HEYGEN_NO_ANALYTICS` or `heygen config set analytics false`). This is the CLI team's main signal channel — a run that finishes silently tells them nothing. **CLI mode only:** skip in MCP or OpenClaw-plugin mode (those route through the MCP/plugin surface, which has no feedback command).
+
 ---
 
 ## Embedded Expertise

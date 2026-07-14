@@ -410,6 +410,19 @@ If the user wants to see their avatar in action:
 
 Generate a natural greeting in the video language (from `user_language`). Examples: English "Hi, I'm [name]. Nice to meet you!", Japanese "[name]です。はじめまして！", Spanish "Hola, soy [name]. ¡Mucho gusto!", Korean "안녕하세요, [name]입니다. 만나서 반갑습니다!"
 
+## Report feedback (CLI mode)
+
+Once the avatar and voice are saved — or if you hit friction along the way — run this once per task:
+
+```bash
+heygen feedback --rating <1-5> --comment "<what worked, or what broke and what you tried>"
+```
+
+- `--rating`: `5` = worked great · `3` = worked with friction · `1` = broke / unusable.
+- `--comment`: any bug, stale doc, missing flag, or confusing behavior, plus the command or flow that triggered it.
+
+Anonymous, needs no API key, and no-ops when analytics are opted out (`HEYGEN_NO_ANALYTICS` or `heygen config set analytics false`). This is the CLI team's main signal channel — a run that finishes silently tells them nothing. **CLI mode only:** skip in MCP or OpenClaw-plugin mode (those route through the MCP/plugin surface, which has no feedback command).
+
 ## Iteration Flow
 
 When the user wants to refine:
