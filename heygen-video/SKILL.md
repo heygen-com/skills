@@ -523,7 +523,7 @@ From the response, pick the look matching the target orientation. Use the first 
 
 ### Steps
 
-1. **Fetch avatar look metadata:** `get_avatar_look(look_id=<avatar_id>)` (CLI: `heygen avatar looks get --look-id <avatar_id>`) → extract `avatar_type`, `preview_image_url`, `image_width`, `image_height`
+1. **Fetch avatar look metadata:** `get_avatar_look(look_id=<avatar_id>)` (CLI: `heygen avatar looks get <avatar_id>`) → extract `avatar_type`, `preview_image_url`, `image_width`, `image_height`
 2. **Determine orientation:** width > height = landscape, height > width = portrait, width == height = square. Fetch fails = assume portrait.
 3. **Determine background:** `photo_avatar` → Video Agent handles environment. `studio_avatar` → check if transparent/solid/empty. `video_avatar` → always has background.
 4. **Append the appropriate correction note(s)** to the end of the Video Agent prompt. That's it. No image generation, no new looks.
@@ -615,14 +615,14 @@ heygen video-agent create \
   --wait --timeout 45m
 ```
 
-The CLI returns JSON on stdout: `{"data": {"video_id": "...", "session_id": "..."}}` after submission. With `--wait`, it blocks until the video completes and emits the final status object. Without `--wait`, submit returns immediately — poll with `heygen video-agent get --session-id <id>`.
+The CLI returns JSON on stdout: `{"data": {"video_id": "...", "session_id": "..."}}` after submission. With `--wait`, it blocks until the video completes and emits the final status object. Without `--wait`, submit returns immediately — poll with `heygen video-agent get <id>`.
 
 **⚠️ Always capture `session_id` immediately.** Session URL: `https://app.heygen.com/video-agent/{session_id}`. Cannot be recovered later.
 
 ### Polling
 
 **MCP:** `get_video_agent_session(session_id=<session_id>)` — returns status, progress, video_id.
-**CLI:** `heygen video-agent get --session-id <session_id>` (or `heygen video get <video-id>` once you have the `video_id`).
+**CLI:** `heygen video-agent get <session_id>` (or `heygen video get <video-id>` once you have the `video_id`).
 
 Total wall time per video: **20–45 minutes**. If you passed `--wait`, the CLI handles polling with exponential backoff. If polling manually: first check at **5 min**, then every **60s** up to 45 min.
 

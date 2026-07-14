@@ -5,7 +5,7 @@ Runs automatically when `avatar_id` is set, before Generate. Appends correction 
 ## Step 1: Fetch the avatar look metadata
 
 **MCP:** `get_avatar_look(look_id=<avatar_id>)`
-**CLI:** `heygen avatar looks get --look-id <avatar_id>`
+**CLI:** `heygen avatar looks get <avatar_id>`
 
 Extract:
 - `avatar_type`: `"photo_avatar"` | `"studio_avatar"` | `"video_avatar"`
