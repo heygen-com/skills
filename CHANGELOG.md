@@ -1,5 +1,21 @@
 # Changelog
 
+## [3.3.0](https://github.com/heygen-com/skills/compare/v3.2.0...v3.3.0) (2026-07-14)
+
+
+### Features
+
+* **skills:** report CLI feedback after each task ([#98](https://github.com/heygen-com/skills/issues/98)) ([1bd5e4d](https://github.com/heygen-com/skills/commit/1bd5e4d33a028dfed3abf504c5e3dd644fb9ea8a))
+
+
+### Bug Fixes
+
+* **cli-refs:** correct video-agent/avatar-looks get to positional args ([#92](https://github.com/heygen-com/skills/issues/92)) ([6cbf4f3](https://github.com/heygen-com/skills/commit/6cbf4f3dccf8cf772be6c4dd9d285ed42e73ba43))
+* **heygen-avatar:** correct avatar create type/response, asset media_type, input-type ([#94](https://github.com/heygen-com/skills/issues/94)) ([832d846](https://github.com/heygen-com/skills/commit/832d846e727e5c25bf5ae9a113f9bade0ad9ddac))
+* **heygen-translate:** correct translation states/fields, SRT asset upload, stale commands ([#95](https://github.com/heygen-com/skills/issues/95)) ([d018cf6](https://github.com/heygen-com/skills/commit/d018cf6d4f6c453015d065a63f0928e6b779e38b))
+* **heygen-video:** correct stale CLI refs (avatar_type enum, response shapes) ([#93](https://github.com/heygen-com/skills/issues/93)) ([49cf9e4](https://github.com/heygen-com/skills/commit/49cf9e499ee15593833007f0973d2d5cb27292ff))
+* **nanoclaw,docs:** correct CLI poll/response shapes, config keys ([#96](https://github.com/heygen-com/skills/issues/96)) ([13f4ad6](https://github.com/heygen-com/skills/commit/13f4ad6e2f50d9f398fff54326afa16e8af2bebf))
+
 ## [3.2.0](https://github.com/heygen-com/skills/compare/v3.1.0...v3.2.0) (2026-05-13)
 
 
