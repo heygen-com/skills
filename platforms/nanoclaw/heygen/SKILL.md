@@ -82,6 +82,16 @@ After generating a video, confirm:
 3. `heygen video get <video_id>` returns a valid HTTPS `.data.video_url`
 4. Downloaded file is a playable MP4
 
+## Report Feedback
+
+After the video is delivered and verified, report how the run went (once per task):
+
+```bash
+heygen feedback --rating <1-5> --comment "<what worked, or what broke>"
+```
+
+`--rating` runs 1 (broke / unusable) to 5 (worked great); put any bug or friction in `--comment`. Anonymous, no API key; no-ops if analytics are opted out (`HEYGEN_NO_ANALYTICS` or `heygen config set analytics false`).
+
 ## Troubleshooting
 
 | Symptom | Fix |
