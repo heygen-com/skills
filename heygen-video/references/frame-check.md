@@ -8,7 +8,7 @@ Runs automatically when `avatar_id` is set, before Generate. Appends correction 
 **CLI:** `heygen avatar looks get <avatar_id>`
 
 Extract:
-- `avatar_type`: `"photo_avatar"` | `"studio_avatar"` | `"video_avatar"`
+- `avatar_type`: `"photo_avatar"` | `"studio_avatar"` | `"digital_twin"`
 - `preview_image_url`: use to determine orientation
 - `image_width` and `image_height`: use for orientation calculation
 
@@ -26,7 +26,7 @@ Use `image_width` and `image_height` from the API response (or fetch the preview
 |---|---|---|
 | `photo_avatar` | ✅ Handled by Video Agent | Video Agent generates avatar + environment together during video creation. No standalone bg correction needed. |
 | `studio_avatar` | ⚠️ Maybe | Check preview image — if transparent/solid/empty → "No background" → apply Correction C |
-| `video_avatar` | ✅ Yes | Recorded in a real environment |
+| `digital_twin` | ✅ Yes | Recorded in a real environment |
 
 ## Step 4: Append correction notes to prompt
 
@@ -70,9 +70,9 @@ Corrections can stack. Use the matrix to determine which notes to append.
 
 | avatar_type | Orientation Match? | Has Background? | Corrections |
 |---|---|---|---|
-| `video_avatar` | ✅ matched | ✅ Yes | None |
-| `video_avatar` | ❌ mismatched | ✅ Yes | Framing only (A or B) |
-| `video_avatar` | ◻ square | ✅ Yes | Framing only (D or E) |
+| `digital_twin` | ✅ matched | ✅ Yes | None |
+| `digital_twin` | ❌ mismatched | ✅ Yes | Framing only (A or B) |
+| `digital_twin` | ◻ square | ✅ Yes | Framing only (D or E) |
 | `studio_avatar` | ✅ matched | ✅ Yes (check preview) | None |
 | `studio_avatar` | ✅ matched | ❌ No | Background (C) |
 | `studio_avatar` | ❌ mismatched | ✅ Yes | Framing only (A or B) |

@@ -1,19 +1,5 @@
 # Known Issues & Troubleshooting
 
-## Known Bug: Video Agent "Talking Photo Not Found"
-
-**Error message:** "The Talking Photo for the current narrator could not be found."
-
-**Root Cause:** Confirmed as a Video Agent backend bug by HeyGen engineering (Jerry Yan). Affects `video_avatar` type narrators and stock avatar auto-selection.
-
-**Workaround:**
-- Prefer explicit `avatar_id` over auto-selection
-- If `video_avatar` fails, retry with a `studio_avatar` or `photo_avatar`
-
-**Status:** Fix in progress at HeyGen.
-
----
-
 ## Weird Pauses / Unnatural Silence in Videos
 
 **Symptom:** Video has awkward pauses or breaks between sentences. Narrator stops speaking but video continues with dead air before next line.
@@ -106,10 +92,10 @@ Stable CLI exit codes tell you what to do without parsing messages:
 | Exit | Class | Action |
 |------|-------|--------|
 | `0` | ok | Continue |
-| `1` | API / network | Retry with backoff. If persistent, check `--verbose` or contact HeyGen support. |
+| `1` | API / network | Retry with backoff. If persistent, inspect the structured stderr error envelope and re-run with the relevant `--help`, or contact HeyGen support. |
 | `2` | usage | You passed a bad flag. Run `--help` on the command, fix the args, retry. |
 | `3` | auth | Re-auth: `heygen auth login` or set `HEYGEN_API_KEY`. Verify with `heygen auth status`. |
-| `4` | timeout under `--wait` | Operation still running server-side. stdout contains the partial resource (with `session_id` or `video_id`) — resume polling with `heygen video-agent get <id>` or `heygen video get <id>`. Do NOT re-submit. |
+| `4` | timeout under `--wait` | Operation still running server-side. stdout contains the last successfully-polled resource (or may be empty if nothing completed yet); a video resource identifies itself as `.data.id`. Prefer the timeout error's `.error.hint` on stderr, which gives the exact resume command (e.g. `heygen video-agent get <id>` or `heygen video get <id>`). Do NOT re-submit. |
 
 Common API-error hints (surfaced in stderr envelope `{error:{code,message,hint}}`):
 
@@ -132,7 +118,7 @@ When `--wait` isn't an option (e.g., you want to return control to the user betw
 
 If a job is stuck at the same status for >5 min, that's a signal to surface a status update or check the dashboard.
 
-**Prefer `--wait`** on creation commands. It handles the polling internally and returns the final resource or exits `4` with a resumable `session_id` / `video_id` on timeout.
+**Prefer `--wait`** on creation commands. It handles the polling internally and returns the final resource, or exits `4` on timeout with the exact resume command in the error's `.error.hint`.
 
 ---
 
