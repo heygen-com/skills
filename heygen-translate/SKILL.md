@@ -244,7 +244,7 @@ Use `--wait` on `create` to block until completion when running ONE language. Fo
 ```bash
 # CLI mode polling (background)
 heygen video-translate get <video-translation-id>
-# Returns { data: { status: "pending"|"running"|"succeeded"|"failed", video_url, ... } }
+# Returns { data: { status: "pending"|"running"|"completed"|"failed", video_url, ... } }
 ```
 
 Polling cadence: 30s for the first 3 minutes, then 60s. Most translations complete in 5–15 min; some (long videos, batched languages) take 30+ min. Hard timeout: 60 min per translation — beyond that, treat as stuck and surface the issue.
@@ -282,13 +282,12 @@ curl -s "$SRT_URL" -o /tmp/proofread.srt
 # 4. Edit /tmp/proofread.srt by hand or sed (glossary, register, names)
 #    See references/proofreads-workflow.md for the full edit playbook.
 
-# 5. Host the edited SRT at a public URL, then upload by reference.
-#    ⚠️  asset_id route is currently BLOCKED for SRTs —
-#       `heygen asset create` only accepts png/jpeg/mp4/webm/mp3/wav/pdf.
-#       Use the URL route. (gist raw, S3 public-read, presigned ≥2h, etc.)
-EDITED_URL="https://example.com/proofread-edited.srt"
+# 5. Upload the edited SRT as an asset, then reference it by asset_id.
+#    `heygen asset create` accepts srt (png, jpeg, mp4, webm, mp3, wav, pdf, srt).
+#    Fallback: host at a public URL and use {"type":"url","url":"..."}.
+ASSET_ID=$(heygen asset create --file /tmp/proofread.srt | jq -r '.data.asset_id')
 heygen video-translate proofreads srt update <proofread-id> \
-  -d "{\"srt\":{\"type\":\"url\",\"url\":\"$EDITED_URL\"}}"
+  -d "{\"srt\":{\"type\":\"asset_id\",\"asset_id\":\"$ASSET_ID\"}}"
 
 # 6. Kick off final render — returns a video_translation_id
 heygen video-translate proofreads generate <proofread-id> --captions
@@ -296,7 +295,7 @@ heygen video-translate proofreads generate <proofread-id> --captions
 
 # 7. Poll the translation to completion (NOT proofreads get — graduates here)
 heygen video-translate get <vid-id>
-# → status: running → succeeded; data.video_url has the final mp4
+# → status: running → completed; data.video_url has the final mp4
 ```
 
 📖 **When to insist on proofread, common SRT edits, glossary discipline → [references/proofreads-workflow.md](references/proofreads-workflow.md)**

@@ -40,7 +40,7 @@ heygen video-translate create -d '...' \
   > /tmp/translation-batch.json
 
 # Extract IDs
-jq -r '.data.video_translations[].video_translation_id' /tmp/translation-batch.json
+jq -r '.data.video_translation_ids[]' /tmp/translation-batch.json
 ```
 
 For each ID, run a backgrounded poll loop in a single shell invocation so the
@@ -53,13 +53,13 @@ while true; do
   resp=$(heygen video-translate get "$ID" 2>/dev/null)
   status=$(echo "$resp" | jq -r '.data.status')
   case "$status" in
-    succeeded)
-      url=$(echo "$resp" | jq -r '.data.video_url // .data.translated_video_url // empty')
+    completed)
+      url=$(echo "$resp" | jq -r '.data.video_url // empty')
       echo "DONE $LANG $url"
       break
       ;;
     failed)
-      msg=$(echo "$resp" | jq -r '.data.failure_reason // "unknown"')
+      msg=$(echo "$resp" | jq -r '.data.failure_message // "unknown"')
       echo "FAILED $LANG $msg"
       break
       ;;
@@ -106,7 +106,7 @@ heygen video-translate create -d '...' \
 `HEYGEN_API_KEY` is missing, expired, or wrong. Action:
 
 1. Confirm the env var: `echo "${HEYGEN_API_KEY:0:8}…" `
-2. Test with a known-good call: `heygen user`
+2. Test with a known-good call: `heygen user me get`
 3. If that fails, regenerate the key at <https://app.heygen.com/api>
 
 **`heygen auth login` worked but a call says `unauthorized`:**
@@ -172,12 +172,12 @@ Fails fast (~30 s after submit). Verify by previewing the source. If the user sa
 **`failed` with `failure_message: "Failed to download video from url, please check the url is valid or the video is public"`** (verified empirically):
 Fails almost instantly on submit. Source URL was 401/403/404, returned HTML instead of a video, redirected to a login page, or had a presigned URL that already expired. HEAD-check first with `curl -sI "$URL"` — expect `200` + `Content-Type: video/...`. Ask the user for a public URL or fall back to local-file upload.
 
-**`failed` with `failure_reason: "speaker detection"`:**
+**`failed` with `failure_message: "speaker detection"`:**
 `speaker_num` mismatched the actual speakers, or audio was too noisy for
 diarization. Re-submit with correct speaker count and
 `enable_speech_enhancement: true`.
 
-**`failed` with `failure_reason: "lip-sync"`:**
+**`failed` with `failure_message: "lip-sync"`:**
 Face was not detected or detection was unstable. Likely cause: occlusion,
 profile shots, low resolution, or fast cuts. Either:
 
@@ -197,23 +197,28 @@ long source videos or batched languages. Beyond 60 min, treat as stuck:
    another 30 minutes?"*
 3. If they re-submit, `heygen video-translate delete <id>` first.
 
-### SRT upload errors (proofreads workflow)
+### SRT upload (proofreads workflow)
 
-**`heygen asset create` returns `Content type not supported application/x-subrip` when uploading an edited SRT** (verified):
-The asset upload endpoint only accepts `png/jpeg/mp4/webm/mp3/wav/pdf`. SRT files are not supported regardless of extension (server sniffs content; renaming `.srt` to `.txt` or `.mp3` does NOT bypass it). The `asset_id` shape is in the `srt update` request schema for forward-compatibility but the upload path is currently blocked.
+**Preferred: upload the edited SRT as an asset.** `heygen asset create` accepts `srt` (supported types: `png, jpeg, mp4, webm, mp3, wav, pdf, srt`). Upload the file, capture `.data.asset_id`, and pass it to `srt update`:
 
-**Fix:** host the edited SRT at a public URL and use the URL route:
+```bash
+ASSET_ID=$(heygen asset create --file /path/to/proofread-edited.srt | jq -r '.data.asset_id')
+heygen video-translate proofreads srt update <proofread-id> \
+  -d "{\"srt\":{\"type\":\"asset_id\",\"asset_id\":\"$ASSET_ID\"}}"
+```
+
+**Fallback: public URL route.** If you'd rather host the SRT, use the URL form:
 
 ```bash
 heygen video-translate proofreads srt update <proofread-id> \
   -d '{"srt":{"type":"url","url":"https://example.com/proofread-edited.srt"}}'
 ```
 
-Working host options: GitHub gists (raw URL), GitHub repo files (raw URL), S3/GCS with public-read or a presigned URL ≥2 h, Vercel/static hosts. The URL must serve `application/x-subrip` or `text/plain` with the SRT body — verify with `curl -sI`.
+Working host options: GitHub gists (raw URL), GitHub repo files (raw URL), S3/GCS with public-read or a presigned URL ≥2 h, Vercel/static hosts. The URL must serve `application/x-subrip` or `text/plain` with the SRT body — verify with `curl -sI`. (Non-subtitle content-type mismatches still error on upload.)
 
 ### Output / delivery errors
 
-**`succeeded` but `video_url` is null:**
+**`completed` but `video_url` is null:**
 Race condition between job completion and CDN propagation. Retry the `get`
 call after 30 seconds.
 
@@ -246,13 +251,13 @@ speaker count, or use proofreads to scrub the SRT and re-dub.
 
 ## Debug Checklist (run before escalating)
 
-1. **Auth:** `heygen user` returns user info ✅ / fails ❌
+1. **Auth:** `heygen user me get` returns user info ✅ / fails ❌
 2. **CLI version:** `heygen --version` returns v0.0.6 or newer
 3. **Languages list:** `heygen video-translate languages list | jq '.data.languages | length'` returns >0
 4. **Source URL reachable:** `curl -sI "<URL>" | head -1` returns `200`
 5. **Source MIME:** `curl -sI "<URL>" | grep -i content-type` shows `video/...`
 6. **Recent jobs:** `heygen video-translate list` to see if past jobs succeeded
 
-If all six pass and the translation still fails: capture the `failure_reason`
+If all six pass and the translation still fails: capture the `failure_message`
 from `heygen video-translate get <id>` and surface it — that's HeyGen-side, not
 something the skill can resolve.
