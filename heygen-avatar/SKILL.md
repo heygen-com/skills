@@ -2,23 +2,7 @@
 version: 3.2.0 # x-release-please-version
 name: heygen-avatar
 description: |
-  Create a persistent HeyGen avatar — a reusable face + voice identity for the agent,
-  the user, or any named character — powered by HeyGen Avatar V technology.
-  Prompt-based creation by default (description → HeyGen builds it); photo upload is
-  optional for real-person digital twins.
-  Use when: (1) giving the agent a face + voice so it can present videos
-  ("bring yourself to life", "create your avatar", "give yourself an avatar",
-  "design a presenter", "set up an avatar", "let's make an avatar"),
-  (2) the user wants to appear in videos as themselves ("create my avatar",
-  "I want my face in a video", "digital twin of me", "build me an avatar"),
-  (3) building a named character presenter ("create an avatar called Cleo",
-  "design a character named X"), (4) establishing HeyGen identity before making videos —
-  the correct FIRST step when no avatar exists yet.
-  Chain signal: when the user says both an identity/avatar action AND a video action in the same
-  request ("create an avatar AND make a video", "set up identity THEN create a video",
-  "design a presenter AND immediately record"), run heygen-avatar first, then heygen-video.
-  Returns avatar_id + voice_id — pass directly to heygen-video to create HeyGen videos.
-  NOT for: generating videos (use heygen-video), translating videos, or TTS-only tasks.
+  Create a persistent HeyGen avatar: a reusable face and voice identity for the agent, the user, or a named character. Prompt-based by default; photo upload is optional for real-person digital twins. Use when setting up an avatar, creating a digital twin, building a character presenter, or establishing identity before a HeyGen video. If the user wants avatar creation and video generation in one request, run heygen-avatar first, then heygen-video. Not for generating videos, translating videos, or TTS-only tasks.
 argument-hint: "[name_or_description]"
 allowed-tools: Bash, WebFetch, Read, Write, mcp__heygen__*
 ---
